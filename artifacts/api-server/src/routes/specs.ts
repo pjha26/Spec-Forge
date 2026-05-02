@@ -749,4 +749,59 @@ router.post("/:id/stream", async (req, res) => {
   }
 });
 
+router.post("/:id/scaffold", async (req, res) => {
+  const parsed = GetSpecParams.safeParse({ id: Number(req.params.id) });
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid spec ID" });
+    return;
+  }
+
+  try {
+    const [spec] = await db.select().from(specsTable).where(eq(specsTable.id, parsed.data.id));
+    if (!spec) { res.status(404).json({ error: "Spec not found" }); return; }
+    if (!spec.content) { res.status(400).json({ error: "Spec has no content yet" }); return; }
+
+    const systemPrompt = `You are an expert software architect. Given a technical spec document, generate a complete project scaffold as a JSON object.
+Return ONLY valid JSON with no markdown, no code fences, no explanation.
+Return exactly this structure:
+{
+  "projectName": "<kebab-case-project-name>",
+  "description": "<one line project description>",
+  "stack": "<primary stack, e.g. Node.js + TypeScript + PostgreSQL>",
+  "files": [
+    { "path": "<relative path>", "content": "<file content>", "language": "<typescript|javascript|json|yaml|sql|markdown|bash|text>" }
+  ]
+}
+Rules:
+- Include 8-15 files that represent a working project skeleton
+- Always include: README.md, package.json (or equivalent), main entry point, at least 2 source files, .gitignore, and a config file
+- For API specs: include routes, controllers, middleware folders
+- For DB schemas: include migration files and model definitions
+- For system design: include docker-compose.yml and service entry points
+- For feature specs: include component files and basic test scaffold
+- File content should be real, usable starter code — not placeholders
+- Use modern best practices (TypeScript, ESM, etc.)
+- Keep each file focused and reasonably complete but concise`;
+
+    const userMessage = `Generate a project scaffold for this specification:\n\n${spec.content.slice(0, 8000)}`;
+
+    const modelToUse = isValidModel(spec.aiModel) ? spec.aiModel : "claude-sonnet-4-6";
+    const raw = await generateCompletion({ model: modelToUse, system: systemPrompt, userMessage, maxTokens: 8192 });
+
+    let scaffold;
+    try {
+      scaffold = JSON.parse(raw.trim());
+    } catch {
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) scaffold = JSON.parse(match[0]);
+      else throw new Error("Failed to parse scaffold JSON");
+    }
+
+    res.json(scaffold);
+  } catch (err) {
+    req.log.error({ err }, "Failed to generate scaffold");
+    res.status(500).json({ error: "Failed to generate scaffold" });
+  }
+});
+
 export default router;

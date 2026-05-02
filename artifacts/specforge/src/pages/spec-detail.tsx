@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 import { useGetSpec } from "@workspace/api-client-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import {
   ArrowLeft, Copy, Download, Server, Cpu, Database, BookOpen,
   Github, FileText, Clock, Terminal, FileCode2, Network, Bot,
   Share2, Printer, Eye, Loader2, RefreshCw, Webhook, ChevronDown, ChevronUp, Check,
-  Sparkles, History, Users, Shield,
+  Sparkles, History, Users, Shield, Code2,
 } from "lucide-react";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
 import { ComplexityScoreCard } from "@/components/complexity-score-card";
@@ -21,6 +22,7 @@ import { SpecChat } from "@/components/spec-chat";
 import { PresenceBar } from "@/components/presence-bar";
 import { SpecInsights } from "@/components/spec-insights";
 import { SpecVersionHistory } from "@/components/spec-version-history";
+import { SpecScaffold } from "@/components/spec-scaffold";
 
 export default function SpecDetail() {
   const { id } = useParams();
@@ -28,6 +30,7 @@ export default function SpecDetail() {
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<"document" | "diagram" | "chat" | "insights">("document");
+  const [showScaffold, setShowScaffold] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [shareData, setShareData] = useState<{ shareUrl: string; viewCount: number } | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -333,84 +336,124 @@ export default function SpecDetail() {
             {isExportingDocx ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <FileCode2 className="w-3 h-3 mr-2" />}
             .DOCX
           </Button>
+
+          <motion.button
+            onClick={() => setShowScaffold(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-bold"
+            style={{
+              background: "linear-gradient(135deg, rgba(139,92,246,0.25), rgba(6,182,212,0.15))",
+              border: "1px solid rgba(139,92,246,0.4)",
+              color: "hsl(263,90%,74%)",
+              boxShadow: "0 0 14px rgba(139,92,246,0.2)",
+            }}
+            whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(139,92,246,0.4)" } as any}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Code2 className="w-3 h-3" />
+            SCAFFOLD
+          </motion.button>
         </div>
       </header>
 
       <PresenceBar specId={spec.id} />
 
-      {shareData && (
-        <div className="print-hide bg-purple-500/10 border-b border-purple-500/20 px-6 py-2 flex items-center gap-3 text-xs font-mono">
-          <Share2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-          <span className="text-purple-300 shrink-0">Share link copied:</span>
-          <span className="text-muted-foreground truncate">{shareData.shareUrl}</span>
-          <button onClick={() => navigator.clipboard.writeText(shareData.shareUrl).then(() => toast({ title: "Copied!" }))} className="ml-auto text-purple-400 hover:text-purple-300 shrink-0">Copy again</button>
-          <button onClick={() => setShareData(null)} className="text-muted-foreground hover:text-foreground shrink-0">✕</button>
-        </div>
-      )}
+      <AnimatePresence>
+        {shareData && (
+          <motion.div
+            className="print-hide bg-purple-500/10 border-b border-purple-500/20 px-6 py-2 flex items-center gap-3 text-xs font-mono"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 35 }}
+          >
+            <Share2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+            <span className="text-purple-300 shrink-0">Share link copied:</span>
+            <span className="text-muted-foreground truncate">{shareData.shareUrl}</span>
+            <button onClick={() => navigator.clipboard.writeText(shareData.shareUrl).then(() => toast({ title: "Copied!" }))} className="ml-auto text-purple-400 hover:text-purple-300 shrink-0">Copy again</button>
+            <button onClick={() => setShareData(null)} className="text-muted-foreground hover:text-foreground shrink-0">✕</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {isSyncing && spec.status === "generating" && (
-        <div className="print-hide bg-green-500/10 border-b border-green-500/20 px-6 py-2 flex items-center gap-3 text-xs font-mono">
-          <Loader2 className="w-3.5 h-3.5 text-green-400 animate-spin shrink-0" />
-          <span className="text-green-300">Re-generating spec from source… this may take 30–60 seconds.</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {isSyncing && spec.status === "generating" && (
+          <motion.div
+            className="print-hide bg-green-500/10 border-b border-green-500/20 px-6 py-2 flex items-center gap-3 text-xs font-mono"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 35 }}
+          >
+            <Loader2 className="w-3.5 h-3.5 text-green-400 animate-spin shrink-0" />
+            <span className="text-green-300">Re-generating spec from source… this may take 30–60 seconds.</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {showWebhook && isGitHub && (
-        <div className="print-hide bg-blue-500/10 border-b border-blue-500/20 px-6 py-4">
-          <div className="max-w-3xl">
-            <div className="flex items-center gap-2 mb-3">
-              <Webhook className="w-4 h-4 text-blue-400" />
-              <span className="text-sm font-semibold text-blue-300 font-mono">GITHUB WEBHOOK SETUP</span>
-              <span className="text-xs text-muted-foreground ml-1">— auto-sync on every push</span>
-            </div>
-
-            {webhookLoading ? (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Generating webhook config…
+      <AnimatePresence>
+        {showWebhook && isGitHub && (
+          <motion.div
+            className="print-hide bg-blue-500/10 border-b border-blue-500/20 px-6 py-4"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 35 }}
+          >
+            <div className="max-w-3xl">
+              <div className="flex items-center gap-2 mb-3">
+                <Webhook className="w-4 h-4 text-blue-400" />
+                <span className="text-sm font-semibold text-blue-300 font-mono">GITHUB WEBHOOK SETUP</span>
+                <span className="text-xs text-muted-foreground ml-1">— auto-sync on every push</span>
               </div>
-            ) : webhookConfig ? (
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground font-mono mb-1.5">PAYLOAD URL</p>
-                    <div className="flex items-center gap-2">
-                      <code className="text-xs bg-black/40 border border-border rounded px-2.5 py-1.5 flex-1 truncate text-green-300 font-mono">
-                        {webhookConfig.webhookUrl}
-                      </code>
-                      <button
-                        onClick={() => copyField(webhookConfig.webhookUrl, "url")}
-                        className="shrink-0 p-1.5 rounded border border-border hover:bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {copiedField === "url" ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground font-mono mb-1.5">SECRET</p>
-                    <div className="flex items-center gap-2">
-                      <code className="text-xs bg-black/40 border border-border rounded px-2.5 py-1.5 flex-1 truncate text-yellow-300 font-mono">
-                        {webhookConfig.secret}
-                      </code>
-                      <button
-                        onClick={() => copyField(webhookConfig.secret, "secret")}
-                        className="shrink-0 p-1.5 rounded border border-border hover:bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {copiedField === "secret" ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
-                  </div>
+
+              {webhookLoading ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Generating webhook config…
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  <span className="text-blue-400 font-semibold">Setup:</span> In your GitHub repo → Settings → Webhooks → Add webhook. Set the Payload URL and Secret above, Content type: <code className="text-xs bg-black/30 px-1 rounded">application/json</code>, and trigger on <strong>push</strong> events. SpecForge will regenerate this doc on every commit.
-                </p>
-              </div>
-            ) : (
-              <p className="text-xs text-destructive">Failed to load webhook config.</p>
-            )}
-          </div>
-        </div>
-      )}
+              ) : webhookConfig ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground font-mono mb-1.5">PAYLOAD URL</p>
+                      <div className="flex items-center gap-2">
+                        <code className="text-xs bg-black/40 border border-border rounded px-2.5 py-1.5 flex-1 truncate text-green-300 font-mono">
+                          {webhookConfig.webhookUrl}
+                        </code>
+                        <button
+                          onClick={() => copyField(webhookConfig.webhookUrl, "url")}
+                          className="shrink-0 p-1.5 rounded border border-border hover:bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {copiedField === "url" ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground font-mono mb-1.5">SECRET</p>
+                      <div className="flex items-center gap-2">
+                        <code className="text-xs bg-black/40 border border-border rounded px-2.5 py-1.5 flex-1 truncate text-yellow-300 font-mono">
+                          {webhookConfig.secret}
+                        </code>
+                        <button
+                          onClick={() => copyField(webhookConfig.secret, "secret")}
+                          className="shrink-0 p-1.5 rounded border border-border hover:bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {copiedField === "secret" ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="text-blue-400 font-semibold">Setup:</span> In your GitHub repo → Settings → Webhooks → Add webhook. Set the Payload URL and Secret above, Content type: <code className="text-xs bg-black/30 px-1 rounded">application/json</code>, and trigger on <strong>push</strong> events. SpecForge will regenerate this doc on every commit.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-destructive">Failed to load webhook config.</p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="flex-1 p-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -581,6 +624,17 @@ export default function SpecDetail() {
           </div>
         </div>
       </div>
+
+      {/* Scaffold slide-over panel */}
+      <AnimatePresence>
+        {showScaffold && spec && (
+          <SpecScaffold
+            specId={spec.id}
+            specTitle={spec.title}
+            onClose={() => setShowScaffold(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

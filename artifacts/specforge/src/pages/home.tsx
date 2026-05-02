@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -172,14 +173,14 @@ export default function Home() {
               <div className="space-y-2.5">
                 <label className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest">Spec Type</label>
                 <div className="grid grid-cols-1 gap-1.5">
-                  {SPEC_TYPES.map((type) => {
+                  {SPEC_TYPES.map((type, idx) => {
                     const Icon = type.icon;
                     const active = specType === type.value;
                     return (
-                      <button
+                      <motion.button
                         key={type.value}
                         onClick={() => setSpecType(type.value)}
-                        className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 text-left group"
+                        className="flex items-center gap-3 p-3 rounded-lg cursor-pointer text-left group"
                         style={active ? {
                           background: type.gradient,
                           border: `1px solid ${type.border}`,
@@ -188,29 +189,44 @@ export default function Home() {
                           background: "rgba(255,255,255,0.02)",
                           border: "1px solid rgba(255,255,255,0.06)",
                         }}
+                        initial={{ opacity: 0, x: -12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.06 + idx * 0.06, type: "spring", stiffness: 380, damping: 30 }}
+                        whileHover={{ scale: 1.015, x: 2 }}
+                        whileTap={{ scale: 0.97 }}
                       >
-                        <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-all duration-200"
+                        <motion.div
+                          className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
                           style={active ? {
                             background: `${type.color}22`,
                             boxShadow: `0 0 8px ${type.glow}`,
                           } : {
                             background: "rgba(255,255,255,0.04)",
                           }}
+                          animate={active ? { scale: [1, 1.12, 1] } : {}}
+                          transition={{ duration: 0.3 }}
                         >
-                          <Icon className="w-3.5 h-3.5 transition-all duration-200"
+                          <Icon className="w-3.5 h-3.5"
                             style={{ color: active ? type.color : undefined }}
                           />
-                        </div>
+                        </motion.div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm" style={{ color: active ? type.color : undefined }}>{type.label}</p>
                           <p className="text-[10px] text-muted-foreground">{type.desc}</p>
                         </div>
-                        {active && (
-                          <div className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse"
-                            style={{ background: type.color }}
-                          />
-                        )}
-                      </button>
+                        <AnimatePresence>
+                          {active && (
+                            <motion.div
+                              className="w-1.5 h-1.5 rounded-full shrink-0"
+                              style={{ background: type.color }}
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0, opacity: 0 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                            />
+                          )}
+                        </AnimatePresence>
+                      </motion.button>
                     );
                   })}
                 </div>
@@ -296,13 +312,13 @@ export default function Home() {
                     { value: "gpt-5.1" as const, label: "GPT-5.1",          badge: "OpenAI",    color: "#34D399", dot: "rgba(52,211,153,0.8)"  },
                     { value: "gemini-2.5-pro" as const, label: "Gemini 2.5 Pro",  badge: "Google",    color: "#60A5FA", dot: "rgba(96,165,250,0.8)"  },
                     { value: "gemini-2.5-flash" as const, label: "Gemini 2.5 Flash", badge: "Google", color: "#60A5FA", dot: "rgba(96,165,250,0.8)"  },
-                  ] as const).map(({ value, label, badge, color, dot }) => {
+                  ] as const).map(({ value, label, badge, color, dot }, idx) => {
                     const active = aiModel === value;
                     return (
-                      <button
+                      <motion.button
                         key={value}
                         onClick={() => setAiModel(value)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all duration-200"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-left"
                         style={active ? {
                           background: `${color}14`,
                           border: `1px solid ${color}44`,
@@ -311,9 +327,17 @@ export default function Home() {
                           background: "rgba(255,255,255,0.02)",
                           border: "1px solid rgba(255,255,255,0.05)",
                         }}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.12 + idx * 0.05, type: "spring", stiffness: 380, damping: 30 }}
+                        whileHover={{ scale: 1.015, x: 2 }}
+                        whileTap={{ scale: 0.97 }}
                       >
-                        <div className="w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200"
+                        <motion.div
+                          className="w-1.5 h-1.5 rounded-full shrink-0"
                           style={{ background: active ? dot : "rgba(255,255,255,0.2)" }}
+                          animate={active ? { scale: [1, 1.4, 1] } : { scale: 1 }}
+                          transition={{ duration: 0.3 }}
                         />
                         <span className="text-sm font-medium flex-1" style={{ color: active ? color : undefined }}>{label}</span>
                         <span className="text-[10px] font-mono px-1.5 py-0.5 rounded"
@@ -327,29 +351,48 @@ export default function Home() {
                             border: "1px solid rgba(255,255,255,0.08)",
                           }}
                         >{badge}</span>
-                      </button>
+                      </motion.button>
                     );
                   })}
                 </div>
               </div>
 
-              <button
+              <motion.button
                 onClick={handleGenerate}
                 disabled={isGenerating || !inputValue.trim()}
-                className="w-full py-3 px-4 rounded-lg font-mono font-bold text-sm text-white tracking-wide disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 btn-gradient"
+                className="w-full py-3 px-4 rounded-lg font-mono font-bold text-sm text-white tracking-wide disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-gradient"
+                whileHover={!isGenerating ? { scale: 1.02, boxShadow: "0 0 32px rgba(139,92,246,0.5)" } as any : {}}
+                whileTap={!isGenerating ? { scale: 0.97 } : {}}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
               >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    GENERATING…
-                  </>
-                ) : (
-                  <>
-                    <Terminal className="w-4 h-4" />
-                    GENERATE SPEC
-                  </>
-                )}
-              </button>
+                <AnimatePresence mode="wait">
+                  {isGenerating ? (
+                    <motion.span
+                      key="generating"
+                      className="flex items-center gap-2"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      GENERATING…
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="idle"
+                      className="flex items-center gap-2"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <Terminal className="w-4 h-4" />
+                      GENERATE SPEC
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
             </div>
 
             <div className="animate-slide-up" style={{ animationDelay: "0.1s" }}>
