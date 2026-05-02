@@ -13,7 +13,7 @@ import {
   ArrowLeft, Copy, Download, Server, Cpu, Database, BookOpen,
   Github, FileText, Clock, Terminal, FileCode2, Network, Bot,
   Share2, Printer, Eye, Loader2, RefreshCw, Webhook, ChevronDown, ChevronUp, Check,
-  Sparkles, History,
+  Sparkles, History, Users, Shield,
 } from "lucide-react";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
 import { ComplexityScoreCard } from "@/components/complexity-score-card";
@@ -95,6 +95,70 @@ export default function SpecDetail() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    }
+  };
+
+  const [isExportingDocx, setIsExportingDocx] = useState(false);
+
+  // Team assignment
+  const [userTeams, setUserTeams] = useState<Array<{ id: number; name: string; role: string }>>([]);
+  const [assigningTeam, setAssigningTeam] = useState(false);
+  const [currentTeamId, setCurrentTeamId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!spec?.id) return;
+    setCurrentTeamId((spec as any).teamId ?? null);
+  }, [spec?.id]);
+
+  useEffect(() => {
+    fetch("/api/teams")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.teams) setUserTeams(d.teams); })
+      .catch(() => {});
+  }, []);
+
+  const handleAssignTeam = async (teamId: number | null) => {
+    if (!spec) return;
+    setAssigningTeam(true);
+    try {
+      if (teamId === null) {
+        // Remove from current team
+        if (currentTeamId) {
+          await fetch(`/api/teams/${currentTeamId}/specs/${spec.id}`, { method: "DELETE" });
+        }
+        setCurrentTeamId(null);
+        toast({ title: "Removed from team" });
+      } else {
+        await fetch(`/api/teams/${teamId}/specs/${spec.id}`, { method: "POST" });
+        setCurrentTeamId(teamId);
+        toast({ title: "Assigned to team!" });
+      }
+    } catch {
+      toast({ title: "Failed to update team assignment", variant: "destructive" });
+    } finally {
+      setAssigningTeam(false);
+    }
+  };
+  const handleDownloadDocx = async () => {
+    if (!spec) return;
+    setIsExportingDocx(true);
+    try {
+      const res = await fetch(`/api/specs/${spec.id}/export/docx`);
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${spec.title.toLowerCase().replace(/\s+/g, "-")}-spec.docx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: "Word document downloaded!" });
+    } catch {
+      toast({ title: "DOCX export failed", variant: "destructive" });
+    } finally {
+      setIsExportingDocx(false);
     }
   };
 
@@ -264,7 +328,11 @@ export default function SpecDetail() {
           </Button>
           <Button variant="outline" size="sm" onClick={handlePrint} className="font-mono text-xs"><Printer className="w-3 h-3 mr-2" />PDF</Button>
           <Button variant="outline" size="sm" onClick={handleCopy} className="font-mono text-xs"><Copy className="w-3 h-3 mr-2" />COPY</Button>
-          <Button size="sm" onClick={handleDownload} className="font-mono text-xs"><Download className="w-3 h-3 mr-2" />.MD</Button>
+          <Button variant="outline" size="sm" onClick={handleDownload} className="font-mono text-xs"><Download className="w-3 h-3 mr-2" />.MD</Button>
+          <Button size="sm" onClick={handleDownloadDocx} disabled={isExportingDocx} className="font-mono text-xs">
+            {isExportingDocx ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <FileCode2 className="w-3 h-3 mr-2" />}
+            .DOCX
+          </Button>
         </div>
       </header>
 
@@ -423,7 +491,70 @@ export default function SpecDetail() {
                   specId={spec.id}
                   versions={versions}
                   loading={versionsLoading}
+                  currentContent={spec.content}
                 />
+              </div>
+            </Card>
+
+            {/* Team assignment */}
+            <Card className="border-border bg-card overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3"
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <Users className="w-3.5 h-3.5" style={{ color: "#06B6D4" }} />
+                <h3 className="text-xs font-mono font-bold text-foreground flex-1">Team Workspace</h3>
+                {assigningTeam && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+              </div>
+              <div className="p-3">
+                {userTeams.length === 0 ? (
+                  <p className="text-[10px] text-muted-foreground font-mono opacity-60 text-center py-2">
+                    No teams yet.{" "}
+                    <a href="/app/teams" className="underline hover:text-foreground">Create one</a>
+                  </p>
+                ) : (
+                  <div className="space-y-1">
+                    {currentTeamId && (
+                      <div className="flex items-center gap-2 mb-2 px-2 py-1.5 rounded-lg text-[10px] font-mono"
+                        style={{ background: "rgba(6,182,212,0.1)", border: "1px solid rgba(6,182,212,0.2)", color: "#06B6D4" }}
+                      >
+                        <Shield className="w-3 h-3 shrink-0" />
+                        <span className="flex-1 truncate">
+                          {userTeams.find(t => t.id === currentTeamId)?.name ?? "Team"}
+                        </span>
+                        <button
+                          onClick={() => handleAssignTeam(null)}
+                          className="opacity-60 hover:opacity-100 transition-opacity"
+                          title="Remove from team"
+                        >✕</button>
+                      </div>
+                    )}
+                    <p className="text-[9px] text-muted-foreground font-mono mb-1.5 opacity-60">
+                      {currentTeamId ? "MOVE TO DIFFERENT TEAM" : "ASSIGN TO TEAM"}
+                    </p>
+                    {userTeams
+                      .filter(t => t.id !== currentTeamId && t.role !== "viewer")
+                      .map(team => (
+                        <button
+                          key={team.id}
+                          onClick={() => handleAssignTeam(team.id)}
+                          disabled={assigningTeam}
+                          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-colors group disabled:opacity-50"
+                          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(6,182,212,0.08)"; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
+                        >
+                          <Shield className="w-3 h-3 text-muted-foreground group-hover:text-cyan-400 shrink-0" />
+                          <span className="text-[10px] font-mono truncate">{team.name}</span>
+                        </button>
+                      ))
+                    }
+                    {userTeams.filter(t => t.id !== currentTeamId && t.role !== "viewer").length === 0 && !currentTeamId && (
+                      <p className="text-[10px] text-muted-foreground font-mono opacity-40 text-center py-1">
+                        You need editor+ role to assign specs.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </Card>
 

@@ -10,7 +10,7 @@ AI-powered technical design document generator for students and hackathon builde
 - **Frontend**: React + Vite + Tailwind CSS + shadcn/ui (artifact: `specforge`)
 - **Backend**: Express 5 + Node.js 24 (artifact: `api-server`)
 - **Database**: PostgreSQL + Drizzle ORM (`lib/db`)
-- **AI**: Claude Sonnet via Anthropic (`lib/integrations-anthropic-ai`)
+- **AI**: Claude Sonnet, GPT-5.x (OpenAI), Gemini 2.5 (Google) — via Replit AI integrations (`lib/integrations-anthropic-ai`, `lib/integrations-openai-ai-server`, `lib/integrations-gemini-ai`)
 - **Auth**: Replit Auth (OIDC + PKCE, sessions in DB) (`lib/replit-auth-web`)
 - **API contracts**: OpenAPI → Orval codegen → React Query hooks + Zod schemas
 - **Validation**: Zod (v4 in DB/server, inline in auth routes)
@@ -28,7 +28,10 @@ AI-powered technical design document generator for students and hackathon builde
 9. **Real-time Presence** — SSE-based live viewer tracking per spec; shows colored avatar bar when 2+ people view simultaneously (`PresenceBar` component)
 10. **Intelligent Insights** — Claude-powered spec health analysis: completeness score, strengths, missing areas, improvement suggestions, estimated implementation days (`SpecInsights` tab)
 11. **In-app Notifications** — SSE real-time notification stream; bell icon in sidebar with unread badge; `sync_complete` / `sync_failed` / `share_viewed` types; mark read / mark all read (`NotificationBell` component)
-12. **Version History** — Every successful generation is snapshotted into `spec_versions` table; timeline panel in the spec detail sidebar lists all versions with trigger source (Initial / Manual Sync / GitHub Push) and complexity score; click any version to open full markdown preview in a modal (`SpecVersionHistory` component)
+12. **Version History** — Every successful generation is snapshotted into `spec_versions` table; timeline panel in the spec detail sidebar lists all versions with trigger source (Initial / Manual Sync / GitHub Push) and complexity score; click any version to open full markdown preview in a modal with a **Changes** tab showing color-coded diff (`SpecVersionHistory` component)
+13. **DOCX Export** — Full Markdown→DOCX converter via `docx` package; `.DOCX` button on spec-detail toolbar downloads a formatted Word document
+14. **Team Workspaces** — `teams` + `team_members` tables; full CRUD via `/api/teams`; Teams page + Team Detail page; specs can be assigned to teams
+15. **Multi-model AI** — Model selector on Generator page lets users pick Claude Sonnet (Anthropic), GPT-5.4 / GPT-5.1 (OpenAI), or Gemini 2.5 Pro / Flash (Google); selection stored on spec row as `aiModel`; model-router (`lib/model-router.ts`) abstracts streaming + completion across all providers
 
 ## Routes
 
@@ -65,7 +68,7 @@ AI-powered technical design document generator for students and hackathon builde
 
 ## DB Schema
 
-- `specs` — main table (specType, inputType, inputValue, content, status, complexityScore, techDebtRisks, mermaidDiagram, shareToken, viewCount, webhookSecret, lastSyncedAt)
+- `specs` — main table (specType, inputType, inputValue, content, status, complexityScore, techDebtRisks, mermaidDiagram, shareToken, viewCount, webhookSecret, lastSyncedAt, aiModel, teamId)
 - `conversations` + `messages` — AI chat history
 - `sessions` — auth sessions (Replit Auth)
 - `users` — authenticated users (Replit Auth)
@@ -82,7 +85,10 @@ pnpm --filter @workspace/db run push       # push DB schema changes
 ## Important Notes
 
 - Anthropic env vars: `AI_INTEGRATIONS_ANTHROPIC_BASE_URL`, `AI_INTEGRATIONS_ANTHROPIC_API_KEY`
-- Model: `claude-sonnet-4-6`
+- OpenAI env vars: `AI_INTEGRATIONS_OPENAI_BASE_URL`, `AI_INTEGRATIONS_OPENAI_API_KEY`
+- Gemini env vars: `AI_INTEGRATIONS_GEMINI_BASE_URL`, `AI_INTEGRATIONS_GEMINI_API_KEY`
+- Default model: `claude-sonnet-4-6`; model-router in `artifacts/api-server/src/lib/model-router.ts`
+- `@google/genai` and `openai` added as direct api-server deps (not externalized by esbuild) so they bundle correctly
 - Auth middleware runs on every request via `authMiddleware.ts` — loads user from session
 - `replit-auth-web` lib has composite TS config; must reference it from root `tsconfig.json`
 - `@workspace/api-zod` doesn't generate schemas for redirect-only auth endpoints — those are defined inline in `routes/auth.ts`

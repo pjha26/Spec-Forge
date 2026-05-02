@@ -8,6 +8,8 @@ import presenceRouter from "./presence";
 import insightsRouter from "./insights";
 import notificationsRouter from "./notifications";
 import versionsRouter from "./versions";
+import exportRouter from "./export";
+import teamsRouter from "./teams";
 
 const router: IRouter = Router();
 
@@ -15,6 +17,8 @@ router.use(healthRouter);
 router.use(authRouter);
 router.use("/specs", specsRouter);
 router.use("/specs", versionsRouter);
+router.use("/specs", exportRouter);
+router.use("/teams", teamsRouter);
 router.use("/anthropic", anthropicRouter);
 router.use(webhooksRouter);
 router.use(presenceRouter);

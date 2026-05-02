@@ -62,6 +62,13 @@ export const CreateSpecBody = zod.object({
   inputType: zod.enum(["github_url", "description"]),
   inputValue: zod.string(),
   title: zod.string(),
+  aiModel: zod.enum([
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gpt-5.1",
+    "gemini-2.5-pro",
+    "gemini-2.5-flash",
+  ]).optional(),
 });
 
 /**

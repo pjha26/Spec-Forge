@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from "express";
 import { db, specsTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
+import { streamCompletion, generateCompletion, isValidModel, type SupportedModel } from "../lib/model-router.js";
 import { db as dbClient, conversations as conversationsTable } from "@workspace/db";
 import { randomBytes, createHmac, timingSafeEqual } from "crypto";
 import { createNotification } from "./notifications";
@@ -48,15 +49,13 @@ async function runSpecGeneration(specId: number, userId?: string): Promise<void>
       ? `Generate a ${spec.specType.replace(/_/g, " ")} for this GitHub repository: ${spec.inputValue}\n\nAnalyze the repository URL and make reasonable assumptions about the project based on the URL structure and naming. Create a detailed, professional document.`
       : `Generate a ${spec.specType.replace(/_/g, " ")} for this project:\n\n${spec.inputValue}\n\nCreate a detailed, professional document based on this description.`;
 
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 8192,
+    const modelToUse = isValidModel(spec.aiModel) ? spec.aiModel : "claude-sonnet-4-6";
+    const fullContent = await generateCompletion({
+      model: modelToUse,
       system: systemPrompt,
-      messages: [{ role: "user", content: userMessage }],
+      userMessage,
+      maxTokens: 8192,
     });
-
-    const block = message.content[0];
-    const fullContent = block.type === "text" ? block.text : "";
 
     const [analysis, diagram] = await Promise.allSettled([
       generateComplexityAnalysis(fullContent, spec.specType),
@@ -419,7 +418,7 @@ router.post("/", async (req, res) => {
     return;
   }
 
-  const { title, specType, inputType, inputValue } = parsed.data;
+  const { title, specType, inputType, inputValue, aiModel } = parsed.data;
 
   try {
     const [spec] = await db
@@ -431,6 +430,7 @@ router.post("/", async (req, res) => {
         inputValue,
         content: "",
         status: "pending",
+        ...(aiModel ? { aiModel } : {}),
       })
       .returning();
 
@@ -678,21 +678,16 @@ router.post("/:id/stream", async (req, res) => {
 
     let fullContent = "";
 
-    const stream = anthropic.messages.stream({
-      model: "claude-sonnet-4-6",
-      max_tokens: 8192,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userMessage }],
-    });
+    const modelToUse = isValidModel(spec.aiModel) ? spec.aiModel : "claude-sonnet-4-6";
 
-    for await (const event of stream) {
-      if (
-        event.type === "content_block_delta" &&
-        event.delta.type === "text_delta"
-      ) {
-        fullContent += event.delta.text;
-        res.write(`data: ${JSON.stringify({ content: event.delta.text })}\n\n`);
-      }
+    for await (const chunk of streamCompletion({
+      model: modelToUse,
+      system: systemPrompt,
+      userMessage,
+      maxTokens: 8192,
+    })) {
+      fullContent += chunk;
+      res.write(`data: ${JSON.stringify({ content: chunk })}\n\n`);
     }
 
     await db

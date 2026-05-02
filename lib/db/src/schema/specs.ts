@@ -23,6 +23,8 @@ export const specsTable = pgTable("specs", {
   viewCount: integer("view_count").notNull().default(0),
   webhookSecret: text("webhook_secret"),
   lastSyncedAt: timestamp("last_synced_at"),
+  teamId: integer("team_id"),
+  aiModel: text("ai_model").notNull().default("claude-sonnet-4-6"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => [

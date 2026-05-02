@@ -10,6 +10,8 @@ import SpecsList from "@/pages/specs";
 import SpecDetail from "@/pages/spec-detail";
 import Landing from "@/pages/landing";
 import SharedSpec from "@/pages/shared-spec";
+import TeamsPage from "@/pages/teams";
+import TeamDetail from "@/pages/team-detail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +45,20 @@ function Router() {
         {() => (
           <Layout>
             <SpecsList />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/app/teams/:id">
+        {() => (
+          <Layout>
+            <TeamDetail />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/app/teams">
+        {() => (
+          <Layout>
+            <TeamsPage />
           </Layout>
         )}
       </Route>
