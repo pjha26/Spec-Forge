@@ -1,7 +1,7 @@
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Zap, FileCode2, History, Bot, LogIn, LogOut, User, Sparkles } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import { Zap, FileCode2, History, LogIn, LogOut, User, Sparkles } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -16,6 +16,8 @@ import { useAuth } from "@workspace/replit-auth-web";
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
+  const [aiOpen, setAiOpen] = useState(false);
+  const [justOpened, setJustOpened] = useState(false);
 
   const initials = user
     ? [user.firstName, user.lastName]
@@ -25,6 +27,32 @@ export function Layout({ children }: { children: React.ReactNode }) {
         .toUpperCase() || "U"
     : "?";
 
+  const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        const tag = (e.target as HTMLElement).tagName.toLowerCase();
+        if (tag === "input" || tag === "textarea" || (e.target as HTMLElement).isContentEditable) return;
+        e.preventDefault();
+        setAiOpen(prev => {
+          if (!prev) setJustOpened(true);
+          return !prev;
+        });
+      }
+      if (e.key === "Escape") setAiOpen(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  useEffect(() => {
+    if (justOpened) {
+      const t = setTimeout(() => setJustOpened(false), 600);
+      return () => clearTimeout(t);
+    }
+  }, [justOpened]);
+
   const navItems = [
     { href: "/app", label: "Generator", icon: FileCode2, exact: true },
     { href: "/app/specs", label: "History", icon: History, exact: false },
@@ -32,6 +60,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
+      {/* ─── Global Cmd+K Toast ─────────────────────────────────── */}
+      <div
+        className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] transition-all duration-300 pointer-events-none"
+        style={{
+          opacity: justOpened ? 1 : 0,
+          transform: `translateX(-50%) translateY(${justOpened ? "0px" : "-8px"})`,
+        }}
+      >
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono"
+          style={{
+            background: "rgba(139,92,246,0.9)",
+            backdropFilter: "blur(12px)",
+            boxShadow: "0 4px 24px rgba(139,92,246,0.4)",
+            color: "white",
+          }}
+        >
+          <Sparkles className="w-3 h-3" />
+          AI Assistant opened
+        </div>
+      </div>
+
       <aside className="w-full md:w-64 flex flex-col relative overflow-hidden"
         style={{
           background: "linear-gradient(180deg, hsl(240,14%,6%) 0%, hsl(240,12%,5%) 100%)",
@@ -44,6 +93,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           />
         </div>
 
+        {/* Logo */}
         <div className="p-5 flex items-center gap-3 relative"
           style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
         >
@@ -70,6 +120,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
+        {/* Nav */}
         <nav className="flex-1 p-3 space-y-1 pt-4">
           {navItems.map(({ href, label, icon: Icon, exact }) => {
             const active = exact ? location === href : location.startsWith(href);
@@ -105,32 +156,35 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
+        {/* AI Assistant button */}
         <div className="p-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-          <Sheet>
-            <SheetTrigger asChild>
-              <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-mono text-xs relative overflow-hidden group transition-all duration-200"
-                style={{
-                  background: "linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(6,182,212,0.08) 100%)",
-                  border: "1px solid rgba(139,92,246,0.25)",
-                  color: "hsl(263,90%,74%)",
-                  boxShadow: "0 0 12px rgba(139,92,246,0.1)",
-                }}
-              >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                  style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(6,182,212,0.12) 100%)" }}
-                />
-                <Sparkles className="w-3.5 h-3.5 relative z-10" />
-                <span className="relative z-10 font-bold tracking-wide">AI ASSISTANT</span>
-              </button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:max-w-md p-0 bg-background border-l border-border flex flex-col">
-              <div className="flex-1 p-4 overflow-hidden">
-                <AIChat />
-              </div>
-            </SheetContent>
-          </Sheet>
+          <button
+            onClick={() => setAiOpen(true)}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-mono text-xs relative overflow-hidden group transition-all duration-200"
+            style={{
+              background: aiOpen
+                ? "linear-gradient(135deg, rgba(139,92,246,0.25) 0%, rgba(6,182,212,0.15) 100%)"
+                : "linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(6,182,212,0.08) 100%)",
+              border: aiOpen ? "1px solid rgba(139,92,246,0.5)" : "1px solid rgba(139,92,246,0.25)",
+              color: "hsl(263,90%,74%)",
+              boxShadow: aiOpen ? "0 0 20px rgba(139,92,246,0.25)" : "0 0 12px rgba(139,92,246,0.1)",
+            }}
+          >
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(6,182,212,0.12) 100%)" }}
+            />
+            <Sparkles className="w-3.5 h-3.5 relative z-10 shrink-0" />
+            <span className="relative z-10 font-bold tracking-wide flex-1">AI ASSISTANT</span>
+            <kbd className="relative z-10 flex items-center gap-0.5 opacity-60 shrink-0"
+              style={{ fontSize: "9px", letterSpacing: "0.02em" }}
+            >
+              <span className="text-[10px]">{isMac ? "⌘" : "Ctrl"}</span>
+              <span>K</span>
+            </kbd>
+          </button>
         </div>
 
+        {/* User section */}
         <div className="p-3 pt-0">
           {isLoading ? (
             <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg"
@@ -196,13 +250,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
+      {/* ─── AI Assistant Sheet ──────────────────────────────────── */}
+      <Sheet open={aiOpen} onOpenChange={setAiOpen}>
+        <SheetContent
+          side="right"
+          className="p-0 flex flex-col"
+          style={{
+            width: "min(440px, 100vw)",
+            background: "rgba(8,8,14,0.97)",
+            borderLeft: "1px solid rgba(139,92,246,0.2)",
+            boxShadow: "-8px 0 48px rgba(139,92,246,0.12)",
+          }}
+        >
+          <AIChat />
+        </SheetContent>
+      </Sheet>
+
+      {/* ─── Main content ───────────────────────────────────────── */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0 line-grid-bg opacity-40" />
-          <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full pointer-events-none"
+          <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full"
             style={{ background: "radial-gradient(circle, rgba(139,92,246,0.04) 0%, transparent 70%)" }}
           />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full pointer-events-none"
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full"
             style={{ background: "radial-gradient(circle, rgba(6,182,212,0.03) 0%, transparent 70%)" }}
           />
         </div>
