@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Zap, FileCode2, History, LogIn, LogOut, User, Sparkles } from "lucide-react";
+import { Zap, FileCode2, History, LogIn, LogOut, User, Sparkles, Server, Code2, Database, BookOpen, ChevronRight } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -12,12 +12,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AIChat } from "@/components/ai-chat";
 import { useAuth } from "@workspace/replit-auth-web";
+import { useListSpecs } from "@workspace/api-client-react";
+
+const SPEC_TYPE_META: Record<string, { color: string; Icon: React.ComponentType<{ className?: string }> }> = {
+  "System Design": { color: "#7C3AED", Icon: Server },
+  "API Design":    { color: "#06B6D4", Icon: Code2 },
+  "Database Schema": { color: "#10B981", Icon: Database },
+  "Feature Spec":  { color: "#F59E0B", Icon: BookOpen },
+};
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
   const [aiOpen, setAiOpen] = useState(false);
   const [justOpened, setJustOpened] = useState(false);
+  const { data: specs } = useListSpecs();
+  const recentSpecs = (specs ?? []).slice(0, 4);
 
   const initials = user
     ? [user.firstName, user.lastName]
@@ -123,7 +133,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </Link>
 
         {/* Nav */}
-        <nav className="flex-1 p-3 space-y-1 pt-4">
+        <nav className="flex-1 p-3 space-y-1 pt-4 flex flex-col min-h-0">
           {navItems.map(({ href, label, icon: Icon, exact }) => {
             const active = exact ? location === href : location.startsWith(href);
             return (
@@ -156,6 +166,58 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
+
+          {/* Recent specs */}
+          {recentSpecs.length > 0 && (
+            <div className="pt-4">
+              <div className="flex items-center justify-between px-3 mb-1.5">
+                <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-muted-foreground opacity-60">
+                  Recent
+                </span>
+                <Link href="/app/specs">
+                  <span className="text-[9px] font-mono text-muted-foreground opacity-50 hover:opacity-100 hover:text-violet-400 transition-all duration-150 cursor-pointer flex items-center gap-0.5">
+                    all <ChevronRight className="w-2.5 h-2.5" />
+                  </span>
+                </Link>
+              </div>
+              <div className="space-y-0.5">
+                {recentSpecs.map((spec) => {
+                  const meta = SPEC_TYPE_META[spec.specType] ?? SPEC_TYPE_META["System Design"];
+                  const { Icon: SpecIcon, color } = meta;
+                  const active = location === `/app/specs/${spec.id}`;
+                  return (
+                    <Link key={spec.id} href={`/app/specs/${spec.id}`}>
+                      <div
+                        className="group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all duration-150"
+                        style={active ? {
+                          background: `rgba(${color === "#7C3AED" ? "124,58,237" : color === "#06B6D4" ? "6,182,212" : color === "#10B981" ? "16,185,129" : "245,158,11"},0.12)`,
+                          border: `1px solid ${color}33`,
+                        } : {
+                          background: "transparent",
+                          border: "1px solid transparent",
+                        }}
+                        onMouseEnter={e => {
+                          if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                        }}
+                        onMouseLeave={e => {
+                          if (!active) e.currentTarget.style.background = "transparent";
+                        }}
+                      >
+                        <div className="w-4 h-4 rounded flex items-center justify-center shrink-0"
+                          style={{ background: `${color}22` }}
+                        >
+                          <SpecIcon className="w-2.5 h-2.5" style={{ color }} />
+                        </div>
+                        <span className="text-[11px] text-muted-foreground group-hover:text-foreground transition-colors duration-150 truncate flex-1 leading-tight">
+                          {spec.title}
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </nav>
 
         {/* AI Assistant button */}
