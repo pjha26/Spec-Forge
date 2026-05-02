@@ -28,6 +28,7 @@ AI-powered technical design document generator for students and hackathon builde
 9. **Real-time Presence** — SSE-based live viewer tracking per spec; shows colored avatar bar when 2+ people view simultaneously (`PresenceBar` component)
 10. **Intelligent Insights** — Claude-powered spec health analysis: completeness score, strengths, missing areas, improvement suggestions, estimated implementation days (`SpecInsights` tab)
 11. **In-app Notifications** — SSE real-time notification stream; bell icon in sidebar with unread badge; `sync_complete` / `sync_failed` / `share_viewed` types; mark read / mark all read (`NotificationBell` component)
+12. **Version History** — Every successful generation is snapshotted into `spec_versions` table; timeline panel in the spec detail sidebar lists all versions with trigger source (Initial / Manual Sync / GitHub Push) and complexity score; click any version to open full markdown preview in a modal (`SpecVersionHistory` component)
 
 ## Routes
 

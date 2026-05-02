@@ -5,6 +5,7 @@ import { anthropic } from "@workspace/integrations-anthropic-ai";
 import { db as dbClient, conversations as conversationsTable } from "@workspace/db";
 import { randomBytes, createHmac, timingSafeEqual } from "crypto";
 import { createNotification } from "./notifications";
+import { saveSpecVersion } from "./versions";
 import {
   CreateSpecBody,
   GetSpecParams,
@@ -72,6 +73,15 @@ async function runSpecGeneration(specId: number, userId?: string): Promise<void>
       lastSyncedAt: new Date(),
       updatedAt: new Date(),
     }).where(eq(specsTable.id, specId));
+
+    await saveSpecVersion(specId, {
+      content: fullContent,
+      complexityScore: analysis.status === "fulfilled" ? analysis.value?.score ?? null : null,
+      techDebtRisks: analysis.status === "fulfilled" ? analysis.value?.risks ?? null : null,
+      complexitySummary: analysis.status === "fulfilled" ? analysis.value?.summary ?? null : null,
+      mermaidDiagram: diagram.status === "fulfilled" ? diagram.value ?? null : null,
+      triggeredBy: "manual",
+    });
 
     if (userId) {
       await createNotification(userId, {
@@ -721,6 +731,15 @@ router.post("/:id/stream", async (req, res) => {
         updatedAt: new Date(),
       })
       .where(eq(specsTable.id, spec.id));
+
+    saveSpecVersion(spec.id, {
+      content: fullContent,
+      complexityScore: analysisData?.score ?? null,
+      techDebtRisks: analysisData?.risks ?? null,
+      complexitySummary: analysisData?.summary ?? null,
+      mermaidDiagram: diagramData ?? null,
+      triggeredBy: "initial",
+    }).catch(() => {});
 
     res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     res.end();

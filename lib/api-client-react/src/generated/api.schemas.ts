@@ -186,6 +186,44 @@ export interface WebhookConfigResponse {
   instructions: string;
 }
 
+export type SpecVersionMetaTriggeredBy =
+  (typeof SpecVersionMetaTriggeredBy)[keyof typeof SpecVersionMetaTriggeredBy];
+
+export const SpecVersionMetaTriggeredBy = {
+  initial: "initial",
+  manual: "manual",
+  github_webhook: "github_webhook",
+} as const;
+
+export interface SpecVersionMeta {
+  id: number;
+  specId: number;
+  complexityScore?: number | null;
+  triggeredBy: SpecVersionMetaTriggeredBy;
+  createdAt: string;
+}
+
+export type SpecVersionTriggeredBy =
+  (typeof SpecVersionTriggeredBy)[keyof typeof SpecVersionTriggeredBy];
+
+export const SpecVersionTriggeredBy = {
+  initial: "initial",
+  manual: "manual",
+  github_webhook: "github_webhook",
+} as const;
+
+export interface SpecVersion {
+  id: number;
+  specId: number;
+  content: string;
+  complexityScore?: number | null;
+  techDebtRisks?: string | null;
+  complexitySummary?: string | null;
+  mermaidDiagram?: string | null;
+  triggeredBy: SpecVersionTriggeredBy;
+  createdAt: string;
+}
+
 export interface SuccessResponse {
   success: boolean;
 }
@@ -247,4 +285,8 @@ export type LoginParams = {
 
 export type GithubWebhook200 = {
   processed: number;
+};
+
+export type ListSpecVersions200 = {
+  versions: SpecVersionMeta[];
 };

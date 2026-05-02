@@ -7,12 +7,14 @@ import webhooksRouter from "./webhooks";
 import presenceRouter from "./presence";
 import insightsRouter from "./insights";
 import notificationsRouter from "./notifications";
+import versionsRouter from "./versions";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
 router.use("/specs", specsRouter);
+router.use("/specs", versionsRouter);
 router.use("/anthropic", anthropicRouter);
 router.use(webhooksRouter);
 router.use(presenceRouter);

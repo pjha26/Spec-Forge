@@ -253,6 +253,45 @@ export const GithubWebhookResponse = zod.object({
 });
 
 /**
+ * @summary List saved versions of a spec
+ */
+export const ListSpecVersionsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ListSpecVersionsResponse = zod.object({
+  versions: zod.array(
+    zod.object({
+      id: zod.number(),
+      specId: zod.number(),
+      complexityScore: zod.number().nullish(),
+      triggeredBy: zod.enum(["initial", "manual", "github_webhook"]),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Get full content of a specific version
+ */
+export const GetSpecVersionParams = zod.object({
+  id: zod.coerce.number(),
+  versionId: zod.coerce.number(),
+});
+
+export const GetSpecVersionResponse = zod.object({
+  id: zod.number(),
+  specId: zod.number(),
+  content: zod.string(),
+  complexityScore: zod.number().nullish(),
+  techDebtRisks: zod.string().nullish(),
+  complexitySummary: zod.string().nullish(),
+  mermaidDiagram: zod.string().nullish(),
+  triggeredBy: zod.enum(["initial", "manual", "github_webhook"]),
+  createdAt: zod.coerce.date(),
+});
+
+/**
  * @summary Subscribe to real-time viewer presence for a spec (SSE)
  */
 export const GetSpecPresenceParams = zod.object({

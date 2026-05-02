@@ -29,6 +29,7 @@ import type {
   GetCurrentAuthUserResponse,
   GithubWebhook200,
   HealthStatus,
+  ListSpecVersions200,
   LoginParams,
   LogoutMobileSessionResponse,
   NotificationListResponse,
@@ -37,6 +38,7 @@ import type {
   ShareSpecResponse,
   Spec,
   SpecInsightsResponse,
+  SpecVersion,
   SuccessResponse,
   SyncSpecResponse,
   WebhookConfigResponse,
@@ -1414,6 +1416,184 @@ export const useGithubWebhook = <
 > => {
   return useMutation(getGithubWebhookMutationOptions(options));
 };
+
+/**
+ * @summary List saved versions of a spec
+ */
+export const getListSpecVersionsUrl = (id: number) => {
+  return `/api/specs/${id}/versions`;
+};
+
+export const listSpecVersions = async (
+  id: number,
+  options?: RequestInit,
+): Promise<ListSpecVersions200> => {
+  return customFetch<ListSpecVersions200>(getListSpecVersionsUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSpecVersionsQueryKey = (id: number) => {
+  return [`/api/specs/${id}/versions`] as const;
+};
+
+export const getListSpecVersionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSpecVersions>>,
+  TError = ErrorType<ApiError>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listSpecVersions>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSpecVersionsQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listSpecVersions>>
+  > = ({ signal }) => listSpecVersions(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listSpecVersions>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListSpecVersionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSpecVersions>>
+>;
+export type ListSpecVersionsQueryError = ErrorType<ApiError>;
+
+/**
+ * @summary List saved versions of a spec
+ */
+
+export function useListSpecVersions<
+  TData = Awaited<ReturnType<typeof listSpecVersions>>,
+  TError = ErrorType<ApiError>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listSpecVersions>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListSpecVersionsQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get full content of a specific version
+ */
+export const getGetSpecVersionUrl = (id: number, versionId: number) => {
+  return `/api/specs/${id}/versions/${versionId}`;
+};
+
+export const getSpecVersion = async (
+  id: number,
+  versionId: number,
+  options?: RequestInit,
+): Promise<SpecVersion> => {
+  return customFetch<SpecVersion>(getGetSpecVersionUrl(id, versionId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSpecVersionQueryKey = (id: number, versionId: number) => {
+  return [`/api/specs/${id}/versions/${versionId}`] as const;
+};
+
+export const getGetSpecVersionQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSpecVersion>>,
+  TError = ErrorType<ApiError>,
+>(
+  id: number,
+  versionId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSpecVersion>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetSpecVersionQueryKey(id, versionId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSpecVersion>>> = ({
+    signal,
+  }) => getSpecVersion(id, versionId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(id && versionId),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSpecVersion>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSpecVersionQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSpecVersion>>
+>;
+export type GetSpecVersionQueryError = ErrorType<ApiError>;
+
+/**
+ * @summary Get full content of a specific version
+ */
+
+export function useGetSpecVersion<
+  TData = Awaited<ReturnType<typeof getSpecVersion>>,
+  TError = ErrorType<ApiError>,
+>(
+  id: number,
+  versionId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSpecVersion>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSpecVersionQueryOptions(id, versionId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Subscribe to real-time viewer presence for a spec (SSE)

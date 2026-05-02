@@ -13,13 +13,14 @@ import {
   ArrowLeft, Copy, Download, Server, Cpu, Database, BookOpen,
   Github, FileText, Clock, Terminal, FileCode2, Network, Bot,
   Share2, Printer, Eye, Loader2, RefreshCw, Webhook, ChevronDown, ChevronUp, Check,
-  Sparkles,
+  Sparkles, History,
 } from "lucide-react";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
 import { ComplexityScoreCard } from "@/components/complexity-score-card";
 import { SpecChat } from "@/components/spec-chat";
 import { PresenceBar } from "@/components/presence-bar";
 import { SpecInsights } from "@/components/spec-insights";
+import { SpecVersionHistory } from "@/components/spec-version-history";
 
 export default function SpecDetail() {
   const { id } = useParams();
@@ -35,6 +36,11 @@ export default function SpecDetail() {
   const [webhookLoading, setWebhookLoading] = useState(false);
   const [copiedField, setCopiedField] = useState<"url" | "secret" | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [versions, setVersions] = useState<Array<{
+    id: number; specId: number; complexityScore: number | null;
+    triggeredBy: string; createdAt: string;
+  }>>([]);
+  const [versionsLoading, setVersionsLoading] = useState(false);
 
   const { data: spec, isLoading, error } = useGetSpec(Number(id));
 
@@ -60,6 +66,16 @@ export default function SpecDetail() {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
   }, [spec?.status]);
+
+  useEffect(() => {
+    if (!spec?.id) return;
+    setVersionsLoading(true);
+    fetch(`/api/specs/${spec.id}/versions`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.versions) setVersions(data.versions); })
+      .catch(() => {})
+      .finally(() => setVersionsLoading(false));
+  }, [spec?.id, spec?.status]);
 
   const handleCopy = () => {
     if (spec?.content) {
@@ -386,6 +402,30 @@ export default function SpecDetail() {
               risks={spec.techDebtRisks as any ?? null}
               summary={spec.complexitySummary ?? null}
             />
+
+            {/* Version history */}
+            <Card className="border-border bg-card overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3"
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <History className="w-3.5 h-3.5" style={{ color: "hsl(263,90%,70%)" }} />
+                <h3 className="text-xs font-mono font-bold text-foreground flex-1">Version History</h3>
+                {versions.length > 0 && (
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                    style={{ background: "rgba(139,92,246,0.15)", color: "hsl(263,90%,70%)" }}
+                  >
+                    {versions.length}
+                  </span>
+                )}
+              </div>
+              <div className="p-3">
+                <SpecVersionHistory
+                  specId={spec.id}
+                  versions={versions}
+                  loading={versionsLoading}
+                />
+              </div>
+            </Card>
 
             {isGitHub && (
               <Card className="border-border bg-card p-4">

@@ -318,6 +318,68 @@ paths:
                 required:
                   - processed
 
+  /specs/{id}/versions:
+    get:
+      operationId: listSpecVersions
+      tags: [specs]
+      summary: List saved versions of a spec
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of spec versions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SpecVersionMeta"
+                required:
+                  - versions
+        "404":
+          description: Spec not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /specs/{id}/versions/{versionId}:
+    get:
+      operationId: getSpecVersion
+      tags: [specs]
+      summary: Get full content of a specific version
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Full version content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpecVersion"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
   /specs/{id}/presence:
     get:
       operationId: getSpecPresence
@@ -893,6 +955,62 @@ components:
         - webhookUrl
         - secret
         - instructions
+
+    SpecVersionMeta:
+      type: object
+      properties:
+        id:
+          type: integer
+        specId:
+          type: integer
+        complexityScore:
+          type: integer
+          nullable: true
+        triggeredBy:
+          type: string
+          enum: [initial, manual, github_webhook]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - specId
+        - triggeredBy
+        - createdAt
+
+    SpecVersion:
+      type: object
+      properties:
+        id:
+          type: integer
+        specId:
+          type: integer
+        content:
+          type: string
+        complexityScore:
+          type: integer
+          nullable: true
+        techDebtRisks:
+          type: string
+          nullable: true
+        complexitySummary:
+          type: string
+          nullable: true
+        mermaidDiagram:
+          type: string
+          nullable: true
+        triggeredBy:
+          type: string
+          enum: [initial, manual, github_webhook]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - specId
+        - content
+        - triggeredBy
+        - createdAt
 
     SuccessResponse:
       type: object
