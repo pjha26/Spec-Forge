@@ -13,6 +13,21 @@ export interface ApiError {
   error: string;
 }
 
+export type TechDebtRiskSeverity =
+  (typeof TechDebtRiskSeverity)[keyof typeof TechDebtRiskSeverity];
+
+export const TechDebtRiskSeverity = {
+  high: "high",
+  medium: "medium",
+  low: "low",
+} as const;
+
+export interface TechDebtRisk {
+  title: string;
+  severity: TechDebtRiskSeverity;
+  description: string;
+}
+
 export type SpecSpecType = (typeof SpecSpecType)[keyof typeof SpecSpecType];
 
 export const SpecSpecType = {
@@ -46,6 +61,11 @@ export interface Spec {
   inputValue: string;
   content: string;
   status: SpecStatus;
+  complexityScore?: number | null;
+  techDebtRisks?: TechDebtRisk[] | null;
+  complexitySummary?: string | null;
+  mermaidDiagram?: string | null;
+  conversationId?: number | null;
   createdAt: string;
   updatedAt: string;
 }

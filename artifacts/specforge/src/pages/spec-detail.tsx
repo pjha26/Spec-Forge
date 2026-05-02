@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link } from "wouter";
 import { useGetSpec } from "@workspace/api-client-react";
 import { Card } from "@/components/ui/card";
@@ -18,12 +19,20 @@ import {
   Github,
   FileText,
   Clock,
-  Terminal
+  Terminal,
+  FileCode2,
+  Network,
+  Bot
 } from "lucide-react";
+import { MermaidDiagram } from "@/components/mermaid-diagram";
+import { ComplexityScoreCard } from "@/components/complexity-score-card";
+import { SpecChat } from "@/components/spec-chat";
 
 export default function SpecDetail() {
   const { id } = useParams();
   const { toast } = useToast();
+  
+  const [activeTab, setActiveTab] = useState<"document" | "diagram" | "chat">("document");
   
   const { data: spec, isLoading, error } = useGetSpec(Number(id));
 
@@ -42,7 +51,7 @@ export default function SpecDetail() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${spec.title.toLowerCase().replace(/\s+/g, "-")}-${spec.specType}.md`;
+      a.download = `${spec.title.toLowerCase().replace(/\\s+/g, "-")}-${spec.specType}.md`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -135,22 +144,61 @@ export default function SpecDetail() {
         </div>
       </header>
 
-      <div className="flex-1 p-6 flex justify-center">
-        <Card className="w-full max-w-4xl border-border bg-[#0a0a0a] flex flex-col overflow-hidden min-h-full">
-          <div className="border-b border-border p-3 flex items-center gap-2 bg-card">
-            <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-destructive/80" />
-              <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-              <div className="w-3 h-3 rounded-full bg-green-500/80" />
-            </div>
-            <span className="ml-2 text-xs font-mono text-muted-foreground">{spec.title.toLowerCase().replace(/\s+/g, "-")}.md</span>
+      <div className="flex-1 p-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-3">
+            <Card className="w-full border-border bg-[#0a0a0a] flex flex-col overflow-hidden min-h-full">
+              <div className="border-b border-border flex items-center justify-between bg-card px-2">
+                <div className="flex">
+                  <button 
+                    onClick={() => setActiveTab("document")}
+                    className={`px-4 py-3 text-sm font-mono flex items-center gap-2 border-b-2 transition-colors ${activeTab === "document" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}
+                  >
+                    <FileCode2 className="w-4 h-4" /> Document
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab("diagram")}
+                    disabled={!spec.mermaidDiagram}
+                    className={`px-4 py-3 text-sm font-mono flex items-center gap-2 border-b-2 transition-colors ${activeTab === "diagram" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/50 disabled:opacity-50 disabled:cursor-not-allowed"}`}
+                  >
+                    <Network className="w-4 h-4" /> Diagram
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab("chat")}
+                    className={`px-4 py-3 text-sm font-mono flex items-center gap-2 border-b-2 transition-colors ${activeTab === "chat" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}
+                  >
+                    <Bot className="w-4 h-4" /> Ask AI
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex-1">
+                {activeTab === "document" ? (
+                  <div className="p-8 overflow-auto prose prose-invert max-w-none prose-pre:bg-black/50 prose-pre:border prose-pre:border-border">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {spec.content}
+                    </ReactMarkdown>
+                  </div>
+                ) : activeTab === "diagram" && spec.mermaidDiagram ? (
+                  <div className="p-8 min-h-[500px] h-[600px]">
+                    <MermaidDiagram chart={spec.mermaidDiagram} />
+                  </div>
+                ) : activeTab === "chat" ? (
+                  <SpecChat specId={spec.id} />
+                ) : null}
+              </div>
+            </Card>
           </div>
-          <div className="p-8 overflow-auto flex-1 prose prose-invert max-w-none prose-pre:bg-black/50 prose-pre:border prose-pre:border-border">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {spec.content}
-            </ReactMarkdown>
+          
+          <div className="lg:col-span-1 space-y-6">
+            <ComplexityScoreCard 
+              score={spec.complexityScore ?? null}
+              label={null}
+              risks={spec.techDebtRisks as any ?? null}
+              summary={spec.complexitySummary ?? null}
+            />
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, integer, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -14,9 +14,20 @@ export const specsTable = pgTable("specs", {
   inputValue: text("input_value").notNull(),
   content: text("content").notNull().default(""),
   status: text("status", { enum: statusEnum }).notNull().default("pending"),
+  complexityScore: integer("complexity_score"),
+  techDebtRisks: jsonb("tech_debt_risks").$type<TechDebtRisk[]>(),
+  complexitySummary: text("complexity_summary"),
+  mermaidDiagram: text("mermaid_diagram"),
+  conversationId: integer("conversation_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
+
+export interface TechDebtRisk {
+  title: string;
+  severity: "high" | "medium" | "low";
+  description: string;
+}
 
 export const insertSpecSchema = createInsertSchema(specsTable).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertSpec = z.infer<typeof insertSpecSchema>;

@@ -2,11 +2,13 @@ import { Router } from "express";
 import { db, specsTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
+import { db as dbClient, conversations as conversationsTable } from "@workspace/db";
 import {
   CreateSpecBody,
   GetSpecParams,
   DeleteSpecParams,
   StreamSpecParams,
+  GetOrCreateSpecChatParams,
 } from "@workspace/api-zod";
 
 const router = Router();
@@ -76,9 +78,6 @@ Rate limit policies and headers.
 ## Data Models
 Core data schemas with field types and constraints.
 
-## WebSocket / Real-time (if applicable)
-Real-time events and their payloads.
-
 Format in clean, professional markdown with code blocks for examples.`,
 
   database_schema: `You are a senior database architect. Generate a comprehensive Database Schema Design for the following project.
@@ -110,9 +109,6 @@ Strategic indexes and query optimization.
 ## Migrations Strategy
 How to handle schema evolution safely.
 
-## Seed Data
-Example seed data for development/testing.
-
 Format in clean markdown with SQL CREATE TABLE statements and descriptions.`,
 
   feature_spec: `You are a senior product engineer. Generate a comprehensive Feature Specification Document for the following project.
@@ -141,9 +137,6 @@ Performance, security, accessibility, scalability requirements.
 ## Technical Approach
 Recommended implementation strategy with key components.
 
-## UI/UX Notes
-Key interaction patterns and flows (no wireframes, just descriptions).
-
 ## API Changes
 New or modified endpoints needed.
 
@@ -153,33 +146,89 @@ Database schema additions or modifications.
 ## Acceptance Criteria
 Specific, testable conditions for feature completion.
 
-## Open Questions
-Unresolved decisions that need answers before implementation.
-
 Format in clean, professional markdown. Be thorough and specific.`,
 };
 
-async function generateSpecContent(
-  specType: string,
-  inputType: string,
-  inputValue: string
-): Promise<string> {
-  const systemPrompt = SPEC_PROMPTS[specType] || SPEC_PROMPTS.feature_spec;
+const MERMAID_PROMPTS: Record<string, string> = {
+  system_design: "Generate a Mermaid.js flowchart (graph TD) showing the system architecture. Include the main components, services, databases, and their connections. Use clear node labels.",
+  api_design: "Generate a Mermaid.js sequence diagram showing the key API interactions between client, server, and any external services. Show authentication flow and main request/response cycles.",
+  database_schema: "Generate a Mermaid.js entity relationship diagram (erDiagram) showing all tables, their fields (with types), and relationships. Use proper ER notation.",
+  feature_spec: "Generate a Mermaid.js flowchart (graph TD) showing the user journey and feature flow from start to completion. Include decision points and key states.",
+};
 
-  const userMessage =
-    inputType === "github_url"
-      ? `Generate a ${specType.replace(/_/g, " ")} for this GitHub repository: ${inputValue}\n\nAnalyze the repository URL and make reasonable assumptions about the project based on the URL structure and naming. Create a detailed, professional document.`
-      : `Generate a ${specType.replace(/_/g, " ")} for this project:\n\n${inputValue}\n\nCreate a detailed, professional document based on this description.`;
+async function generateComplexityAnalysis(specContent: string, specType: string) {
+  const message = await anthropic.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 8192,
+    system: `You are a senior software architect analyzing technical design documents. 
+Return ONLY valid JSON with no markdown formatting, no code blocks, no explanation.
+Return exactly this structure:
+{
+  "score": <integer 1-10>,
+  "label": "<Low|Medium|High|Very High>",
+  "risks": [
+    { "title": "<short title>", "severity": "<high|medium|low>", "description": "<1-2 sentence description>" }
+  ],
+  "summary": "<2-3 sentence overall assessment>"
+}`,
+    messages: [
+      {
+        role: "user",
+        content: `Analyze this ${specType.replace(/_/g, " ")} for complexity and technical debt risks:
+
+${specContent.slice(0, 6000)}
+
+Provide a complexity score from 1-10 where:
+1-3 = Simple, straightforward implementation
+4-6 = Moderate complexity, manageable with care  
+7-8 = High complexity, significant risks
+9-10 = Very high complexity, major concerns
+
+Identify 2-4 specific technical debt risks. Be concrete and actionable.`,
+      },
+    ],
+  });
+
+  const block = message.content[0];
+  if (block.type !== "text") throw new Error("Unexpected response type");
+
+  try {
+    return JSON.parse(block.text.trim());
+  } catch {
+    const match = block.text.match(/\{[\s\S]*\}/);
+    if (match) return JSON.parse(match[0]);
+    throw new Error("Failed to parse complexity analysis JSON");
+  }
+}
+
+async function generateMermaidDiagram(specContent: string, specType: string) {
+  const prompt = MERMAID_PROMPTS[specType] || MERMAID_PROMPTS.system_design;
 
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 8192,
-    system: systemPrompt,
-    messages: [{ role: "user", content: userMessage }],
+    system: `You generate Mermaid.js diagrams based on technical specifications.
+Return ONLY the raw Mermaid diagram syntax. No markdown code fences, no explanation, no \`\`\`mermaid prefix.
+Start directly with the diagram type (e.g., "graph TD" or "sequenceDiagram" or "erDiagram").
+Keep it readable — max 15-20 nodes. Use short, clear labels.`,
+    messages: [
+      {
+        role: "user",
+        content: `${prompt}
+
+Based on this specification:
+
+${specContent.slice(0, 5000)}`,
+      },
+    ],
   });
 
   const block = message.content[0];
-  return block.type === "text" ? block.text : "";
+  if (block.type !== "text") throw new Error("Unexpected response type");
+
+  let diagram = block.text.trim();
+  diagram = diagram.replace(/^```mermaid\n?/, "").replace(/\n?```$/, "").trim();
+  return diagram;
 }
 
 router.get("/recent", async (req, res) => {
@@ -210,9 +259,7 @@ router.get("/recent", async (req, res) => {
     res.json({
       specs: specs.map((s) => ({
         ...s,
-        specType: s.specType,
-        inputType: s.inputType,
-        status: s.status,
+        techDebtRisks: s.techDebtRisks ?? null,
         createdAt: s.createdAt.toISOString(),
         updatedAt: s.updatedAt.toISOString(),
       })),
@@ -235,9 +282,7 @@ router.get("/", async (req, res) => {
     res.json(
       specs.map((s) => ({
         ...s,
-        specType: s.specType,
-        inputType: s.inputType,
-        status: s.status,
+        techDebtRisks: s.techDebtRisks ?? null,
         createdAt: s.createdAt.toISOString(),
         updatedAt: s.updatedAt.toISOString(),
       }))
@@ -272,12 +317,70 @@ router.post("/", async (req, res) => {
 
     res.status(201).json({
       ...spec,
+      techDebtRisks: null,
       createdAt: spec.createdAt.toISOString(),
       updatedAt: spec.updatedAt.toISOString(),
     });
   } catch (err) {
     req.log.error({ err }, "Failed to create spec");
     res.status(500).json({ error: "Failed to create spec" });
+  }
+});
+
+router.post("/:id/chat", async (req, res) => {
+  const parsed = GetOrCreateSpecChatParams.safeParse({
+    id: Number(req.params.id),
+  });
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid spec ID" });
+    return;
+  }
+
+  try {
+    const [spec] = await db
+      .select()
+      .from(specsTable)
+      .where(eq(specsTable.id, parsed.data.id));
+
+    if (!spec) {
+      res.status(404).json({ error: "Spec not found" });
+      return;
+    }
+
+    if (spec.conversationId) {
+      const [existing] = await dbClient
+        .select()
+        .from(conversationsTable)
+        .where(eq(conversationsTable.id, spec.conversationId));
+
+      if (existing) {
+        res.json({
+          id: existing.id,
+          title: existing.title,
+          createdAt: existing.createdAt.toISOString(),
+        });
+        return;
+      }
+    }
+
+    const [conv] = await dbClient
+      .insert(conversationsTable)
+      .values({ title: `Ask: ${spec.title}` })
+      .returning();
+
+    await db
+      .update(specsTable)
+      .set({ conversationId: conv.id, updatedAt: new Date() })
+      .where(eq(specsTable.id, spec.id));
+
+    res.json({
+      id: conv.id,
+      title: conv.title,
+      createdAt: conv.createdAt.toISOString(),
+    });
+  } catch (err) {
+    req.log.error({ err }, "Failed to get or create spec chat");
+    res.status(500).json({ error: "Failed to get or create spec chat" });
   }
 });
 
@@ -301,6 +404,7 @@ router.get("/:id", async (req, res) => {
 
     res.json({
       ...spec,
+      techDebtRisks: spec.techDebtRisks ?? null,
       createdAt: spec.createdAt.toISOString(),
       updatedAt: spec.updatedAt.toISOString(),
     });
@@ -362,7 +466,8 @@ router.post("/:id/stream", async (req, res) => {
       .set({ status: "generating", updatedAt: new Date() })
       .where(eq(specsTable.id, spec.id));
 
-    const systemPrompt = SPEC_PROMPTS[spec.specType] || SPEC_PROMPTS.feature_spec;
+    const systemPrompt =
+      SPEC_PROMPTS[spec.specType] || SPEC_PROMPTS.feature_spec;
     const userMessage =
       spec.inputType === "github_url"
         ? `Generate a ${spec.specType.replace(/_/g, " ")} for this GitHub repository: ${spec.inputValue}\n\nAnalyze the repository URL and make reasonable assumptions about the project based on the URL structure and naming. Create a detailed, professional document.`
@@ -389,7 +494,39 @@ router.post("/:id/stream", async (req, res) => {
 
     await db
       .update(specsTable)
-      .set({ content: fullContent, status: "completed", updatedAt: new Date() })
+      .set({ content: fullContent, status: "generating", updatedAt: new Date() })
+      .where(eq(specsTable.id, spec.id));
+
+    res.write(`data: ${JSON.stringify({ phase: "analyzing" })}\n\n`);
+
+    const [analysis, diagram] = await Promise.allSettled([
+      generateComplexityAnalysis(fullContent, spec.specType),
+      generateMermaidDiagram(fullContent, spec.specType),
+    ]);
+
+    const analysisData =
+      analysis.status === "fulfilled" ? analysis.value : null;
+    const diagramData =
+      diagram.status === "fulfilled" ? diagram.value : null;
+
+    if (analysisData) {
+      res.write(`data: ${JSON.stringify({ analysis: analysisData })}\n\n`);
+    }
+    if (diagramData) {
+      res.write(`data: ${JSON.stringify({ diagram: diagramData })}\n\n`);
+    }
+
+    await db
+      .update(specsTable)
+      .set({
+        content: fullContent,
+        status: "completed",
+        complexityScore: analysisData?.score ?? null,
+        techDebtRisks: analysisData?.risks ?? null,
+        complexitySummary: analysisData?.summary ?? null,
+        mermaidDiagram: diagramData ?? null,
+        updatedAt: new Date(),
+      })
       .where(eq(specsTable.id, spec.id));
 
     res.write(`data: ${JSON.stringify({ done: true })}\n\n`);

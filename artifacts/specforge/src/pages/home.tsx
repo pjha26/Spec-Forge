@@ -17,10 +17,14 @@ import {
   Terminal, 
   Github, 
   FileText,
-  Loader2
+  Loader2,
+  FileCode2,
+  Network
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { ComplexityScoreCard } from "@/components/complexity-score-card";
+import { MermaidDiagram } from "@/components/mermaid-diagram";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -36,6 +40,12 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamedContent, setStreamedContent] = useState("");
   const contentEndRef = useRef<HTMLDivElement>(null);
+  
+  const [activeTab, setActiveTab] = useState<"document" | "diagram">("document");
+  
+  // New State for SSE Analysis & Diagram
+  const [analysisData, setAnalysisData] = useState<any>(null);
+  const [diagramData, setDiagramData] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     if (!inputValue.trim()) {
@@ -50,6 +60,9 @@ export default function Home() {
     try {
       setIsGenerating(true);
       setStreamedContent("");
+      setAnalysisData(null);
+      setDiagramData(null);
+      setActiveTab("document");
       
       const title = inputType === "github_url" 
         ? inputValue.split("/").pop() || "Project Spec" 
@@ -71,12 +84,42 @@ export default function Home() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
+      let buffer = "";
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         
-        const chunk = decoder.decode(value);
-        setStreamedContent(prev => prev + chunk);
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Process complete SSE events from buffer
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
+        
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const dataStr = line.slice(6);
+            try {
+              const data = JSON.parse(dataStr);
+              
+              if (data.content) {
+                setStreamedContent(prev => prev + data.content);
+              } else if (data.analysis) {
+                setAnalysisData(data.analysis);
+              } else if (data.diagram) {
+                setDiagramData(data.diagram);
+              } else if (data.error) {
+                toast({
+                  title: "Generation Error",
+                  description: data.error,
+                  variant: "destructive"
+                });
+              }
+            } catch (e) {
+              console.error("Failed to parse SSE JSON", e);
+            }
+          }
+        }
       }
 
       toast({
@@ -96,10 +139,10 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (contentEndRef.current) {
+    if (contentEndRef.current && activeTab === "document") {
       contentEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [streamedContent]);
+  }, [streamedContent, activeTab]);
 
   return (
     <div className="flex-1 overflow-auto bg-background p-6">
@@ -196,7 +239,15 @@ export default function Home() {
               </Button>
             </Card>
 
-            {recentSpecs && (
+            {analysisData || (isGenerating && streamedContent.length > 500) ? (
+              <ComplexityScoreCard 
+                score={analysisData?.score ?? null}
+                label={analysisData?.label ?? null}
+                risks={analysisData?.risks ?? null}
+                summary={analysisData?.summary ?? null}
+                isGenerating={isGenerating}
+              />
+            ) : recentSpecs && !isGenerating ? (
               <div className="space-y-3">
                 <h3 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-wider">System Stats</h3>
                 <div className="grid grid-cols-2 gap-2">
@@ -206,21 +257,28 @@ export default function Home() {
                   <StatCard label="Feature" count={recentSpecs.byType?.feature_spec || 0} />
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="lg:col-span-2">
             <Card className="h-full min-h-[500px] border-border bg-[#0a0a0a] flex flex-col overflow-hidden">
-              <div className="border-b border-border p-3 flex items-center justify-between bg-card">
-                <div className="flex items-center gap-4">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-destructive/80" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                  </div>
-                  <span className="text-xs font-mono text-muted-foreground">output.md</span>
+              <div className="border-b border-border flex items-center justify-between bg-card px-2">
+                <div className="flex">
+                  <button 
+                    onClick={() => setActiveTab("document")}
+                    className={`px-4 py-3 text-sm font-mono flex items-center gap-2 border-b-2 transition-colors ${activeTab === "document" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}
+                  >
+                    <FileCode2 className="w-4 h-4" /> Document
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab("diagram")}
+                    disabled={!diagramData && !isGenerating}
+                    className={`px-4 py-3 text-sm font-mono flex items-center gap-2 border-b-2 transition-colors ${activeTab === "diagram" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/50 disabled:opacity-50 disabled:cursor-not-allowed"}`}
+                  >
+                    <Network className="w-4 h-4" /> Diagram
+                  </button>
                 </div>
-                {isGenerating && <span className="text-xs font-mono text-primary animate-pulse">Generating...</span>}
+                {isGenerating && <span className="text-xs font-mono text-primary animate-pulse pr-3">Generating...</span>}
               </div>
               <div className="flex-1 p-5 overflow-auto bg-[#0a0a0a]">
                 {!streamedContent && !isGenerating ? (
@@ -228,13 +286,24 @@ export default function Home() {
                     <Terminal className="w-8 h-8 opacity-20" />
                     <p className="font-mono text-sm">Awaiting input sequence...</p>
                   </div>
-                ) : (
+                ) : activeTab === "document" ? (
                   <div className="prose prose-invert prose-sm max-w-none">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {streamedContent}
                     </ReactMarkdown>
-                    {isGenerating && <span className="inline-block w-2 h-4 bg-primary ml-1 animate-pulse" />}
+                    {isGenerating && !diagramData && <span className="inline-block w-2 h-4 bg-primary ml-1 animate-pulse" />}
                     <div ref={contentEndRef} />
+                  </div>
+                ) : (
+                  <div className="h-full w-full min-h-[400px]">
+                     {diagramData ? (
+                       <MermaidDiagram chart={diagramData} />
+                     ) : isGenerating ? (
+                       <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground font-mono gap-4">
+                         <Loader2 className="w-8 h-8 animate-spin opacity-50" />
+                         <p className="text-sm">Synthesizing diagram structure...</p>
+                       </div>
+                     ) : null}
                   </div>
                 )}
               </div>

@@ -512,6 +512,90 @@ export const useStreamSpec = <
 };
 
 /**
+ * @summary Get or create a conversation for asking questions about a spec
+ */
+export const getGetOrCreateSpecChatUrl = (id: number) => {
+  return `/api/specs/${id}/chat`;
+};
+
+export const getOrCreateSpecChat = async (
+  id: number,
+  options?: RequestInit,
+): Promise<AnthropicConversation> => {
+  return customFetch<AnthropicConversation>(getGetOrCreateSpecChatUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getGetOrCreateSpecChatMutationOptions = <
+  TError = ErrorType<ApiError>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof getOrCreateSpecChat>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof getOrCreateSpecChat>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["getOrCreateSpecChat"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof getOrCreateSpecChat>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return getOrCreateSpecChat(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type GetOrCreateSpecChatMutationResult = NonNullable<
+  Awaited<ReturnType<typeof getOrCreateSpecChat>>
+>;
+
+export type GetOrCreateSpecChatMutationError = ErrorType<ApiError>;
+
+/**
+ * @summary Get or create a conversation for asking questions about a spec
+ */
+export const useGetOrCreateSpecChat = <
+  TError = ErrorType<ApiError>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof getOrCreateSpecChat>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof getOrCreateSpecChat>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getGetOrCreateSpecChatMutationOptions(options));
+};
+
+/**
  * @summary List recent specs with stats
  */
 export const getListRecentSpecsUrl = () => {

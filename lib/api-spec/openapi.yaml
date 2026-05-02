@@ -122,6 +122,31 @@ paths:
           content:
             text/event-stream: {}
 
+  /specs/{id}/chat:
+    post:
+      operationId: getOrCreateSpecChat
+      tags: [specs]
+      summary: Get or create a conversation for asking questions about a spec
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation for this spec
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnthropicConversation"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
   /specs/recent:
     get:
       operationId: listRecentSpecs
@@ -271,6 +296,21 @@ components:
       required:
         - error
 
+    TechDebtRisk:
+      type: object
+      properties:
+        title:
+          type: string
+        severity:
+          type: string
+          enum: [high, medium, low]
+        description:
+          type: string
+      required:
+        - title
+        - severity
+        - description
+
     Spec:
       type: object
       properties:
@@ -291,6 +331,23 @@ components:
         status:
           type: string
           enum: [pending, generating, completed, failed]
+        complexityScore:
+          type: integer
+          nullable: true
+        techDebtRisks:
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/TechDebtRisk"
+        complexitySummary:
+          type: string
+          nullable: true
+        mermaidDiagram:
+          type: string
+          nullable: true
+        conversationId:
+          type: integer
+          nullable: true
         createdAt:
           type: string
           format: date-time
