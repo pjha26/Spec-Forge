@@ -75,7 +75,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
-    "mermaid": "^10.9.1",
+    "mermaid": "^10.9.5",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1"
   }
