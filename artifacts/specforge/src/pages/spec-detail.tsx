@@ -1,28 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import { useGetSpec } from "@workspace/api-client-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { 
-  ArrowLeft,
-  Copy,
-  Download,
-  Server,
-  Cpu,
-  Database,
-  BookOpen,
-  Github,
-  FileText,
-  Clock,
-  Terminal,
-  FileCode2,
-  Network,
-  Bot
+import {
+  ArrowLeft, Copy, Download, Server, Cpu, Database, BookOpen,
+  Github, FileText, Clock, Terminal, FileCode2, Network, Bot,
+  Share2, Printer, Eye, Loader2, RefreshCw, Webhook, ChevronDown, ChevronUp, Check,
 } from "lucide-react";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
 import { ComplexityScoreCard } from "@/components/complexity-score-card";
@@ -31,17 +21,47 @@ import { SpecChat } from "@/components/spec-chat";
 export default function SpecDetail() {
   const { id } = useParams();
   const { toast } = useToast();
-  
+  const queryClient = useQueryClient();
+
   const [activeTab, setActiveTab] = useState<"document" | "diagram" | "chat">("document");
-  
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareData, setShareData] = useState<{ shareUrl: string; viewCount: number } | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [showWebhook, setShowWebhook] = useState(false);
+  const [webhookConfig, setWebhookConfig] = useState<{ webhookUrl: string; secret: string; instructions: string } | null>(null);
+  const [webhookLoading, setWebhookLoading] = useState(false);
+  const [copiedField, setCopiedField] = useState<"url" | "secret" | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const { data: spec, isLoading, error } = useGetSpec(Number(id));
+
+  const isGitHub = spec?.inputType === "github_url";
+
+  useEffect(() => {
+    if (spec?.status === "generating") {
+      setIsSyncing(true);
+      pollingRef.current = setInterval(async () => {
+        await queryClient.invalidateQueries({ queryKey: [`/api/specs/${id}`] });
+      }, 3000);
+    } else {
+      if (isSyncing && spec?.status === "completed") {
+        toast({ title: "Sync complete!", description: "Spec regenerated from latest source." });
+      }
+      setIsSyncing(false);
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    }
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [spec?.status]);
 
   const handleCopy = () => {
     if (spec?.content) {
       navigator.clipboard.writeText(spec.content);
-      toast({
-        title: "Copied to clipboard",
-      });
+      toast({ title: "Copied to clipboard" });
     }
   };
 
@@ -51,12 +71,69 @@ export default function SpecDetail() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${spec.title.toLowerCase().replace(/\\s+/g, "-")}-${spec.specType}.md`;
+      a.download = `${spec.title.toLowerCase().replace(/\s+/g, "-")}-${spec.specType}.md`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
+  };
+
+  const handlePrint = () => window.print();
+
+  const handleShare = async () => {
+    if (!spec) return;
+    setIsSharing(true);
+    try {
+      const res = await fetch(`/api/specs/${spec.id}/share`, { method: "POST" });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setShareData({ shareUrl: data.shareUrl, viewCount: data.viewCount });
+      await navigator.clipboard.writeText(data.shareUrl);
+      toast({ title: "Share link copied!", description: `${data.viewCount} view${data.viewCount !== 1 ? "s" : ""} so far` });
+    } catch {
+      toast({ title: "Failed to generate share link", variant: "destructive" });
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleSync = async () => {
+    if (!spec) return;
+    setIsSyncing(true);
+    try {
+      const res = await fetch(`/api/specs/${spec.id}/sync`, { method: "POST" });
+      if (!res.ok) throw new Error();
+      toast({ title: "Sync started", description: "Re-generating from latest source…" });
+      pollingRef.current = setInterval(async () => {
+        await queryClient.invalidateQueries({ queryKey: [`/api/specs/${id}`] });
+      }, 3000);
+    } catch {
+      toast({ title: "Sync failed", variant: "destructive" });
+      setIsSyncing(false);
+    }
+  };
+
+  const handleWebhookToggle = async () => {
+    if (showWebhook) { setShowWebhook(false); return; }
+    setShowWebhook(true);
+    if (webhookConfig) return;
+    setWebhookLoading(true);
+    try {
+      const res = await fetch(`/api/specs/${spec?.id}/webhook`);
+      if (!res.ok) throw new Error();
+      setWebhookConfig(await res.json());
+    } catch {
+      toast({ title: "Failed to load webhook config", variant: "destructive" });
+    } finally {
+      setWebhookLoading(false);
+    }
+  };
+
+  const copyField = async (text: string, field: "url" | "secret") => {
+    await navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
   };
 
   const getSpecTypeIcon = (type: string) => {
@@ -96,10 +173,8 @@ export default function SpecDetail() {
         <div className="text-center space-y-4">
           <h2 className="text-xl font-bold text-destructive font-mono">ERR_SPEC_NOT_FOUND</h2>
           <p className="text-muted-foreground">The requested specification could not be located.</p>
-          <Link href="/specs">
-            <Button variant="outline" className="font-mono">
-              <ArrowLeft className="w-4 h-4 mr-2" /> RETURN TO HISTORY
-            </Button>
+          <Link href="/app/specs">
+            <Button variant="outline" className="font-mono"><ArrowLeft className="w-4 h-4 mr-2" /> RETURN TO HISTORY</Button>
           </Link>
         </div>
       </div>
@@ -108,95 +183,223 @@ export default function SpecDetail() {
 
   return (
     <div className="flex-1 overflow-auto bg-background flex flex-col">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur border-b border-border px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/specs">
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+      <header className="print-hide sticky top-0 z-10 bg-background/80 backdrop-blur border-b border-border px-6 py-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <Link href="/app/specs">
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full shrink-0">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
-          <div>
-            <h1 className="text-lg font-bold leading-tight">{spec.title}</h1>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono mt-1">
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold leading-tight truncate">{spec.title}</h1>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono mt-1 flex-wrap">
               <span className="flex items-center gap-1">
-                {spec.inputType === "github_url" ? <Github className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
-                {spec.inputType === "github_url" ? "GitHub" : "Description"}
+                {isGitHub ? <Github className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
+                {isGitHub ? "GitHub" : "Description"}
               </span>
               <span>•</span>
-              <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {format(new Date(spec.createdAt), "MMM d, yyyy HH:mm")}
-              </span>
+              <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{format(new Date(spec.createdAt), "MMM d, yyyy HH:mm")}</span>
+              {(spec.viewCount ?? 0) > 0 && (
+                <><span>•</span><span className="flex items-center gap-1"><Eye className="w-3 h-3" />{spec.viewCount} views</span></>
+              )}
+              {spec.lastSyncedAt && (
+                <><span>•</span><span className="flex items-center gap-1 text-green-500"><RefreshCw className="w-3 h-3" />synced {formatDistanceToNow(new Date(spec.lastSyncedAt))} ago</span></>
+              )}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1.5 py-1 px-2.5 mr-2">
-            {getSpecTypeIcon(spec.specType)}
-            {getSpecTypeLabel(spec.specType)}
+
+        <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
+          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1.5 py-1 px-2.5">
+            {getSpecTypeIcon(spec.specType)}{getSpecTypeLabel(spec.specType)}
           </Badge>
-          <Button variant="outline" size="sm" onClick={handleCopy} className="font-mono text-xs">
-            <Copy className="w-3 h-3 mr-2" /> COPY
+
+          {isGitHub && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSync}
+                disabled={isSyncing}
+                className="font-mono text-xs border-green-500/30 text-green-400 hover:bg-green-500/10"
+              >
+                {isSyncing ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-2" />}
+                {isSyncing ? "SYNCING…" : "SYNC NOW"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleWebhookToggle}
+                className="font-mono text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+              >
+                <Webhook className="w-3 h-3 mr-2" />
+                WEBHOOK
+                {showWebhook ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
+              </Button>
+            </>
+          )}
+
+          <Button variant="outline" size="sm" onClick={handleShare} disabled={isSharing} className="font-mono text-xs border-purple-500/30 text-purple-400 hover:bg-purple-500/10">
+            {isSharing ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Share2 className="w-3 h-3 mr-2" />}
+            SHARE
           </Button>
-          <Button size="sm" onClick={handleDownload} className="font-mono text-xs">
-            <Download className="w-3 h-3 mr-2" /> DOWNLOAD
-          </Button>
+          <Button variant="outline" size="sm" onClick={handlePrint} className="font-mono text-xs"><Printer className="w-3 h-3 mr-2" />PDF</Button>
+          <Button variant="outline" size="sm" onClick={handleCopy} className="font-mono text-xs"><Copy className="w-3 h-3 mr-2" />COPY</Button>
+          <Button size="sm" onClick={handleDownload} className="font-mono text-xs"><Download className="w-3 h-3 mr-2" />.MD</Button>
         </div>
       </header>
+
+      {shareData && (
+        <div className="print-hide bg-purple-500/10 border-b border-purple-500/20 px-6 py-2 flex items-center gap-3 text-xs font-mono">
+          <Share2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+          <span className="text-purple-300 shrink-0">Share link copied:</span>
+          <span className="text-muted-foreground truncate">{shareData.shareUrl}</span>
+          <button onClick={() => navigator.clipboard.writeText(shareData.shareUrl).then(() => toast({ title: "Copied!" }))} className="ml-auto text-purple-400 hover:text-purple-300 shrink-0">Copy again</button>
+          <button onClick={() => setShareData(null)} className="text-muted-foreground hover:text-foreground shrink-0">✕</button>
+        </div>
+      )}
+
+      {isSyncing && spec.status === "generating" && (
+        <div className="print-hide bg-green-500/10 border-b border-green-500/20 px-6 py-2 flex items-center gap-3 text-xs font-mono">
+          <Loader2 className="w-3.5 h-3.5 text-green-400 animate-spin shrink-0" />
+          <span className="text-green-300">Re-generating spec from source… this may take 30–60 seconds.</span>
+        </div>
+      )}
+
+      {showWebhook && isGitHub && (
+        <div className="print-hide bg-blue-500/10 border-b border-blue-500/20 px-6 py-4">
+          <div className="max-w-3xl">
+            <div className="flex items-center gap-2 mb-3">
+              <Webhook className="w-4 h-4 text-blue-400" />
+              <span className="text-sm font-semibold text-blue-300 font-mono">GITHUB WEBHOOK SETUP</span>
+              <span className="text-xs text-muted-foreground ml-1">— auto-sync on every push</span>
+            </div>
+
+            {webhookLoading ? (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                Generating webhook config…
+              </div>
+            ) : webhookConfig ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground font-mono mb-1.5">PAYLOAD URL</p>
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs bg-black/40 border border-border rounded px-2.5 py-1.5 flex-1 truncate text-green-300 font-mono">
+                        {webhookConfig.webhookUrl}
+                      </code>
+                      <button
+                        onClick={() => copyField(webhookConfig.webhookUrl, "url")}
+                        className="shrink-0 p-1.5 rounded border border-border hover:bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {copiedField === "url" ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground font-mono mb-1.5">SECRET</p>
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs bg-black/40 border border-border rounded px-2.5 py-1.5 flex-1 truncate text-yellow-300 font-mono">
+                        {webhookConfig.secret}
+                      </code>
+                      <button
+                        onClick={() => copyField(webhookConfig.secret, "secret")}
+                        className="shrink-0 p-1.5 rounded border border-border hover:bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {copiedField === "secret" ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <span className="text-blue-400 font-semibold">Setup:</span> In your GitHub repo → Settings → Webhooks → Add webhook. Set the Payload URL and Secret above, Content type: <code className="text-xs bg-black/30 px-1 rounded">application/json</code>, and trigger on <strong>push</strong> events. SpecForge will regenerate this doc on every commit.
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-destructive">Failed to load webhook config.</p>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 p-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3">
             <Card className="w-full border-border bg-[#0a0a0a] flex flex-col overflow-hidden min-h-full">
-              <div className="border-b border-border flex items-center justify-between bg-card px-2">
+              <div className="print-hide border-b border-border flex items-center justify-between bg-card px-2">
                 <div className="flex">
-                  <button 
-                    onClick={() => setActiveTab("document")}
-                    className={`px-4 py-3 text-sm font-mono flex items-center gap-2 border-b-2 transition-colors ${activeTab === "document" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}
-                  >
-                    <FileCode2 className="w-4 h-4" /> Document
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab("diagram")}
-                    disabled={!spec.mermaidDiagram}
-                    className={`px-4 py-3 text-sm font-mono flex items-center gap-2 border-b-2 transition-colors ${activeTab === "diagram" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/50 disabled:opacity-50 disabled:cursor-not-allowed"}`}
-                  >
-                    <Network className="w-4 h-4" /> Diagram
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab("chat")}
-                    className={`px-4 py-3 text-sm font-mono flex items-center gap-2 border-b-2 transition-colors ${activeTab === "chat" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}
-                  >
-                    <Bot className="w-4 h-4" /> Ask AI
-                  </button>
+                  {(["document", "diagram", "chat"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      disabled={tab === "diagram" && !spec.mermaidDiagram}
+                      className={`px-4 py-3 text-sm font-mono flex items-center gap-2 border-b-2 transition-colors ${
+                        activeTab === tab
+                          ? "border-primary text-foreground"
+                          : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      }`}
+                    >
+                      {tab === "document" && <FileCode2 className="w-4 h-4" />}
+                      {tab === "diagram" && <Network className="w-4 h-4" />}
+                      {tab === "chat" && <Bot className="w-4 h-4" />}
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </button>
+                  ))}
                 </div>
               </div>
-              
-              <div className="flex-1">
-                {activeTab === "document" ? (
+
+              <div className="flex-1 print-content">
+                {activeTab === "document" && (
                   <div className="p-8 overflow-auto prose prose-invert max-w-none prose-pre:bg-black/50 prose-pre:border prose-pre:border-border">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {spec.content}
-                    </ReactMarkdown>
+                    {isSyncing && spec.status === "generating" ? (
+                      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-4">
+                        <Loader2 className="w-8 h-8 animate-spin text-green-500" />
+                        <p className="font-mono text-sm">Regenerating from source…</p>
+                      </div>
+                    ) : (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{spec.content}</ReactMarkdown>
+                    )}
                   </div>
-                ) : activeTab === "diagram" && spec.mermaidDiagram ? (
+                )}
+                {activeTab === "diagram" && spec.mermaidDiagram && (
                   <div className="p-8 min-h-[500px] h-[600px]">
                     <MermaidDiagram chart={spec.mermaidDiagram} />
                   </div>
-                ) : activeTab === "chat" ? (
-                  <SpecChat specId={spec.id} />
-                ) : null}
+                )}
+                {activeTab === "chat" && <SpecChat specId={spec.id} />}
               </div>
             </Card>
           </div>
-          
-          <div className="lg:col-span-1 space-y-6">
-            <ComplexityScoreCard 
+
+          <div className="lg:col-span-1 space-y-6 print-hide">
+            <ComplexityScoreCard
               score={spec.complexityScore ?? null}
               label={null}
               risks={spec.techDebtRisks as any ?? null}
               summary={spec.complexitySummary ?? null}
             />
+
+            {isGitHub && (
+              <Card className="border-border bg-card p-4">
+                <h3 className="text-xs font-mono text-muted-foreground mb-3">SOURCE</h3>
+                <a
+                  href={spec.inputValue}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary hover:underline flex items-start gap-2 break-all"
+                >
+                  <Github className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  {spec.inputValue}
+                </a>
+                {spec.lastSyncedAt && (
+                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
+                    <RefreshCw className="w-3 h-3" />
+                    Last synced {formatDistanceToNow(new Date(spec.lastSyncedAt))} ago
+                  </p>
+                )}
+              </Card>
+            )}
           </div>
         </div>
       </div>

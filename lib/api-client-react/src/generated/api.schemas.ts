@@ -66,8 +66,17 @@ export interface Spec {
   complexitySummary?: string | null;
   mermaidDiagram?: string | null;
   conversationId?: number | null;
+  shareToken?: string | null;
+  viewCount: number;
+  lastSyncedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ShareSpecResponse {
+  shareToken: string;
+  shareUrl: string;
+  viewCount: number;
 }
 
 export type CreateSpecBodySpecType =
@@ -135,3 +144,52 @@ export interface AnthropicConversationWithMessages {
 export interface AnthropicError {
   error: string;
 }
+
+export interface AuthUser {
+  id: string;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  profileImageUrl?: string | null;
+}
+
+export interface GetCurrentAuthUserResponse {
+  isAuthenticated: boolean;
+  user?: AuthUser | null;
+}
+
+export interface ExchangeMobileAuthorizationCodeBody {
+  code: string;
+  code_verifier: string;
+  state: string;
+  nonce?: string;
+  redirect_uri: string;
+}
+
+export interface ExchangeMobileAuthorizationCodeResponse {
+  token: string;
+}
+
+export interface LogoutMobileSessionResponse {
+  success: boolean;
+}
+
+export interface SyncSpecResponse {
+  id: number;
+  status: string;
+  lastSyncedAt?: string | null;
+}
+
+export interface WebhookConfigResponse {
+  webhookUrl: string;
+  secret: string;
+  instructions: string;
+}
+
+export type LoginParams = {
+  returnTo?: string;
+};
+
+export type GithubWebhook200 = {
+  processed: number;
+};

@@ -159,6 +159,95 @@
   }
 }
 
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    font-family: Georgia, serif;
+    font-size: 12pt;
+    line-height: 1.6;
+  }
+
+  .print-hide {
+    display: none !important;
+  }
+
+  .print-show {
+    display: block !important;
+  }
+
+  .print-content {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  h1, h2, h3, h4 {
+    color: black !important;
+    page-break-after: avoid;
+  }
+
+  pre, code {
+    background: #f4f4f4 !important;
+    color: #333 !important;
+    border: 1px solid #ddd !important;
+    font-family: monospace;
+    font-size: 10pt;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  th, td {
+    border: 1px solid #ccc !important;
+    padding: 6px 10px;
+    color: black !important;
+  }
+
+  th {
+    background: #f0f0f0 !important;
+    font-weight: bold;
+  }
+
+  a {
+    color: #333 !important;
+    text-decoration: none;
+  }
+
+  @page {
+    margin: 2cm;
+    size: A4;
+  }
+
+  p, li {
+    page-break-inside: avoid;
+  }
+
+  .print-header {
+    border-bottom: 2px solid #333;
+    padding-bottom: 12pt;
+    margin-bottom: 24pt;
+  }
+
+  .print-complexity {
+    border: 1px solid #ccc;
+    padding: 12pt;
+    margin-bottom: 24pt;
+    background: #f9f9f9 !important;
+  }
+
+  .print-risk-high { color: #c0392b !important; font-weight: bold; }
+  .print-risk-medium { color: #e67e22 !important; font-weight: bold; }
+  .print-risk-low { color: #27ae60 !important; font-weight: bold; }
+}
+
 @layer utilities {
   input[type="search"]::-webkit-search-cancel-button {
     @apply hidden;

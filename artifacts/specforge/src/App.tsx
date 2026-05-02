@@ -9,6 +9,7 @@ import Home from "@/pages/home";
 import SpecsList from "@/pages/specs";
 import SpecDetail from "@/pages/spec-detail";
 import Landing from "@/pages/landing";
+import SharedSpec from "@/pages/shared-spec";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,25 +20,32 @@ const queryClient = new QueryClient({
   },
 });
 
-function AppRoutes() {
-  return (
-    <Layout>
-      <Switch>
-        <Route path="/app" component={Home} />
-        <Route path="/app/specs" component={SpecsList} />
-        <Route path="/app/specs/:id" component={SpecDetail} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
-  );
-}
-
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
-      <Route path="/app" component={AppRoutes} />
-      <Route path="/app/:rest*" component={AppRoutes} />
+      <Route path="/share/:token" component={SharedSpec} />
+      <Route path="/app">
+        {() => (
+          <Layout>
+            <Home />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/app/specs/:id">
+        {() => (
+          <Layout>
+            <SpecDetail />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/app/specs">
+        {() => (
+          <Layout>
+            <SpecsList />
+          </Layout>
+        )}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

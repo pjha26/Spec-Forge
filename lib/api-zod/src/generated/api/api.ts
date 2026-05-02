@@ -8,6 +8,51 @@
 import * as zod from "zod";
 
 /**
+ * @summary Get current authenticated user
+ */
+export const GetCurrentAuthUserResponse = zod.object({
+  isAuthenticated: zod.boolean(),
+  user: zod
+    .object({
+      id: zod.string(),
+      email: zod.string().nullish(),
+      firstName: zod.string().nullish(),
+      lastName: zod.string().nullish(),
+      profileImageUrl: zod.string().nullish(),
+    })
+    .nullish(),
+});
+
+/**
+ * @summary Redirect to OIDC login
+ */
+export const LoginQueryParams = zod.object({
+  returnTo: zod.coerce.string().optional(),
+});
+
+/**
+ * @summary Exchange authorization code for mobile session token
+ */
+export const ExchangeMobileAuthorizationCodeBody = zod.object({
+  code: zod.string(),
+  code_verifier: zod.string(),
+  state: zod.string(),
+  nonce: zod.string().optional(),
+  redirect_uri: zod.string(),
+});
+
+export const ExchangeMobileAuthorizationCodeResponse = zod.object({
+  token: zod.string(),
+});
+
+/**
+ * @summary Log out mobile session
+ */
+export const LogoutMobileSessionResponse = zod.object({
+  success: zod.boolean(),
+});
+
+/**
  * Returns server health status
  * @summary Health check
  */
@@ -44,6 +89,9 @@ export const ListSpecsResponseItem = zod.object({
   complexitySummary: zod.string().nullish(),
   mermaidDiagram: zod.string().nullish(),
   conversationId: zod.number().nullish(),
+  shareToken: zod.string().nullish(),
+  viewCount: zod.number(),
+  lastSyncedAt: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -97,6 +145,9 @@ export const GetSpecResponse = zod.object({
   complexitySummary: zod.string().nullish(),
   mermaidDiagram: zod.string().nullish(),
   conversationId: zod.number().nullish(),
+  shareToken: zod.string().nullish(),
+  viewCount: zod.number(),
+  lastSyncedAt: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -126,6 +177,92 @@ export const GetOrCreateSpecChatResponse = zod.object({
   id: zod.number(),
   title: zod.string(),
   createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Get a publicly shared spec by its share token
+ */
+export const GetSpecByShareTokenParams = zod.object({
+  token: zod.coerce.string(),
+});
+
+export const GetSpecByShareTokenResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  specType: zod.enum([
+    "system_design",
+    "api_design",
+    "database_schema",
+    "feature_spec",
+  ]),
+  inputType: zod.enum(["github_url", "description"]),
+  inputValue: zod.string(),
+  content: zod.string(),
+  status: zod.enum(["pending", "generating", "completed", "failed"]),
+  complexityScore: zod.number().nullish(),
+  techDebtRisks: zod
+    .array(
+      zod.object({
+        title: zod.string(),
+        severity: zod.enum(["high", "medium", "low"]),
+        description: zod.string(),
+      }),
+    )
+    .nullish(),
+  complexitySummary: zod.string().nullish(),
+  mermaidDiagram: zod.string().nullish(),
+  conversationId: zod.number().nullish(),
+  shareToken: zod.string().nullish(),
+  viewCount: zod.number(),
+  lastSyncedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Manually trigger a re-generation of a spec from its original source
+ */
+export const SyncSpecParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const SyncSpecResponse = zod.object({
+  id: zod.number(),
+  status: zod.string(),
+  lastSyncedAt: zod.string().nullish(),
+});
+
+/**
+ * @summary Get or create webhook configuration for a spec
+ */
+export const GetSpecWebhookParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetSpecWebhookResponse = zod.object({
+  webhookUrl: zod.string(),
+  secret: zod.string(),
+  instructions: zod.string(),
+});
+
+/**
+ * @summary Receive GitHub push webhooks
+ */
+export const GithubWebhookResponse = zod.object({
+  processed: zod.number(),
+});
+
+/**
+ * @summary Generate or retrieve a public share link for a spec
+ */
+export const ShareSpecParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ShareSpecResponse = zod.object({
+  shareToken: zod.string(),
+  shareUrl: zod.string(),
+  viewCount: zod.number(),
 });
 
 /**
@@ -159,6 +296,9 @@ export const ListRecentSpecsResponse = zod.object({
       complexitySummary: zod.string().nullish(),
       mermaidDiagram: zod.string().nullish(),
       conversationId: zod.number().nullish(),
+      shareToken: zod.string().nullish(),
+      viewCount: zod.number(),
+      lastSyncedAt: zod.coerce.date().nullish(),
       createdAt: zod.coerce.date(),
       updatedAt: zod.coerce.date(),
     }),

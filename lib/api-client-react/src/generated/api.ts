@@ -24,10 +24,19 @@ import type {
   ApiError,
   CreateAnthropicConversationBody,
   CreateSpecBody,
+  ExchangeMobileAuthorizationCodeBody,
+  ExchangeMobileAuthorizationCodeResponse,
+  GetCurrentAuthUserResponse,
+  GithubWebhook200,
   HealthStatus,
+  LoginParams,
+  LogoutMobileSessionResponse,
   RecentSpecsResponse,
   SendAnthropicMessageBody,
+  ShareSpecResponse,
   Spec,
+  SyncSpecResponse,
+  WebhookConfigResponse,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -38,6 +47,474 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+/**
+ * @summary Get current authenticated user
+ */
+export const getGetCurrentAuthUserUrl = () => {
+  return `/api/auth/user`;
+};
+
+export const getCurrentAuthUser = async (
+  options?: RequestInit,
+): Promise<GetCurrentAuthUserResponse> => {
+  return customFetch<GetCurrentAuthUserResponse>(getGetCurrentAuthUserUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCurrentAuthUserQueryKey = () => {
+  return [`/api/auth/user`] as const;
+};
+
+export const getGetCurrentAuthUserQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCurrentAuthUser>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCurrentAuthUser>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCurrentAuthUserQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getCurrentAuthUser>>
+  > = ({ signal }) => getCurrentAuthUser({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCurrentAuthUser>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCurrentAuthUserQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCurrentAuthUser>>
+>;
+export type GetCurrentAuthUserQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get current authenticated user
+ */
+
+export function useGetCurrentAuthUser<
+  TData = Awaited<ReturnType<typeof getCurrentAuthUser>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCurrentAuthUser>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCurrentAuthUserQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Redirect to OIDC login
+ */
+export const getLoginUrl = (params?: LoginParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/login?${stringifiedParams}`
+    : `/api/login`;
+};
+
+export const login = async (
+  params?: LoginParams,
+  options?: RequestInit,
+): Promise<unknown> => {
+  return customFetch<unknown>(getLoginUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getLoginQueryKey = (params?: LoginParams) => {
+  return [`/api/login`, ...(params ? [params] : [])] as const;
+};
+
+export const getLoginQueryOptions = <
+  TData = Awaited<ReturnType<typeof login>>,
+  TError = ErrorType<void>,
+>(
+  params?: LoginParams,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof login>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getLoginQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof login>>> = ({
+    signal,
+  }) => login(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof login>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type LoginQueryResult = NonNullable<Awaited<ReturnType<typeof login>>>;
+export type LoginQueryError = ErrorType<void>;
+
+/**
+ * @summary Redirect to OIDC login
+ */
+
+export function useLogin<
+  TData = Awaited<ReturnType<typeof login>>,
+  TError = ErrorType<void>,
+>(
+  params?: LoginParams,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof login>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getLoginQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Log out and clear session
+ */
+export const getLogoutUrl = () => {
+  return `/api/logout`;
+};
+
+export const logout = async (options?: RequestInit): Promise<unknown> => {
+  return customFetch<unknown>(getLogoutUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getLogoutQueryKey = () => {
+  return [`/api/logout`] as const;
+};
+
+export const getLogoutQueryOptions = <
+  TData = Awaited<ReturnType<typeof logout>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof logout>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getLogoutQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof logout>>> = ({
+    signal,
+  }) => logout({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof logout>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type LogoutQueryResult = NonNullable<Awaited<ReturnType<typeof logout>>>;
+export type LogoutQueryError = ErrorType<void>;
+
+/**
+ * @summary Log out and clear session
+ */
+
+export function useLogout<
+  TData = Awaited<ReturnType<typeof logout>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof logout>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getLogoutQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary OIDC callback
+ */
+export const getAuthCallbackUrl = () => {
+  return `/api/callback`;
+};
+
+export const authCallback = async (options?: RequestInit): Promise<unknown> => {
+  return customFetch<unknown>(getAuthCallbackUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAuthCallbackQueryKey = () => {
+  return [`/api/callback`] as const;
+};
+
+export const getAuthCallbackQueryOptions = <
+  TData = Awaited<ReturnType<typeof authCallback>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof authCallback>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAuthCallbackQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof authCallback>>> = ({
+    signal,
+  }) => authCallback({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof authCallback>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AuthCallbackQueryResult = NonNullable<
+  Awaited<ReturnType<typeof authCallback>>
+>;
+export type AuthCallbackQueryError = ErrorType<void>;
+
+/**
+ * @summary OIDC callback
+ */
+
+export function useAuthCallback<
+  TData = Awaited<ReturnType<typeof authCallback>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof authCallback>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAuthCallbackQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Exchange authorization code for mobile session token
+ */
+export const getExchangeMobileAuthorizationCodeUrl = () => {
+  return `/api/mobile-auth/token-exchange`;
+};
+
+export const exchangeMobileAuthorizationCode = async (
+  exchangeMobileAuthorizationCodeBody: ExchangeMobileAuthorizationCodeBody,
+  options?: RequestInit,
+): Promise<ExchangeMobileAuthorizationCodeResponse> => {
+  return customFetch<ExchangeMobileAuthorizationCodeResponse>(
+    getExchangeMobileAuthorizationCodeUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(exchangeMobileAuthorizationCodeBody),
+    },
+  );
+};
+
+export const getExchangeMobileAuthorizationCodeMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof exchangeMobileAuthorizationCode>>,
+    TError,
+    { data: BodyType<ExchangeMobileAuthorizationCodeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof exchangeMobileAuthorizationCode>>,
+  TError,
+  { data: BodyType<ExchangeMobileAuthorizationCodeBody> },
+  TContext
+> => {
+  const mutationKey = ["exchangeMobileAuthorizationCode"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof exchangeMobileAuthorizationCode>>,
+    { data: BodyType<ExchangeMobileAuthorizationCodeBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return exchangeMobileAuthorizationCode(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ExchangeMobileAuthorizationCodeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof exchangeMobileAuthorizationCode>>
+>;
+export type ExchangeMobileAuthorizationCodeMutationBody =
+  BodyType<ExchangeMobileAuthorizationCodeBody>;
+export type ExchangeMobileAuthorizationCodeMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Exchange authorization code for mobile session token
+ */
+export const useExchangeMobileAuthorizationCode = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof exchangeMobileAuthorizationCode>>,
+    TError,
+    { data: BodyType<ExchangeMobileAuthorizationCodeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof exchangeMobileAuthorizationCode>>,
+  TError,
+  { data: BodyType<ExchangeMobileAuthorizationCodeBody> },
+  TContext
+> => {
+  return useMutation(
+    getExchangeMobileAuthorizationCodeMutationOptions(options),
+  );
+};
+
+/**
+ * @summary Log out mobile session
+ */
+export const getLogoutMobileSessionUrl = () => {
+  return `/api/mobile-auth/logout`;
+};
+
+export const logoutMobileSession = async (
+  options?: RequestInit,
+): Promise<LogoutMobileSessionResponse> => {
+  return customFetch<LogoutMobileSessionResponse>(getLogoutMobileSessionUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getLogoutMobileSessionMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof logoutMobileSession>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof logoutMobileSession>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["logoutMobileSession"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof logoutMobileSession>>,
+    void
+  > = () => {
+    return logoutMobileSession(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type LogoutMobileSessionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof logoutMobileSession>>
+>;
+
+export type LogoutMobileSessionMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Log out mobile session
+ */
+export const useLogoutMobileSession = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof logoutMobileSession>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof logoutMobileSession>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getLogoutMobileSessionMutationOptions(options));
+};
 
 /**
  * Returns server health status
@@ -593,6 +1070,430 @@ export const useGetOrCreateSpecChat = <
   TContext
 > => {
   return useMutation(getGetOrCreateSpecChatMutationOptions(options));
+};
+
+/**
+ * @summary Get a publicly shared spec by its share token
+ */
+export const getGetSpecByShareTokenUrl = (token: string) => {
+  return `/api/specs/share/${token}`;
+};
+
+export const getSpecByShareToken = async (
+  token: string,
+  options?: RequestInit,
+): Promise<Spec> => {
+  return customFetch<Spec>(getGetSpecByShareTokenUrl(token), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSpecByShareTokenQueryKey = (token: string) => {
+  return [`/api/specs/share/${token}`] as const;
+};
+
+export const getGetSpecByShareTokenQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSpecByShareToken>>,
+  TError = ErrorType<ApiError>,
+>(
+  token: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSpecByShareToken>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetSpecByShareTokenQueryKey(token);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getSpecByShareToken>>
+  > = ({ signal }) => getSpecByShareToken(token, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!token,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSpecByShareToken>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSpecByShareTokenQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSpecByShareToken>>
+>;
+export type GetSpecByShareTokenQueryError = ErrorType<ApiError>;
+
+/**
+ * @summary Get a publicly shared spec by its share token
+ */
+
+export function useGetSpecByShareToken<
+  TData = Awaited<ReturnType<typeof getSpecByShareToken>>,
+  TError = ErrorType<ApiError>,
+>(
+  token: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSpecByShareToken>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSpecByShareTokenQueryOptions(token, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Manually trigger a re-generation of a spec from its original source
+ */
+export const getSyncSpecUrl = (id: number) => {
+  return `/api/specs/${id}/sync`;
+};
+
+export const syncSpec = async (
+  id: number,
+  options?: RequestInit,
+): Promise<SyncSpecResponse> => {
+  return customFetch<SyncSpecResponse>(getSyncSpecUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSyncSpecMutationOptions = <
+  TError = ErrorType<ApiError>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncSpec>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof syncSpec>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["syncSpec"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof syncSpec>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return syncSpec(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SyncSpecMutationResult = NonNullable<
+  Awaited<ReturnType<typeof syncSpec>>
+>;
+
+export type SyncSpecMutationError = ErrorType<ApiError>;
+
+/**
+ * @summary Manually trigger a re-generation of a spec from its original source
+ */
+export const useSyncSpec = <
+  TError = ErrorType<ApiError>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncSpec>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof syncSpec>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getSyncSpecMutationOptions(options));
+};
+
+/**
+ * @summary Get or create webhook configuration for a spec
+ */
+export const getGetSpecWebhookUrl = (id: number) => {
+  return `/api/specs/${id}/webhook`;
+};
+
+export const getSpecWebhook = async (
+  id: number,
+  options?: RequestInit,
+): Promise<WebhookConfigResponse> => {
+  return customFetch<WebhookConfigResponse>(getGetSpecWebhookUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSpecWebhookQueryKey = (id: number) => {
+  return [`/api/specs/${id}/webhook`] as const;
+};
+
+export const getGetSpecWebhookQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSpecWebhook>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSpecWebhook>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSpecWebhookQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSpecWebhook>>> = ({
+    signal,
+  }) => getSpecWebhook(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSpecWebhook>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSpecWebhookQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSpecWebhook>>
+>;
+export type GetSpecWebhookQueryError = ErrorType<void>;
+
+/**
+ * @summary Get or create webhook configuration for a spec
+ */
+
+export function useGetSpecWebhook<
+  TData = Awaited<ReturnType<typeof getSpecWebhook>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSpecWebhook>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSpecWebhookQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Receive GitHub push webhooks
+ */
+export const getGithubWebhookUrl = () => {
+  return `/api/webhooks/github`;
+};
+
+export const githubWebhook = async (
+  options?: RequestInit,
+): Promise<GithubWebhook200> => {
+  return customFetch<GithubWebhook200>(getGithubWebhookUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getGithubWebhookMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof githubWebhook>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof githubWebhook>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["githubWebhook"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof githubWebhook>>,
+    void
+  > = () => {
+    return githubWebhook(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type GithubWebhookMutationResult = NonNullable<
+  Awaited<ReturnType<typeof githubWebhook>>
+>;
+
+export type GithubWebhookMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Receive GitHub push webhooks
+ */
+export const useGithubWebhook = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof githubWebhook>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof githubWebhook>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getGithubWebhookMutationOptions(options));
+};
+
+/**
+ * @summary Generate or retrieve a public share link for a spec
+ */
+export const getShareSpecUrl = (id: number) => {
+  return `/api/specs/${id}/share`;
+};
+
+export const shareSpec = async (
+  id: number,
+  options?: RequestInit,
+): Promise<ShareSpecResponse> => {
+  return customFetch<ShareSpecResponse>(getShareSpecUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getShareSpecMutationOptions = <
+  TError = ErrorType<ApiError>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof shareSpec>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof shareSpec>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["shareSpec"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof shareSpec>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return shareSpec(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ShareSpecMutationResult = NonNullable<
+  Awaited<ReturnType<typeof shareSpec>>
+>;
+
+export type ShareSpecMutationError = ErrorType<ApiError>;
+
+/**
+ * @summary Generate or retrieve a public share link for a spec
+ */
+export const useShareSpec = <
+  TError = ErrorType<ApiError>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof shareSpec>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof shareSpec>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getShareSpecMutationOptions(options));
 };
 
 /**

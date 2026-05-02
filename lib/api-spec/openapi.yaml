@@ -14,7 +14,87 @@ tags:
     description: Generated spec documents
   - name: anthropic
     description: Anthropic AI chat operations
+  - name: auth
+    description: Authentication operations
 paths:
+  /auth/user:
+    get:
+      operationId: getCurrentAuthUser
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user or unauthenticated state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCurrentAuthUserResponse"
+
+  /login:
+    get:
+      operationId: login
+      tags: [auth]
+      summary: Redirect to OIDC login
+      parameters:
+        - name: returnTo
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirect to OIDC provider
+
+  /logout:
+    get:
+      operationId: logout
+      tags: [auth]
+      summary: Log out and clear session
+      responses:
+        "302":
+          description: Redirect after logout
+
+  /callback:
+    get:
+      operationId: authCallback
+      tags: [auth]
+      summary: OIDC callback
+      responses:
+        "302":
+          description: Redirect after authentication
+
+  /mobile-auth/token-exchange:
+    post:
+      operationId: exchangeMobileAuthorizationCode
+      tags: [auth]
+      summary: Exchange authorization code for mobile session token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExchangeMobileAuthorizationCodeBody"
+      responses:
+        "200":
+          description: Session token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExchangeMobileAuthorizationCodeResponse"
+
+  /mobile-auth/logout:
+    post:
+      operationId: logoutMobileSession
+      tags: [auth]
+      summary: Log out mobile session
+      responses:
+        "200":
+          description: Logout result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutMobileSessionResponse"
+
   /healthz:
     get:
       operationId: healthCheck
@@ -140,6 +220,120 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AnthropicConversation"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /specs/share/{token}:
+    get:
+      operationId: getSpecByShareToken
+      tags: [specs]
+      summary: Get a publicly shared spec by its share token
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Shared spec document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Spec"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /specs/{id}/sync:
+    post:
+      operationId: syncSpec
+      tags: [specs]
+      summary: Manually trigger a re-generation of a spec from its original source
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sync started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncSpecResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /specs/{id}/webhook:
+    get:
+      operationId: getSpecWebhook
+      tags: [specs]
+      summary: Get or create webhook configuration for a spec
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Webhook config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookConfigResponse"
+        "404":
+          description: Not found
+
+  /webhooks/github:
+    post:
+      operationId: githubWebhook
+      tags: [specs]
+      summary: Receive GitHub push webhooks
+      responses:
+        "200":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  processed:
+                    type: integer
+                required:
+                  - processed
+
+  /specs/{id}/share:
+    post:
+      operationId: shareSpec
+      tags: [specs]
+      summary: Generate or retrieve a public share link for a spec
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Share link details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShareSpecResponse"
         "404":
           description: Not found
           content:
@@ -348,6 +542,15 @@ components:
         conversationId:
           type: integer
           nullable: true
+        shareToken:
+          type: string
+          nullable: true
+        viewCount:
+          type: integer
+        lastSyncedAt:
+          type: string
+          format: date-time
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -362,8 +565,23 @@ components:
         - inputValue
         - content
         - status
+        - viewCount
         - createdAt
         - updatedAt
+
+    ShareSpecResponse:
+      type: object
+      properties:
+        shareToken:
+          type: string
+        shareUrl:
+          type: string
+        viewCount:
+          type: integer
+      required:
+        - shareToken
+        - shareUrl
+        - viewCount
 
     CreateSpecBody:
       type: object
@@ -481,3 +699,97 @@ components:
           type: string
       required:
         - error
+
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          nullable: true
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
+        profileImageUrl:
+          type: string
+          nullable: true
+      required:
+        - id
+
+    GetCurrentAuthUserResponse:
+      type: object
+      properties:
+        isAuthenticated:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/AuthUser"
+          nullable: true
+      required:
+        - isAuthenticated
+
+    ExchangeMobileAuthorizationCodeBody:
+      type: object
+      properties:
+        code:
+          type: string
+        code_verifier:
+          type: string
+        state:
+          type: string
+        nonce:
+          type: string
+        redirect_uri:
+          type: string
+      required:
+        - code
+        - code_verifier
+        - state
+        - redirect_uri
+
+    ExchangeMobileAuthorizationCodeResponse:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+
+    LogoutMobileSessionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
+
+    SyncSpecResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+        lastSyncedAt:
+          type: string
+          nullable: true
+      required:
+        - id
+        - status
+
+    WebhookConfigResponse:
+      type: object
+      properties:
+        webhookUrl:
+          type: string
+        secret:
+          type: string
+        instructions:
+          type: string
+      required:
+        - webhookUrl
+        - secret
+        - instructions
