@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import SpecsList from "@/pages/specs";
 import SpecDetail from "@/pages/spec-detail";
+import Landing from "@/pages/landing";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,16 +19,27 @@ const queryClient = new QueryClient({
   },
 });
 
-function Router() {
+function AppRoutes() {
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/specs" component={SpecsList} />
-        <Route path="/specs/:id" component={SpecDetail} />
+        <Route path="/app" component={Home} />
+        <Route path="/app/specs" component={SpecsList} />
+        <Route path="/app/specs/:id" component={SpecDetail} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
+  );
+}
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/" component={Landing} />
+      <Route path="/app" component={AppRoutes} />
+      <Route path="/app/:rest*" component={AppRoutes} />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 

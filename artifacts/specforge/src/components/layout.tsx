@@ -17,14 +17,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <span className="font-mono font-bold tracking-tight text-lg">SpecForge</span>
         </div>
         <nav className="flex-1 p-4 space-y-2">
-          <Link href="/">
-            <div className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer ${location === "/" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
+          <Link href="/app">
+            <div className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer ${location === "/app" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
               <FileCode2 className="w-4 h-4" />
               <span className="font-medium text-sm">Generator</span>
             </div>
           </Link>
-          <Link href="/specs">
-            <div className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer ${location.startsWith("/specs") && location !== "/" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
+          <Link href="/app/specs">
+            <div className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer ${location.startsWith("/app/specs") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
               <History className="w-4 h-4" />
               <span className="font-medium text-sm">History</span>
             </div>
