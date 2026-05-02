@@ -20,11 +20,13 @@ import {
   FileCode2,
   Network,
   Zap,
+  LayoutTemplate,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ComplexityScoreCard } from "@/components/complexity-score-card";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
+import { SpecTemplatesModal, type SpecTemplate } from "@/components/spec-templates-modal";
 
 const SPEC_TYPES = [
   {
@@ -84,9 +86,18 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamedContent, setStreamedContent] = useState("");
   const contentEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [activeTab, setActiveTab] = useState<"document" | "diagram">("document");
   const [analysisData, setAnalysisData] = useState<any>(null);
   const [diagramData, setDiagramData] = useState<string | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
+
+  const handleTemplateSelect = (tpl: SpecTemplate) => {
+    setSpecType(tpl.specType as any);
+    setInputType("description");
+    setInputValue(tpl.description);
+    setTimeout(() => textareaRef.current?.focus(), 80);
+  };
 
   const handleGenerate = async () => {
     if (!inputValue.trim()) {
@@ -151,19 +162,39 @@ export default function Home() {
     <div className="flex-1 overflow-auto bg-background p-6">
       <div className="max-w-6xl mx-auto space-y-6">
 
-        <header className="space-y-1 animate-slide-up">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{
-                background: "linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(6,182,212,0.1) 100%)",
-                border: "1px solid rgba(139,92,246,0.3)",
-              }}
-            >
-              <Zap className="w-4 h-4" style={{ color: "hsl(263,90%,70%)" }} />
+        <header className="animate-slide-up flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{
+                  background: "linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(6,182,212,0.1) 100%)",
+                  border: "1px solid rgba(139,92,246,0.3)",
+                }}
+              >
+                <Zap className="w-4 h-4" style={{ color: "hsl(263,90%,70%)" }} />
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight gradient-text">Generate Spec</h1>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight gradient-text">Generate Spec</h1>
+            <p className="text-muted-foreground text-sm ml-11">Instantly produce professional-grade technical specs from a codebase or description.</p>
           </div>
-          <p className="text-muted-foreground text-sm ml-11">Instantly produce professional-grade technical specs from a codebase or description.</p>
+          <motion.button
+            onClick={() => setShowTemplates(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-mono font-bold shrink-0"
+            style={{
+              background: "linear-gradient(135deg, rgba(139,92,246,0.18), rgba(6,182,212,0.1))",
+              border: "1px solid rgba(139,92,246,0.35)",
+              color: "hsl(263,90%,74%)",
+              boxShadow: "0 0 18px rgba(139,92,246,0.15)",
+            }}
+            whileHover={{ scale: 1.04, boxShadow: "0 0 28px rgba(139,92,246,0.35)" } as any}
+            whileTap={{ scale: 0.97 }}
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.12, type: "spring", stiffness: 360, damping: 28 }}
+          >
+            <LayoutTemplate className="w-4 h-4" />
+            Templates
+          </motion.button>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -283,6 +314,7 @@ export default function Home() {
                   />
                 ) : (
                   <Textarea
+                    ref={textareaRef}
                     placeholder="Describe your project, architecture, or feature requirements..."
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
@@ -513,6 +545,16 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Templates modal */}
+      <AnimatePresence>
+        {showTemplates && (
+          <SpecTemplatesModal
+            onClose={() => setShowTemplates(false)}
+            onSelect={handleTemplateSelect}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
