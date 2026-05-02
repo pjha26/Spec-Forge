@@ -1,138 +1,137 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
   useCreateSpec,
   useListRecentSpecs,
 } from "@workspace/api-client-react";
-import { 
-  Database, 
-  Server, 
-  Cpu, 
-  BookOpen, 
-  Terminal, 
-  Github, 
+import {
+  Database,
+  Server,
+  Cpu,
+  BookOpen,
+  Terminal,
+  Github,
   FileText,
   Loader2,
   FileCode2,
-  Network
+  Network,
+  Zap,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ComplexityScoreCard } from "@/components/complexity-score-card";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
 
+const SPEC_TYPES = [
+  {
+    value: "system_design" as const,
+    label: "System Design",
+    icon: Server,
+    color: "#7C3AED",
+    glow: "rgba(124,58,237,0.4)",
+    gradient: "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(99,102,241,0.08) 100%)",
+    border: "rgba(124,58,237,0.4)",
+    desc: "Architecture & data flow",
+  },
+  {
+    value: "api_design" as const,
+    label: "API Design",
+    icon: Cpu,
+    color: "#06B6D4",
+    glow: "rgba(6,182,212,0.4)",
+    gradient: "linear-gradient(135deg, rgba(6,182,212,0.15) 0%, rgba(6,182,212,0.05) 100%)",
+    border: "rgba(6,182,212,0.4)",
+    desc: "Endpoints & schemas",
+  },
+  {
+    value: "database_schema" as const,
+    label: "Database Schema",
+    icon: Database,
+    color: "#10B981",
+    glow: "rgba(16,185,129,0.4)",
+    gradient: "linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0.05) 100%)",
+    border: "rgba(16,185,129,0.4)",
+    desc: "Tables & relationships",
+  },
+  {
+    value: "feature_spec" as const,
+    label: "Feature Spec",
+    icon: BookOpen,
+    color: "#F59E0B",
+    glow: "rgba(245,158,11,0.4)",
+    gradient: "linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.05) 100%)",
+    border: "rgba(245,158,11,0.4)",
+    desc: "Stories & criteria",
+  },
+];
+
 export default function Home() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  
+
   const [inputType, setInputType] = useState<"github_url" | "description">("github_url");
   const [inputValue, setInputValue] = useState("");
   const [specType, setSpecType] = useState<"system_design" | "api_design" | "database_schema" | "feature_spec">("system_design");
-  
+
   const createSpec = useCreateSpec();
   const { data: recentSpecs } = useListRecentSpecs();
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamedContent, setStreamedContent] = useState("");
   const contentEndRef = useRef<HTMLDivElement>(null);
-  
   const [activeTab, setActiveTab] = useState<"document" | "diagram">("document");
-  
-  // New State for SSE Analysis & Diagram
   const [analysisData, setAnalysisData] = useState<any>(null);
   const [diagramData, setDiagramData] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     if (!inputValue.trim()) {
-      toast({
-        title: "Input required",
-        description: "Please provide a GitHub URL or project description.",
-        variant: "destructive"
-      });
+      toast({ title: "Input required", description: "Please provide a GitHub URL or project description.", variant: "destructive" });
       return;
     }
-
     try {
       setIsGenerating(true);
       setStreamedContent("");
       setAnalysisData(null);
       setDiagramData(null);
       setActiveTab("document");
-      
-      const title = inputType === "github_url" 
-        ? inputValue.split("/").pop() || "Project Spec" 
+
+      const title = inputType === "github_url"
+        ? inputValue.split("/").pop() || "Project Spec"
         : "Generated Spec";
 
-      const spec = await createSpec.mutateAsync({
-        data: {
-          inputType,
-          inputValue,
-          specType,
-          title
-        }
-      });
-
-      // Start streaming
+      const spec = await createSpec.mutateAsync({ data: { inputType, inputValue, specType, title } });
       const response = await fetch(`/api/specs/${spec.id}/stream`, { method: "POST" });
       if (!response.body) throw new Error("No response body");
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-
       let buffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
         buffer += decoder.decode(value, { stream: true });
-        
-        // Process complete SSE events from buffer
         const lines = buffer.split("\n\n");
         buffer = lines.pop() || "";
-        
         for (const line of lines) {
           if (line.startsWith("data: ")) {
-            const dataStr = line.slice(6);
             try {
-              const data = JSON.parse(dataStr);
-              
-              if (data.content) {
-                setStreamedContent(prev => prev + data.content);
-              } else if (data.analysis) {
-                setAnalysisData(data.analysis);
-              } else if (data.diagram) {
-                setDiagramData(data.diagram);
-              } else if (data.error) {
-                toast({
-                  title: "Generation Error",
-                  description: data.error,
-                  variant: "destructive"
-                });
-              }
-            } catch (e) {
-              console.error("Failed to parse SSE JSON", e);
-            }
+              const data = JSON.parse(line.slice(6));
+              if (data.content) setStreamedContent(prev => prev + data.content);
+              else if (data.analysis) setAnalysisData(data.analysis);
+              else if (data.diagram) setDiagramData(data.diagram);
+              else if (data.error) toast({ title: "Generation Error", description: data.error, variant: "destructive" });
+            } catch {}
           }
         }
       }
 
-      toast({
-        title: "Success",
-        description: "Spec generated successfully.",
-      });
-      
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to generate spec.",
-        variant: "destructive"
-      });
+      toast({ title: "Spec generated!", description: "Your technical document is ready." });
+    } catch {
+      toast({ title: "Error", description: "Failed to generate spec.", variant: "destructive" });
     } finally {
       setIsGenerating(false);
     }
@@ -144,63 +143,105 @@ export default function Home() {
     }
   }, [streamedContent, activeTab]);
 
+  const activeSpecType = SPEC_TYPES.find(s => s.value === specType)!;
+
   return (
     <div className="flex-1 overflow-auto bg-background p-6">
-      <div className="max-w-6xl mx-auto space-y-8">
-        
-        <header className="space-y-2">
-          <h1 className="text-3xl font-mono font-bold tracking-tight">Generate Spec</h1>
-          <p className="text-muted-foreground">Instantly produce professional-grade technical specs from a codebase or description.</p>
+      <div className="max-w-6xl mx-auto space-y-6">
+
+        <header className="space-y-1 animate-slide-up">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(6,182,212,0.1) 100%)",
+                border: "1px solid rgba(139,92,246,0.3)",
+              }}
+            >
+              <Zap className="w-4 h-4" style={{ color: "hsl(263,90%,70%)" }} />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight gradient-text">Generate Spec</h1>
+          </div>
+          <p className="text-muted-foreground text-sm ml-11">Instantly produce professional-grade technical specs from a codebase or description.</p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="p-5 border-border bg-card space-y-5">
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-foreground">Spec Type</label>
-                <div className="grid grid-cols-1 gap-2">
-                  <SpecTypeOption 
-                    active={specType === "system_design"} 
-                    onClick={() => setSpecType("system_design")}
-                    icon={<Server className="w-4 h-4" />}
-                    label="System Design"
-                  />
-                  <SpecTypeOption 
-                    active={specType === "api_design"} 
-                    onClick={() => setSpecType("api_design")}
-                    icon={<Cpu className="w-4 h-4" />}
-                    label="API Design"
-                  />
-                  <SpecTypeOption 
-                    active={specType === "database_schema"} 
-                    onClick={() => setSpecType("database_schema")}
-                    icon={<Database className="w-4 h-4" />}
-                    label="Database Schema"
-                  />
-                  <SpecTypeOption 
-                    active={specType === "feature_spec"} 
-                    onClick={() => setSpecType("feature_spec")}
-                    icon={<BookOpen className="w-4 h-4" />}
-                    label="Feature Spec"
-                  />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1 space-y-4">
+            <div className="rounded-xl p-5 space-y-5 glass-card animate-slide-up" style={{ animationDelay: "0.05s" }}>
+
+              <div className="space-y-2.5">
+                <label className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest">Spec Type</label>
+                <div className="grid grid-cols-1 gap-1.5">
+                  {SPEC_TYPES.map((type) => {
+                    const Icon = type.icon;
+                    const active = specType === type.value;
+                    return (
+                      <button
+                        key={type.value}
+                        onClick={() => setSpecType(type.value)}
+                        className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 text-left group"
+                        style={active ? {
+                          background: type.gradient,
+                          border: `1px solid ${type.border}`,
+                          boxShadow: `0 0 12px ${type.glow.replace("0.4", "0.2")}, inset 0 1px 0 rgba(255,255,255,0.06)`,
+                        } : {
+                          background: "rgba(255,255,255,0.02)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
+                        <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-all duration-200"
+                          style={active ? {
+                            background: `${type.color}22`,
+                            boxShadow: `0 0 8px ${type.glow}`,
+                          } : {
+                            background: "rgba(255,255,255,0.04)",
+                          }}
+                        >
+                          <Icon className="w-3.5 h-3.5 transition-all duration-200"
+                            style={{ color: active ? type.color : undefined }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm" style={{ color: active ? type.color : undefined }}>{type.label}</p>
+                          <p className="text-[10px] text-muted-foreground">{type.desc}</p>
+                        </div>
+                        {active && (
+                          <div className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse"
+                            style={{ background: type.color }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-foreground">Input Source</label>
-                <div className="flex bg-secondary p-1 rounded-md">
-                  <button
-                    className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-medium rounded ${inputType === "github_url" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                    onClick={() => setInputType("github_url")}
-                  >
-                    <Github className="w-3 h-3" /> GitHub
-                  </button>
-                  <button
-                    className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-medium rounded ${inputType === "description" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                    onClick={() => setInputType("description")}
-                  >
-                    <FileText className="w-3 h-3" /> Description
-                  </button>
+              <div className="space-y-2.5">
+                <label className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest">Input Source</label>
+                <div className="flex rounded-lg p-1 gap-1"
+                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  {[
+                    { value: "github_url" as const, label: "GitHub", icon: Github },
+                    { value: "description" as const, label: "Text", icon: FileText },
+                  ].map(({ value, label, icon: Icon }) => (
+                    <button
+                      key={value}
+                      onClick={() => setInputType(value)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200"
+                      style={inputType === value ? {
+                        background: "rgba(139,92,246,0.2)",
+                        color: "hsl(263,90%,74%)",
+                        border: "1px solid rgba(139,92,246,0.3)",
+                        boxShadow: "0 0 8px rgba(139,92,246,0.2)",
+                      } : {
+                        color: "hsl(var(--muted-foreground))",
+                        border: "1px solid transparent",
+                      }}
+                    >
+                      <Icon className="w-3 h-3" />
+                      {label}
+                    </button>
+                  ))}
                 </div>
 
                 {inputType === "github_url" ? (
@@ -209,133 +250,179 @@ export default function Home() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     className="font-mono text-sm"
+                    style={{
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      transition: "border-color 0.2s, box-shadow 0.2s",
+                    }}
+                    onFocus={e => {
+                      e.target.style.borderColor = "rgba(139,92,246,0.5)";
+                      e.target.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.1)";
+                    }}
+                    onBlur={e => {
+                      e.target.style.borderColor = "rgba(255,255,255,0.08)";
+                      e.target.style.boxShadow = "none";
+                    }}
                   />
                 ) : (
                   <Textarea
                     placeholder="Describe your project, architecture, or feature requirements..."
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    className="min-h-[120px] text-sm resize-none"
+                    className="min-h-[100px] text-sm resize-none"
+                    style={{
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                    onFocus={e => {
+                      e.target.style.borderColor = "rgba(139,92,246,0.5)";
+                      e.target.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.1)";
+                    }}
+                    onBlur={e => {
+                      e.target.style.borderColor = "rgba(255,255,255,0.08)";
+                      e.target.style.boxShadow = "none";
+                    }}
                   />
                 )}
               </div>
 
-              <Button 
-                onClick={handleGenerate} 
+              <button
+                onClick={handleGenerate}
                 disabled={isGenerating || !inputValue.trim()}
-                className="w-full font-mono font-bold tracking-wide"
+                className="w-full py-3 px-4 rounded-lg font-mono font-bold text-sm text-white tracking-wide disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 btn-gradient"
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    GENERATING
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    GENERATING…
                   </>
                 ) : (
                   <>
-                    <Terminal className="w-4 h-4 mr-2" />
+                    <Terminal className="w-4 h-4" />
                     GENERATE SPEC
                   </>
                 )}
-              </Button>
-            </Card>
+              </button>
+            </div>
 
-            {analysisData || (isGenerating && streamedContent.length > 500) ? (
-              <ComplexityScoreCard 
-                score={analysisData?.score ?? null}
-                label={analysisData?.label ?? null}
-                risks={analysisData?.risks ?? null}
-                summary={analysisData?.summary ?? null}
-                isGenerating={isGenerating}
-              />
-            ) : recentSpecs && !isGenerating ? (
-              <div className="space-y-3">
-                <h3 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-wider">System Stats</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <StatCard label="System" count={recentSpecs.byType?.system_design || 0} />
-                  <StatCard label="API" count={recentSpecs.byType?.api_design || 0} />
-                  <StatCard label="Database" count={recentSpecs.byType?.database_schema || 0} />
-                  <StatCard label="Feature" count={recentSpecs.byType?.feature_spec || 0} />
+            <div className="animate-slide-up" style={{ animationDelay: "0.1s" }}>
+              {analysisData || (isGenerating && streamedContent.length > 500) ? (
+                <ComplexityScoreCard
+                  score={analysisData?.score ?? null}
+                  label={analysisData?.label ?? null}
+                  risks={analysisData?.risks ?? null}
+                  summary={analysisData?.summary ?? null}
+                  isGenerating={isGenerating}
+                />
+              ) : recentSpecs && !isGenerating ? (
+                <div className="space-y-2.5">
+                  <h3 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest px-1">System Stats</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: "System", count: recentSpecs.byType?.system_design || 0, color: "#7C3AED" },
+                      { label: "API", count: recentSpecs.byType?.api_design || 0, color: "#06B6D4" },
+                      { label: "Database", count: recentSpecs.byType?.database_schema || 0, color: "#10B981" },
+                      { label: "Feature", count: recentSpecs.byType?.feature_spec || 0, color: "#F59E0B" },
+                    ].map(({ label, count, color }) => (
+                      <div key={label} className="rounded-lg p-3 flex flex-col gap-1 glass-card">
+                        <span className="text-2xl font-mono font-bold" style={{ color }}>{count}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wide">{label}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
 
-          <div className="lg:col-span-2">
-            <Card className="h-full min-h-[500px] border-border bg-[#0a0a0a] flex flex-col overflow-hidden">
-              <div className="border-b border-border flex items-center justify-between bg-card px-2">
+          <div className="lg:col-span-2 animate-slide-up" style={{ animationDelay: "0.08s" }}>
+            <div className="h-full min-h-[520px] rounded-xl flex flex-col overflow-hidden"
+              style={{
+                background: "rgba(8,8,14,0.9)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
+              }}
+            >
+              <div className="flex items-center justify-between px-2"
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
+              >
                 <div className="flex">
-                  <button 
-                    onClick={() => setActiveTab("document")}
-                    className={`px-4 py-3 text-sm font-mono flex items-center gap-2 border-b-2 transition-colors ${activeTab === "document" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}
-                  >
-                    <FileCode2 className="w-4 h-4" /> Document
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab("diagram")}
-                    disabled={!diagramData && !isGenerating}
-                    className={`px-4 py-3 text-sm font-mono flex items-center gap-2 border-b-2 transition-colors ${activeTab === "diagram" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/50 disabled:opacity-50 disabled:cursor-not-allowed"}`}
-                  >
-                    <Network className="w-4 h-4" /> Diagram
-                  </button>
+                  {[
+                    { key: "document" as const, icon: FileCode2, label: "Document" },
+                    { key: "diagram" as const, icon: Network, label: "Diagram" },
+                  ].map(({ key, icon: Icon, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setActiveTab(key)}
+                      disabled={key === "diagram" && !diagramData && !isGenerating}
+                      className="px-4 py-3 text-sm font-mono flex items-center gap-2 transition-all duration-200 border-b-2"
+                      style={{
+                        borderBottomColor: activeTab === key ? "hsl(263,90%,64%)" : "transparent",
+                        color: activeTab === key ? "white" : undefined,
+                        opacity: key === "diagram" && !diagramData && !isGenerating ? 0.4 : 1,
+                      }}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      {label}
+                    </button>
+                  ))}
                 </div>
-                {isGenerating && <span className="text-xs font-mono text-primary animate-pulse pr-3">Generating...</span>}
+                {isGenerating && (
+                  <div className="flex items-center gap-2 pr-3">
+                    <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(263,90%,64%)" }} />
+                    <span className="text-xs font-mono text-muted-foreground">Generating…</span>
+                  </div>
+                )}
               </div>
-              <div className="flex-1 p-5 overflow-auto bg-[#0a0a0a]">
+
+              <div className="flex-1 overflow-auto">
                 {!streamedContent && !isGenerating ? (
-                  <div className="h-full flex items-center justify-center text-muted-foreground text-center flex-col gap-2">
-                    <Terminal className="w-8 h-8 opacity-20" />
-                    <p className="font-mono text-sm">Awaiting input sequence...</p>
+                  <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-4 p-8">
+                    <div className="relative">
+                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                        style={{
+                          background: "rgba(139,92,246,0.08)",
+                          border: "1px solid rgba(139,92,246,0.2)",
+                        }}
+                      >
+                        <Terminal className="w-7 h-7 opacity-40" />
+                      </div>
+                      <div className="absolute -inset-3 rounded-3xl opacity-20 blur-lg"
+                        style={{ background: "radial-gradient(circle, rgba(139,92,246,0.5), transparent)" }}
+                      />
+                    </div>
+                    <div className="text-center space-y-1">
+                      <p className="font-mono text-sm">Awaiting input sequence…</p>
+                      <p className="text-xs text-muted-foreground/60">Select a spec type and enter your source</p>
+                    </div>
                   </div>
                 ) : activeTab === "document" ? (
-                  <div className="prose prose-invert prose-sm max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {streamedContent}
-                    </ReactMarkdown>
-                    {isGenerating && !diagramData && <span className="inline-block w-2 h-4 bg-primary ml-1 animate-pulse" />}
+                  <div className="p-6 prose prose-invert prose-sm max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{streamedContent}</ReactMarkdown>
+                    {isGenerating && !diagramData && (
+                      <span className="inline-block w-2 h-4 rounded-sm ml-1 animate-pulse align-middle"
+                        style={{ background: "hsl(263,90%,64%)" }}
+                      />
+                    )}
                     <div ref={contentEndRef} />
                   </div>
                 ) : (
                   <div className="h-full w-full min-h-[400px]">
-                     {diagramData ? (
-                       <MermaidDiagram chart={diagramData} />
-                     ) : isGenerating ? (
-                       <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground font-mono gap-4">
-                         <Loader2 className="w-8 h-8 animate-spin opacity-50" />
-                         <p className="text-sm">Synthesizing diagram structure...</p>
-                       </div>
-                     ) : null}
+                    {diagramData ? (
+                      <MermaidDiagram chart={diagramData} />
+                    ) : isGenerating ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center gap-4" style={{ color: "hsl(var(--muted-foreground))" }}>
+                        <Loader2 className="w-8 h-8 animate-spin opacity-40" />
+                        <p className="text-sm font-mono">Synthesizing diagram structure…</p>
+                      </div>
+                    ) : null}
                   </div>
                 )}
               </div>
-            </Card>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function SpecTypeOption({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: React.ReactNode, label: string }) {
-  return (
-    <div 
-      onClick={onClick}
-      className={`flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-all ${
-        active 
-          ? "border-primary bg-primary/10 text-primary" 
-          : "border-border bg-background text-muted-foreground hover:border-muted-foreground/50"
-      }`}
-    >
-      {icon}
-      <span className="font-medium text-sm">{label}</span>
-    </div>
-  );
-}
-
-function StatCard({ label, count }: { label: string, count: number }) {
-  return (
-    <div className="bg-card border border-border rounded p-3 flex flex-col">
-      <span className="text-xl font-mono font-bold text-foreground">{count}</span>
-      <span className="text-xs text-muted-foreground">{label}</span>
     </div>
   );
 }
