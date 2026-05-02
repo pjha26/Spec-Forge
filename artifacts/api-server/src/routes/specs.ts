@@ -4,6 +4,7 @@ import { eq, desc, sql } from "drizzle-orm";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 import { db as dbClient, conversations as conversationsTable } from "@workspace/db";
 import { randomBytes, createHmac, timingSafeEqual } from "crypto";
+import { createNotification } from "./notifications";
 import {
   CreateSpecBody,
   GetSpecParams,
@@ -34,7 +35,7 @@ function getWebhookUrl(req: Request): string {
   return `${proto}://${host}/api/webhooks/github`;
 }
 
-async function runSpecGeneration(specId: number): Promise<void> {
+async function runSpecGeneration(specId: number, userId?: string): Promise<void> {
   const [spec] = await db.select().from(specsTable).where(eq(specsTable.id, specId));
   if (!spec) return;
 
@@ -71,8 +72,25 @@ async function runSpecGeneration(specId: number): Promise<void> {
       lastSyncedAt: new Date(),
       updatedAt: new Date(),
     }).where(eq(specsTable.id, specId));
+
+    if (userId) {
+      await createNotification(userId, {
+        type: "sync_complete",
+        title: "Sync complete",
+        message: `"${spec.title}" was successfully re-generated from source.`,
+        specId,
+      });
+    }
   } catch {
     await db.update(specsTable).set({ status: "failed", updatedAt: new Date() }).where(eq(specsTable.id, specId));
+    if (userId) {
+      await createNotification(userId, {
+        type: "sync_failed",
+        title: "Sync failed",
+        message: `Failed to re-generate "${spec.title}". Please try again.`,
+        specId,
+      });
+    }
   }
 }
 
@@ -427,7 +445,8 @@ router.post("/:id/sync", async (req: Request, res: Response) => {
       return;
     }
 
-    runSpecGeneration(spec.id).catch(() => {});
+    const userId = (req as any).session?.user?.id as string | undefined;
+    runSpecGeneration(spec.id, userId).catch(() => {});
 
     res.json({ id: spec.id, status: "generating", lastSyncedAt: null });
   } catch (err) {

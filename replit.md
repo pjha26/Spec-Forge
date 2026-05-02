@@ -24,14 +24,17 @@ AI-powered technical design document generator for students and hackathon builde
 5. **Public Sharing** — Share tokens + view counter at `/share/:token` (no auth required)
 6. **PDF Export** — `window.print()` + `@media print` CSS for clean PDF output
 7. **User Authentication** — Replit Auth OIDC with session cookies + user dropdown in sidebar
-8. **GitHub Auto-sync** — Manual "Sync Now" button re-generates spec from source; GitHub webhook endpoint (`POST /api/webhooks/github`) verifies HMAC-SHA256 and auto-regenerates on push
+8. **GitHub Auto-sync** — Manual "Sync Now" button re-generates spec from source; GitHub webhook endpoint (`POST /api/webhooks/github`) verifies HMAC-SHA256 and auto-regenerates on push; fires notifications on completion/failure
+9. **Real-time Presence** — SSE-based live viewer tracking per spec; shows colored avatar bar when 2+ people view simultaneously (`PresenceBar` component)
+10. **Intelligent Insights** — Claude-powered spec health analysis: completeness score, strengths, missing areas, improvement suggestions, estimated implementation days (`SpecInsights` tab)
+11. **In-app Notifications** — SSE real-time notification stream; bell icon in sidebar with unread badge; `sync_complete` / `sync_failed` / `share_viewed` types; mark read / mark all read (`NotificationBell` component)
 
 ## Routes
 
 - `/` — Landing page
 - `/app` — Generator
 - `/app/specs` — History
-- `/app/specs/:id` — Spec detail (Document | Diagram | Ask AI tabs)
+- `/app/specs/:id` — Spec detail (Document | Diagram | Chat | Insights tabs)
 - `/share/:token` — Public read-only share page
 
 ## API Endpoints (all prefixed `/api`)
@@ -41,17 +44,23 @@ AI-powered technical design document generator for students and hackathon builde
 - `GET /specs/:id` — get spec
 - `DELETE /specs/:id` — delete spec
 - `POST /specs/:id/stream` — SSE generation stream
-- `POST /specs/:id/sync` — trigger background re-generation
+- `POST /specs/:id/sync` — trigger background re-generation (fires notification)
 - `GET /specs/:id/webhook` — get/create GitHub webhook config
 - `POST /specs/:id/share` — generate/get share link
 - `GET /specs/share/:token` — public share lookup
 - `POST /specs/:id/chat` — get/create conversation for spec
+- `GET /specs/:id/presence` — SSE stream of real-time viewers for a spec
+- `POST /specs/:id/insights` — Claude-powered spec health analysis
 - `GET /specs/recent` — recent specs + stats
 - `POST /webhooks/github` — GitHub push webhook receiver (HMAC verified)
 - `GET /auth/user` — current session user
 - `GET /login` — OIDC login redirect
 - `GET /callback` — OIDC callback
 - `GET /logout` — clear session + OIDC end-session
+- `GET /notifications` — list notifications with unread count
+- `GET /notifications/stream` — SSE real-time notification stream
+- `PUT /notifications/read-all` — mark all notifications read
+- `PUT /notifications/:id/read` — mark single notification read
 
 ## DB Schema
 
@@ -59,6 +68,7 @@ AI-powered technical design document generator for students and hackathon builde
 - `conversations` + `messages` — AI chat history
 - `sessions` — auth sessions (Replit Auth)
 - `users` — authenticated users (Replit Auth)
+- `notifications` — in-app notifications (userId, type, title, message, specId, read, createdAt)
 
 ## Key Commands
 
@@ -77,4 +87,6 @@ pnpm --filter @workspace/db run push       # push DB schema changes
 - `@workspace/api-zod` doesn't generate schemas for redirect-only auth endpoints — those are defined inline in `routes/auth.ts`
 - GitHub webhook needs deployed URL; use "Sync Now" button in development
 - `serializeSpec()` strips `webhookSecret` from all responses
-- Actual spec IDs start at 4 (IDs 1–3 were seeded test data)
+- Presence tracking is in-memory (Map per specId), not persisted — resets on server restart
+- `createNotification(userId, { type, title, message, specId? })` + `broadcastNotification(userId, notification)` exported from `routes/notifications.ts`
+- Notification SSE connections tracked in-memory Map keyed by userId

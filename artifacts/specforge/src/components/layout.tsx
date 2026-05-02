@@ -13,8 +13,9 @@ import {
 import { AIChat } from "@/components/ai-chat";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useListSpecs } from "@workspace/api-client-react";
+import { NotificationBell } from "@/components/notification-bell";
 
-const SPEC_TYPE_META: Record<string, { color: string; Icon: React.ComponentType<{ className?: string }> }> = {
+const SPEC_TYPE_META: Record<string, { color: string; Icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }> = {
   "System Design": { color: "#7C3AED", Icon: Server },
   "API Design":    { color: "#06B6D4", Icon: Code2 },
   "Database Schema": { color: "#10B981", Icon: Database },
@@ -61,6 +62,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       const t = setTimeout(() => setJustOpened(false), 600);
       return () => clearTimeout(t);
     }
+    return undefined;
   }, [justOpened]);
 
   const navItems = [
@@ -221,10 +223,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* AI Assistant button */}
-        <div className="p-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <div className="p-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+          <NotificationBell />
           <button
             onClick={() => setAiOpen(true)}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-mono text-xs relative overflow-hidden group transition-all duration-200"
+            className="flex-1 flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-mono text-xs relative overflow-hidden group transition-all duration-200"
             style={{
               background: aiOpen
                 ? "linear-gradient(135deg, rgba(139,92,246,0.25) 0%, rgba(6,182,212,0.15) 100%)"

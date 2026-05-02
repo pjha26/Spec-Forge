@@ -16,6 +16,8 @@ tags:
     description: Anthropic AI chat operations
   - name: auth
     description: Authentication operations
+  - name: notifications
+    description: In-app notification operations
 paths:
   /auth/user:
     get:
@@ -315,6 +317,104 @@ paths:
                     type: integer
                 required:
                   - processed
+
+  /specs/{id}/presence:
+    get:
+      operationId: getSpecPresence
+      tags: [specs]
+      summary: Subscribe to real-time viewer presence for a spec (SSE)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: SSE stream of viewer presence updates
+          content:
+            text/event-stream: {}
+
+  /specs/{id}/insights:
+    post:
+      operationId: analyzeSpec
+      tags: [specs]
+      summary: Get AI-powered health insights and analysis for a spec
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Spec health insights
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpecInsightsResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications for the current user
+      responses:
+        "200":
+          description: Notification list with unread count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationListResponse"
+
+  /notifications/stream:
+    get:
+      operationId: streamNotifications
+      tags: [notifications]
+      summary: Subscribe to real-time notification updates (SSE)
+      responses:
+        "200":
+          description: SSE stream of new notifications
+          content:
+            text/event-stream: {}
+
+  /notifications/read-all:
+    put:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /notifications/{id}/read:
+    put:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a single notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
 
   /specs/{id}/share:
     post:
@@ -793,3 +893,102 @@ components:
         - webhookUrl
         - secret
         - instructions
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
+
+    SpecPresenceViewer:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        name:
+          type: string
+        color:
+          type: string
+        joinedAt:
+          type: string
+      required:
+        - sessionId
+        - name
+        - color
+        - joinedAt
+
+    SpecInsightsResponse:
+      type: object
+      properties:
+        completeness:
+          type: integer
+        overallHealth:
+          type: string
+          enum: [excellent, good, fair, poor]
+        missingAreas:
+          type: array
+          items:
+            type: string
+        strengthAreas:
+          type: array
+          items:
+            type: string
+        suggestions:
+          type: array
+          items:
+            type: string
+        estimatedImplementationDays:
+          type: integer
+      required:
+        - completeness
+        - overallHealth
+        - missingAreas
+        - strengthAreas
+        - suggestions
+        - estimatedImplementationDays
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        type:
+          type: string
+          enum: [sync_complete, sync_failed, share_viewed]
+        title:
+          type: string
+        message:
+          type: string
+        specId:
+          type: integer
+          nullable: true
+        read:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - type
+        - title
+        - message
+        - read
+        - createdAt
+
+    NotificationListResponse:
+      type: object
+      properties:
+        notifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+        unreadCount:
+          type: integer
+      required:
+        - notifications
+        - unreadCount

@@ -13,17 +13,20 @@ import {
   ArrowLeft, Copy, Download, Server, Cpu, Database, BookOpen,
   Github, FileText, Clock, Terminal, FileCode2, Network, Bot,
   Share2, Printer, Eye, Loader2, RefreshCw, Webhook, ChevronDown, ChevronUp, Check,
+  Sparkles,
 } from "lucide-react";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
 import { ComplexityScoreCard } from "@/components/complexity-score-card";
 import { SpecChat } from "@/components/spec-chat";
+import { PresenceBar } from "@/components/presence-bar";
+import { SpecInsights } from "@/components/spec-insights";
 
 export default function SpecDetail() {
   const { id } = useParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<"document" | "diagram" | "chat">("document");
+  const [activeTab, setActiveTab] = useState<"document" | "diagram" | "chat" | "insights">("document");
   const [isSharing, setIsSharing] = useState(false);
   const [shareData, setShareData] = useState<{ shareUrl: string; viewCount: number } | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -249,6 +252,8 @@ export default function SpecDetail() {
         </div>
       </header>
 
+      <PresenceBar specId={spec.id} />
+
       {shareData && (
         <div className="print-hide bg-purple-500/10 border-b border-purple-500/20 px-6 py-2 flex items-center gap-3 text-xs font-mono">
           <Share2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
@@ -329,7 +334,7 @@ export default function SpecDetail() {
             <Card className="w-full border-border bg-[#0a0a0a] flex flex-col overflow-hidden min-h-full">
               <div className="print-hide border-b border-border flex items-center justify-between bg-card px-2">
                 <div className="flex">
-                  {(["document", "diagram", "chat"] as const).map((tab) => (
+                  {(["document", "diagram", "chat", "insights"] as const).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -343,6 +348,7 @@ export default function SpecDetail() {
                       {tab === "document" && <FileCode2 className="w-4 h-4" />}
                       {tab === "diagram" && <Network className="w-4 h-4" />}
                       {tab === "chat" && <Bot className="w-4 h-4" />}
+                      {tab === "insights" && <Sparkles className="w-4 h-4" />}
                       {tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>
                   ))}
@@ -368,6 +374,7 @@ export default function SpecDetail() {
                   </div>
                 )}
                 {activeTab === "chat" && <SpecChat specId={spec.id} />}
+                {activeTab === "insights" && <SpecInsights specId={spec.id} />}
               </div>
             </Card>
           </div>

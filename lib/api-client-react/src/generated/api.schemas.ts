@@ -186,6 +186,61 @@ export interface WebhookConfigResponse {
   instructions: string;
 }
 
+export interface SuccessResponse {
+  success: boolean;
+}
+
+export interface SpecPresenceViewer {
+  sessionId: string;
+  name: string;
+  color: string;
+  joinedAt: string;
+}
+
+export type SpecInsightsResponseOverallHealth =
+  (typeof SpecInsightsResponseOverallHealth)[keyof typeof SpecInsightsResponseOverallHealth];
+
+export const SpecInsightsResponseOverallHealth = {
+  excellent: "excellent",
+  good: "good",
+  fair: "fair",
+  poor: "poor",
+} as const;
+
+export interface SpecInsightsResponse {
+  completeness: number;
+  overallHealth: SpecInsightsResponseOverallHealth;
+  missingAreas: string[];
+  strengthAreas: string[];
+  suggestions: string[];
+  estimatedImplementationDays: number;
+}
+
+export type NotificationType =
+  (typeof NotificationType)[keyof typeof NotificationType];
+
+export const NotificationType = {
+  sync_complete: "sync_complete",
+  sync_failed: "sync_failed",
+  share_viewed: "share_viewed",
+} as const;
+
+export interface Notification {
+  id: number;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  specId?: number | null;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface NotificationListResponse {
+  notifications: Notification[];
+  unreadCount: number;
+}
+
 export type LoginParams = {
   returnTo?: string;
 };

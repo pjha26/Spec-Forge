@@ -253,6 +253,66 @@ export const GithubWebhookResponse = zod.object({
 });
 
 /**
+ * @summary Subscribe to real-time viewer presence for a spec (SSE)
+ */
+export const GetSpecPresenceParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Get AI-powered health insights and analysis for a spec
+ */
+export const AnalyzeSpecParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AnalyzeSpecResponse = zod.object({
+  completeness: zod.number(),
+  overallHealth: zod.enum(["excellent", "good", "fair", "poor"]),
+  missingAreas: zod.array(zod.string()),
+  strengthAreas: zod.array(zod.string()),
+  suggestions: zod.array(zod.string()),
+  estimatedImplementationDays: zod.number(),
+});
+
+/**
+ * @summary List notifications for the current user
+ */
+export const ListNotificationsResponse = zod.object({
+  notifications: zod.array(
+    zod.object({
+      id: zod.number(),
+      userId: zod.string(),
+      type: zod.enum(["sync_complete", "sync_failed", "share_viewed"]),
+      title: zod.string(),
+      message: zod.string(),
+      specId: zod.number().nullish(),
+      read: zod.boolean(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+  unreadCount: zod.number(),
+});
+
+/**
+ * @summary Mark all notifications as read
+ */
+export const MarkAllNotificationsReadResponse = zod.object({
+  success: zod.boolean(),
+});
+
+/**
+ * @summary Mark a single notification as read
+ */
+export const MarkNotificationReadParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const MarkNotificationReadResponse = zod.object({
+  success: zod.boolean(),
+});
+
+/**
  * @summary Generate or retrieve a public share link for a spec
  */
 export const ShareSpecParams = zod.object({
