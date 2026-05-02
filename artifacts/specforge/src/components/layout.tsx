@@ -94,31 +94,33 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Logo */}
-        <div className="p-5 flex items-center gap-3 relative"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
-        >
-          <div className="relative">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center relative z-10"
-              style={{
-                background: "linear-gradient(135deg, hsl(263,90%,60%) 0%, hsl(213,90%,60%) 100%)",
-                boxShadow: "0 0 16px rgba(139,92,246,0.5), 0 4px 12px rgba(0,0,0,0.3)",
-              }}
-            >
-              <Zap className="w-4 h-4 text-white fill-white" />
+        <Link href="/">
+          <div className="p-5 flex items-center gap-3 relative cursor-pointer group"
+            style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+          >
+            <div className="relative">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center relative z-10 transition-all duration-200 group-hover:scale-105"
+                style={{
+                  background: "linear-gradient(135deg, hsl(263,90%,60%) 0%, hsl(213,90%,60%) 100%)",
+                  boxShadow: "0 0 16px rgba(139,92,246,0.5), 0 4px 12px rgba(0,0,0,0.3)",
+                }}
+              >
+                <Zap className="w-4 h-4 text-white fill-white" />
+              </div>
+              <div className="absolute -inset-1 rounded-2xl opacity-30 blur-sm transition-opacity duration-200 group-hover:opacity-60"
+                style={{ background: "linear-gradient(135deg, hsl(263,90%,60%), hsl(213,90%,60%))" }}
+              />
             </div>
-            <div className="absolute -inset-1 rounded-2xl opacity-30 blur-sm"
-              style={{ background: "linear-gradient(135deg, hsl(263,90%,60%), hsl(213,90%,60%))" }}
-            />
-          </div>
-          <div>
-            <span className="font-mono font-bold tracking-tight text-base text-white">SpecForge</span>
-            <div className="text-[9px] font-mono px-1.5 py-0.5 rounded-sm inline-block ml-1.5 align-middle"
-              style={{ background: "rgba(139,92,246,0.15)", color: "hsl(263,90%,74%)", border: "1px solid rgba(139,92,246,0.25)" }}
-            >
-              BETA
+            <div>
+              <span className="font-mono font-bold tracking-tight text-base text-white transition-colors duration-200 group-hover:text-violet-300">SpecForge</span>
+              <div className="text-[9px] font-mono px-1.5 py-0.5 rounded-sm inline-block ml-1.5 align-middle"
+                style={{ background: "rgba(139,92,246,0.15)", color: "hsl(263,90%,74%)", border: "1px solid rgba(139,92,246,0.25)" }}
+              >
+                BETA
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Nav */}
         <nav className="flex-1 p-3 space-y-1 pt-4">
