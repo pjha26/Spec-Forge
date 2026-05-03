@@ -19,7 +19,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeConfig>(DEFAULT_THEME);
 
   useEffect(() => {
-    document.documentElement.classList.add("dark");
     const stored = loadTheme();
     setThemeState(stored);
     applyTheme(stored);

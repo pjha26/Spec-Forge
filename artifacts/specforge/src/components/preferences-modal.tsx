@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/theme-provider";
-import { ACCENT_PRESETS, FONT_OPTIONS, SYNTAX_THEMES } from "@/lib/theme";
+import { THEMES, FONT_OPTIONS, SYNTAX_THEMES, type ThemeId } from "@/lib/theme";
 
 const SECTION_OPTIONS = [
   "Security Considerations",
