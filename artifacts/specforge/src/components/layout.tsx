@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Zap, FileCode2, History, LogIn, LogOut, User, Sparkles, Server, Code2, Database, BookOpen, ChevronRight, Users, Search, Network, PlugZap } from "lucide-react";
+import { Zap, FileCode2, History, LogIn, LogOut, User, Sparkles, Server, Code2, Database, BookOpen, ChevronRight, Users, Search, Network, PlugZap, Terminal } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -349,6 +349,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
           />
         </div>
         <div className="relative z-10 flex-1 flex flex-col h-full overflow-hidden">
+          {import.meta.env.VITE_LOCAL_DEV === "true" && (
+            <div
+              className="shrink-0 flex items-center gap-2.5 px-4 py-1.5 font-mono text-[10px] select-none"
+              style={{
+                background: "rgba(234,179,8,0.08)",
+                borderBottom: "1px solid rgba(234,179,8,0.2)",
+                color: "#EAB308",
+              }}
+            >
+              <Terminal className="w-3 h-3 shrink-0" />
+              <span className="font-bold tracking-widest uppercase">Local Dev Mode</span>
+              <span className="opacity-50 mx-1">·</span>
+              <span className="opacity-60">Replit Auth bypassed</span>
+              <span className="opacity-50 mx-1">·</span>
+              <span className="opacity-60">
+                user: <span className="text-yellow-400">{import.meta.env.VITE_LOCAL_DEV_USER_ID ?? "local-dev-user"}</span>
+              </span>
+            </div>
+          )}
           {children}
         </div>
       </main>

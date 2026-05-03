@@ -129,6 +129,42 @@ AI-powered technical design document generator. Drop in a GitHub URL, text descr
 - `artifacts/specforge/src/components/team-knowledge-panel.tsx` — upload/list/delete UI panel
 - `artifacts/specforge/src/pages/team-detail.tsx` — tabbed layout with new "Knowledge Base" tab
 
+## Local Dev Mode (VS Code / self-hosted without Replit account)
+
+Set these two env vars and the entire Replit OIDC auth flow is bypassed. A stable
+mock user (`local-dev-user`) is injected into every request automatically.
+
+**API server** (`.env` or `docker-compose.dev.yml`):
+```
+LOCAL_DEV=true
+LOCAL_DEV_USER_ID=local-dev-user   # optional, this is the default
+```
+
+**Frontend** (`artifacts/specforge/.env.local`):
+```
+VITE_LOCAL_DEV=true
+VITE_LOCAL_DEV_USER_ID=local-dev-user
+```
+
+With both set, a yellow `LOCAL DEV MODE` banner appears at the top of the app and
+the "Sign in with Replit" button / OIDC redirects are no-ops.
+
+**Docker (recommended for local):**
+```bash
+cp .env.example .env                    # fill in AI keys + DB password
+cp artifacts/specforge/.env.local.example artifacts/specforge/.env.local
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
+**Files:**
+- `artifacts/api-server/src/lib/dev-mode.ts` — `isLocalDev()`, `DEV_USER`, `initDevUser()`
+- `artifacts/api-server/src/middlewares/authMiddleware.ts` — bypasses OIDC when `isLocalDev()`
+- `artifacts/api-server/src/routes/auth.ts` — `/login`, `/callback`, `/logout` redirect locally
+- `artifacts/specforge/src/components/layout.tsx` — dev mode banner (checks `VITE_LOCAL_DEV`)
+- `.env.example` — documents `LOCAL_DEV` + `LOCAL_DEV_USER_ID`
+- `artifacts/specforge/.env.local.example` — frontend counterpart
+- `docker-compose.dev.yml` — Docker override for local dev
+
 ## Key Commands
 
 ```bash

@@ -13,6 +13,7 @@ import {
   ISSUER_URL,
   type SessionData,
 } from "../lib/auth";
+import { isLocalDev } from "../lib/dev-mode.js";
 
 const AuthUser = z.object({
   id: z.string(),
@@ -120,6 +121,7 @@ router.get("/auth/user", (req: Request, res: Response) => {
 });
 
 router.get("/login", async (req: Request, res: Response) => {
+  if (isLocalDev()) { res.redirect("/app"); return; }
   const config = await getOidcConfig();
   const callbackUrl = `${getOrigin(req)}/api/callback`;
 
@@ -151,6 +153,7 @@ router.get("/login", async (req: Request, res: Response) => {
 // Query params are not validated because the OIDC provider may include
 // parameters not expressed in the schema.
 router.get("/callback", async (req: Request, res: Response) => {
+  if (isLocalDev()) { res.redirect("/app"); return; }
   const config = await getOidcConfig();
   const callbackUrl = `${getOrigin(req)}/api/callback`;
 
@@ -217,6 +220,7 @@ router.get("/callback", async (req: Request, res: Response) => {
 });
 
 router.get("/logout", async (req: Request, res: Response) => {
+  if (isLocalDev()) { res.redirect("/"); return; }
   const config = await getOidcConfig();
   const origin = getOrigin(req);
 

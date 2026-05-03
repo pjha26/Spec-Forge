@@ -34,11 +34,14 @@ services:
       DATABASE_URL: postgresql://specforge:${POSTGRES_PASSWORD:-changeme}@db:5432/specforge
       SESSION_SECRET: ${SESSION_SECRET}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
       NOTION_API_KEY: ${NOTION_API_KEY:-}
       ISSUER_URL: ${ISSUER_URL:-https://replit.com/oidc}
       PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8080}
+      # Local dev auth bypass (leave unset / false in production)
+      LOCAL_DEV: ${LOCAL_DEV:-false}
+      LOCAL_DEV_USER_ID: ${LOCAL_DEV_USER_ID:-local-dev-user}
 
 volumes:
   pgdata:

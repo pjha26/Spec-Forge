@@ -9,6 +9,7 @@ import {
   type SessionData,
   type AuthUser,
 } from "../lib/auth";
+import { isLocalDev, DEV_USER } from "../lib/dev-mode.js";
 
 declare global {
   namespace Express {
@@ -63,6 +64,15 @@ export async function authMiddleware(
   req.isAuthenticated = function (this: Request) {
     return this.user != null;
   } as Request["isAuthenticated"];
+
+  // ── Local-dev bypass ──────────────────────────────────────────────────────
+  // When LOCAL_DEV=true the OIDC flow is skipped entirely and a stable mock
+  // user is injected so every auth-gated route works without a Replit account.
+  if (isLocalDev()) {
+    req.user = DEV_USER;
+    next();
+    return;
+  }
 
   const sid = getSessionId(req);
   if (!sid) {

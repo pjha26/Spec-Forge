@@ -5,6 +5,7 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { authMiddleware } from "./middlewares/authMiddleware";
+import { initDevUser } from "./lib/dev-mode.js";
 
 const app: Express = express();
 
@@ -34,5 +35,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(authMiddleware);
 
 app.use("/api", router);
+
+// Ensure the dev user row exists before the first request arrives
+initDevUser().catch(() => {});
 
 export default app;

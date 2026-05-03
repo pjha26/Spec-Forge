@@ -1,0 +1,23 @@
+# Local development override — bypasses Replit Auth completely.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#
+# The API server injects a stable mock user into every request so all
+# auth-gated routes work without a Replit account or REPL_ID.
+# Never use this file in production.
+
+version: "3.9"
+
+services:
+  api:
+    build:
+      args:
+        - NODE_ENV=development
+    environment:
+      NODE_ENV: development
+      LOCAL_DEV: "true"
+      LOCAL_DEV_USER_ID: ${LOCAL_DEV_USER_ID:-local-dev-user}
+      # OIDC is bypassed — these are not required in dev mode
+      ISSUER_URL: ""
+      PUBLIC_URL: "http://localhost:8080"
