@@ -39,7 +39,7 @@ export async function createNotification(
 }
 
 router.get("/notifications/stream", (req, res) => {
-  const user = (req as any).session?.user;
+  const user = req.user;
   if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
 
   res.setHeader("Content-Type", "text/event-stream");
@@ -60,7 +60,7 @@ router.get("/notifications/stream", (req, res) => {
 });
 
 router.get("/notifications", async (req, res) => {
-  const user = (req as any).session?.user;
+  const user = req.user;
   if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
 
   const notifications = await db
@@ -75,7 +75,7 @@ router.get("/notifications", async (req, res) => {
 });
 
 router.put("/notifications/read-all", async (req, res) => {
-  const user = (req as any).session?.user;
+  const user = req.user;
   if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
 
   await db
@@ -87,7 +87,7 @@ router.put("/notifications/read-all", async (req, res) => {
 });
 
 router.put("/notifications/:id/read", async (req, res) => {
-  const user = (req as any).session?.user;
+  const user = req.user;
   if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
 
   const id = Number(req.params["id"]);

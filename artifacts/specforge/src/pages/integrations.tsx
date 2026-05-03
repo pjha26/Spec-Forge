@@ -194,8 +194,8 @@ export default function IntegrationsPage() {
         <motion.div className="mb-8" initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: "rgba(0,180,216,0.12)", border: "1px solid rgba(0,180,216,0.25)" }}>
-              <Zap className="w-5 h-5" style={{ color: "hsl(191,100%,52%)" }} />
+              style={{ background: "rgba(var(--primary-rgb),0.12)", border: "1px solid rgba(var(--primary-rgb),0.25)" }}>
+              <Zap className="w-5 h-5" style={{ color: "hsl(var(--primary))" }} />
             </div>
             <div>
               <h1 className="text-xl font-bold">Integrations</h1>
@@ -214,8 +214,8 @@ export default function IntegrationsPage() {
                 onClick={() => setTab(t.id)}
                 className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-mono transition-all duration-150"
                 style={tab === t.id ? {
-                  background: "rgba(0,180,216,0.15)", border: "1px solid rgba(0,180,216,0.35)",
-                  color: "hsl(191,100%,65%)",
+                  background: "rgba(var(--primary-rgb),0.15)", border: "1px solid rgba(var(--primary-rgb),0.35)",
+                  color: "hsl(var(--primary))",
                 } : { color: "hsl(var(--muted-foreground))" }}
               >
                 <Icon className="w-3.5 h-3.5" /> {t.label}

@@ -33,3 +33,9 @@ externalPort = 8081
 [[ports]]
 localPort = 26218
 externalPort = 3000
+
+[userenv]
+
+[userenv.development]
+LOCAL_DEV = "true"
+VITE_LOCAL_DEV = "true"

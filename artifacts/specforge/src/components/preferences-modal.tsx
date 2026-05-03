@@ -97,8 +97,8 @@ export function PreferencesModal({ onClose }: Props) {
         className="relative w-full max-w-xl max-h-[85vh] overflow-y-auto rounded-2xl flex flex-col"
         style={{
           background: "hsl(var(--card))",
-          border: "1px solid rgba(0,180,216,0.2)",
-          boxShadow: "0 0 60px rgba(0,180,216,0.1), 0 24px 48px rgba(0,0,0,0.6)",
+          border: "1px solid rgba(var(--primary-rgb),0.2)",
+          boxShadow: "0 0 60px rgba(var(--primary-rgb),0.1), 0 24px 48px rgba(0,0,0,0.6)",
         }}
         initial={{ opacity: 0, scale: 0.95, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -110,7 +110,7 @@ export function PreferencesModal({ onClose }: Props) {
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: "rgba(0,180,216,0.12)", border: "1px solid rgba(0,180,216,0.25)" }}
+              style={{ background: "rgba(var(--primary-rgb),0.12)", border: "1px solid rgba(var(--primary-rgb),0.25)" }}
             >
               <Brain className="w-4.5 h-4.5" style={{ color: "hsl(var(--primary))" }} />
             </div>
@@ -156,9 +156,9 @@ export function PreferencesModal({ onClose }: Props) {
                     onClick={() => setDomain(domain === d ? "" : d)}
                     className="px-2.5 py-1 rounded-md text-xs font-mono transition-all"
                     style={domain === d ? {
-                      background: "rgba(6,182,212,0.2)",
-                      border: "1px solid rgba(6,182,212,0.4)",
-                      color: "#06B6D4",
+                      background: "rgba(var(--primary-rgb),0.2)",
+                      border: "1px solid rgba(var(--primary-rgb),0.4)",
+                      color: "hsl(var(--primary))",
                     } : {
                       background: "rgba(255,255,255,0.04)",
                       border: "1px solid rgba(255,255,255,0.08)",
@@ -189,9 +189,9 @@ export function PreferencesModal({ onClose }: Props) {
                       onClick={() => toggleSection(s)}
                       className="px-2.5 py-1 rounded-md text-xs font-mono transition-all flex items-center gap-1"
                       style={active ? {
-                        background: "rgba(139,92,246,0.2)",
-                        border: "1px solid rgba(139,92,246,0.4)",
-                        color: "hsl(263,90%,74%)",
+                        background: "rgba(var(--primary-rgb),0.2)",
+                        border: "1px solid rgba(var(--primary-rgb),0.4)",
+                        color: "hsl(var(--primary))",
                       } : {
                         background: "rgba(255,255,255,0.04)",
                         border: "1px solid rgba(255,255,255,0.08)",
@@ -274,8 +274,8 @@ export function PreferencesModal({ onClose }: Props) {
                       style={{
                         fontFamily: f.css,
                         ...(theme.font === f.value ? {
-                          background: "rgba(0,180,216,0.15)",
-                          border: "1px solid rgba(0,180,216,0.4)",
+                          background: "rgba(var(--primary-rgb),0.15)",
+                          border: "1px solid rgba(var(--primary-rgb),0.4)",
                           color: "hsl(var(--primary))",
                         } : {
                           background: "rgba(255,255,255,0.03)",
@@ -300,8 +300,8 @@ export function PreferencesModal({ onClose }: Props) {
                       onClick={() => setTheme({ ...theme, syntaxTheme: s.value })}
                       className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all"
                       style={theme.syntaxTheme === s.value ? {
-                        background: "rgba(0,180,216,0.15)",
-                        border: "1px solid rgba(0,180,216,0.4)",
+                        background: "rgba(var(--primary-rgb),0.15)",
+                        border: "1px solid rgba(var(--primary-rgb),0.4)",
                         color: "hsl(var(--primary))",
                       } : {
                         background: "rgba(255,255,255,0.03)",
@@ -331,8 +331,8 @@ export function PreferencesModal({ onClose }: Props) {
             style={{
               background: saved
                 ? "rgba(16,185,129,0.2)"
-                : "linear-gradient(135deg, rgba(0,180,216,0.85), rgba(3,105,161,0.8))",
-              border: saved ? "1px solid rgba(16,185,129,0.4)" : "1px solid rgba(0,180,216,0.5)",
+                : "linear-gradient(135deg, rgba(var(--primary-rgb),0.85), rgba(var(--primary-rgb),0.6))",
+              border: saved ? "1px solid rgba(16,185,129,0.4)" : "1px solid rgba(var(--primary-rgb),0.5)",
               color: saved ? "#10B981" : "white",
             }}
             whileHover={{ scale: 1.04 }}

@@ -81,6 +81,7 @@ function NeuralCanvas() {
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const primaryRgb = getComputedStyle(document.documentElement).getPropertyValue("--primary-rgb").trim() || "0, 180, 216";
       const mx = mouse.current.x;
       const my = mouse.current.y;
 
@@ -114,7 +115,7 @@ function NeuralCanvas() {
             ctx.beginPath();
             ctx.moveTo(pts[i].x, pts[i].y);
             ctx.lineTo(pts[j].x, pts[j].y);
-            ctx.strokeStyle = `rgba(0,180,216,${alpha})`;
+            ctx.strokeStyle = `rgba(${primaryRgb},${alpha})`;
             ctx.lineWidth = 0.8;
             ctx.stroke();
           }
@@ -130,7 +131,7 @@ function NeuralCanvas() {
         ctx.arc(p.x, p.y, p.r + (near ? 1.2 : 0), 0, Math.PI * 2);
         ctx.fillStyle = near
           ? "rgba(103,232,249,0.9)"
-          : "rgba(0,180,216,0.55)";
+          : `rgba(${primaryRgb},0.55)`;
         ctx.fill();
       }
 
@@ -162,7 +163,7 @@ function NeuralCanvas() {
 // ── Floating Orbs ──────────────────────────────────────────────────────────
 function FloatingOrbs() {
   const orbs = useMemo(() => [
-    { size: 520, x: "55%",  y: "-10%", color: "hsl(191,100%,45%)", delay: 0,   dur: 18 },
+    { size: 520, x: "55%",  y: "-10%", color: "hsl(var(--primary))", delay: 0,   dur: 18 },
     { size: 380, x: "8%",   y: "20%",  color: "hsl(210,100%,55%)", delay: 3,   dur: 22 },
     { size: 300, x: "80%",  y: "5%",   color: "hsl(160,80%,45%)",  delay: 1.5, dur: 16 },
     { size: 240, x: "20%",  y: "60%",  color: "hsl(220,90%,55%)",  delay: 4,   dur: 20 },
@@ -254,7 +255,7 @@ function TiltCard({ children, className = "" }: { children: React.ReactNode; cla
           background: useTransform(
             [glowX, glowY],
             ([gx, gy]) =>
-              `radial-gradient(380px circle at ${gx}% ${gy}%, rgba(0,180,216,0.12), transparent 65%)`
+              `radial-gradient(380px circle at ${gx}% ${gy}%, rgba(var(--primary-rgb),0.12), transparent 65%)`
           ),
         }}
       />
@@ -314,7 +315,7 @@ function PageBeam() {
         background: useTransform(
           [sx, sy],
           ([mx, my]) =>
-            `radial-gradient(520px circle at ${mx}px ${my}px, rgba(0,180,216,0.04), transparent 65%)`
+            `radial-gradient(520px circle at ${mx}px ${my}px, rgba(var(--primary-rgb),0.04), transparent 65%)`
         ),
       }}
     />
@@ -352,7 +353,7 @@ function LiveActivityTicker() {
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/8 bg-black/40 backdrop-blur-xl p-4 min-h-[200px]"
-      style={{ boxShadow: "0 0 40px rgba(0,180,216,0.06) inset, 0 0 0 1px rgba(0,180,216,0.08)" }}
+      style={{ boxShadow: "0 0 40px rgba(var(--primary-rgb),0.06) inset, 0 0 0 1px rgba(var(--primary-rgb),0.08)" }}
     >
       <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/6">
         <motion.div
@@ -392,7 +393,7 @@ function ScrollProgress() {
       className="fixed top-0 left-0 right-0 h-[2px] z-[100] origin-left"
       style={{
         scaleX,
-        background: "linear-gradient(90deg, hsl(191,100%,52%), hsl(220,90%,65%))",
+        background: "linear-gradient(90deg, var(--primary-hex), var(--primary-light-hex))",
       }}
     />
   );
@@ -463,7 +464,7 @@ function FloatingBadges() {
 // ── Animated Terminal ──────────────────────────────────────────────────────
 function TerminalWindow() {
   const lines = [
-    { t: 0.3,  text: "> specforge generate --type system_design", color: "#22d3ee" },
+    { t: 0.3,  text: "> specforge generate --type system_design", color: "hsl(var(--primary))" },
     { t: 0.9,  text: "✓ Scanning repository structure...",        color: "#6b7280" },
     { t: 1.35, text: "✓ Analysing components & dependencies...",  color: "#6b7280" },
     { t: 1.8,  text: "✓ Generating architecture diagram...",      color: "#6b7280" },
@@ -476,7 +477,7 @@ function TerminalWindow() {
 
   return (
     <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
-      style={{ boxShadow: "0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,180,216,0.1) inset" }}
+      style={{ boxShadow: "0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(var(--primary-rgb),0.1) inset" }}
     >
       <div className="flex items-center gap-2 px-4 py-3 bg-white/[0.04] border-b border-white/6">
         <motion.span className="w-3 h-3 rounded-full bg-red-500/80"    whileHover={{ scale: 1.3 }} />
@@ -501,7 +502,7 @@ function TerminalWindow() {
           animate={{ opacity: [0, 1, 0] }}
           transition={{ delay: 3.7, duration: 0.8, repeat: Infinity }}
           className="inline-block w-2 h-[15px] rounded-sm align-middle"
-          style={{ background: "#22d3ee" }}
+          style={{ background: "hsl(var(--primary))" }}
         />
       </div>
     </div>
@@ -539,12 +540,12 @@ function GrainOverlay() {
 // ── Feature data ────────────────────────────────────────────────────────────
 const features = [
   {
-    icon: <Zap className="w-5 h-5" style={{ color: "#22d3ee" }} />,
-    color: "#0891b2",
+    icon: <Zap className="w-5 h-5" style={{ color: "hsl(var(--primary))" }} />,
+    color: "hsl(var(--primary))",
     title: "Complexity Analysis",
     desc: "Instant 1–10 complexity score with tech debt risks, severity prioritisation, and suggested mitigations.",
     tag: "AI Analysis",
-    glow: "rgba(8,145,178,0.18)",
+    glow: "rgba(var(--primary-rgb),0.18)",
   },
   {
     icon: <Network className="w-5 h-5" style={{ color: "#60a5fa" }} />,
@@ -579,23 +580,23 @@ const features = [
     glow: "rgba(219,39,119,0.18)",
   },
   {
-    icon: <Layers className="w-5 h-5" style={{ color: "#22d3ee" }} />,
-    color: "#0891b2",
+    icon: <Layers className="w-5 h-5" style={{ color: "hsl(var(--primary))" }} />,
+    color: "hsl(var(--primary))",
     title: "Multi-format Export",
     desc: "Export to Markdown, DOCX, Notion, or PDF. Version history snapshots every generation.",
     tag: "Export",
-    glow: "rgba(8,145,178,0.18)",
+    glow: "rgba(var(--primary-rgb),0.18)",
   },
 ];
 
 // ── GSAP feature cards (maps existing feature data to FeatureCard interface) ─
 const GSAP_FEATURE_CARDS: FeatureCard[] = [
-  { icon: <Zap className="w-6 h-6" style={{ color: "#22d3ee" }} />,    color: "#0891b2", title: "Complexity Analysis",   desc: "Instant 1–10 complexity score with tech-debt risks, severity prioritisation, and suggested mitigations.", tag: "AI Analysis" },
+  { icon: <Zap className="w-6 h-6" style={{ color: "hsl(var(--primary))" }} />,    color: "hsl(var(--primary))", title: "Complexity Analysis",   desc: "Instant 1–10 complexity score with tech-debt risks, severity prioritisation, and suggested mitigations.", tag: "AI Analysis" },
   { icon: <Network className="w-6 h-6" style={{ color: "#60a5fa" }} />, color: "#2563eb", title: "Architecture Diagrams", desc: "Auto-generated Mermaid flowcharts, sequence diagrams, and ER diagrams — rendered in milliseconds.",         tag: "Visual" },
   { icon: <Bot className="w-6 h-6" style={{ color: "#34d399" }} />,     color: "#059669", title: "Ask Your Doc",          desc: "Chat with Claude about your spec — trade-offs, edge cases, implementation details, anything.",            tag: "Chat" },
   { icon: <Shield className="w-6 h-6" style={{ color: "#f59e0b" }} />,  color: "#d97706", title: "Team Collaboration",    desc: "Shared workspaces, annotation threads, AI audit runs, and role-based access control.",                    tag: "Teams" },
   { icon: <GitBranch className="w-6 h-6" style={{ color: "#f472b6" }} />, color: "#db2777", title: "GitHub Auto-sync",    desc: "Webhooks keep your spec in sync when code changes — commit SPEC.md back to the repo automatically.",      tag: "Git" },
-  { icon: <Layers className="w-6 h-6" style={{ color: "#22d3ee" }} />,  color: "#0891b2", title: "Multi-format Export",  desc: "Export to Markdown, DOCX, Notion, or PDF. Version history snapshots every generation.",                  tag: "Export" },
+  { icon: <Layers className="w-6 h-6" style={{ color: "hsl(var(--primary))" }} />,  color: "hsl(var(--primary))", title: "Multi-format Export",  desc: "Export to Markdown, DOCX, Notion, or PDF. Version history snapshots every generation.",                  tag: "Export" },
 ];
 
 // ── Main Landing ────────────────────────────────────────────────────────────
@@ -620,7 +621,7 @@ export default function Landing() {
       <style>{`
         @keyframes shimmer { from { background-position: -200% center; } to { background-position: 200% center; } }
         .shimmer-text {
-          background: linear-gradient(90deg, hsl(191,100%,65%) 0%, hsl(220,90%,72%) 35%, hsl(160,80%,60%) 65%, hsl(191,100%,65%) 100%);
+          background: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(220,90%,72%) 35%, hsl(160,80%,60%) 65%, hsl(var(--primary)) 100%);
           background-size: 200% auto;
           -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
           animation: shimmer 4s linear infinite;
@@ -630,7 +631,7 @@ export default function Landing() {
           100% { background-position: 200% 50%; }
         }
         .border-beam {
-          background: linear-gradient(90deg, transparent 0%, rgba(0,180,216,0.7) 40%, rgba(56,189,248,0.7) 60%, transparent 100%);
+          background: linear-gradient(90deg, transparent 0%, rgba(var(--primary-rgb),0.7) 40%, rgba(var(--primary-rgb),0.5) 60%, transparent 100%);
           background-size: 200% 100%;
           animation: borderBeam 2.8s linear infinite;
         }
@@ -659,7 +660,7 @@ export default function Landing() {
           <ThemeSwitcher compact />
           <Link href="/app">
             <MagneticButton className="inline-flex items-center gap-2 text-white text-sm font-mono px-4 py-2 rounded-xl transition-all"
-              style={{ background: "linear-gradient(135deg, #0891b2, #0369a1)", boxShadow: "0 0 24px rgba(0,180,216,0.3)" } as React.CSSProperties}
+              style={{ background: "linear-gradient(135deg, var(--primary-hex), var(--primary-light-hex))", boxShadow: `0 0 24px rgba(var(--primary-rgb),0.3)` } as React.CSSProperties}
             >
               Launch App <ArrowRight className="w-3.5 h-3.5" />
             </MagneticButton>
@@ -676,15 +677,15 @@ export default function Landing() {
         {/* Gaming: floating code fragments drifting in background */}
         <FloatingCode />
         {/* GSAP morphing blobs in background */}
-        <MorphBlob size={600} color="rgba(0,180,216,0.10)" className="absolute -top-20 -left-32 pointer-events-none" />
-        <MorphBlob size={420} color="rgba(8,145,178,0.08)" className="absolute bottom-0 right-0 pointer-events-none" />
+        <MorphBlob size={600} color="rgba(var(--primary-rgb),0.10)" className="absolute -top-20 -left-32 pointer-events-none" />
+        <MorphBlob size={420} color="rgba(var(--primary-rgb),0.08)" className="absolute bottom-0 right-0 pointer-events-none" />
         {/* Lottie AI radar — floats top-right of hero */}
         <AIRadarPulse size={160} className="absolute top-28 right-8 md:right-16 opacity-60 pointer-events-none hidden md:block" />
 
         {/* Grid overlay */}
         <div className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: "linear-gradient(rgba(0,180,216,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,180,216,0.04) 1px, transparent 1px)",
+            backgroundImage: "linear-gradient(rgba(var(--primary-rgb),0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--primary-rgb),0.04) 1px, transparent 1px)",
             backgroundSize: "48px 48px",
             maskImage: "radial-gradient(ellipse 80% 70% at 50% 0%, black 30%, transparent 100%)",
           }}
@@ -723,7 +724,7 @@ export default function Landing() {
                 animate={{ opacity: [1, 0] }}
                 transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
                 className="inline-block w-[3px] h-[0.82em] ml-1 align-middle rounded-sm"
-                style={{ background: "#22d3ee" }}
+                style={{ background: "hsl(var(--primary))" }}
               />
             </div>
             <motion.div
@@ -758,25 +759,25 @@ export default function Landing() {
               <MagneticButton>
                 <motion.div
                   className="relative inline-flex items-center gap-3 text-white font-mono text-base px-8 py-4 rounded-2xl overflow-hidden"
-                  style={{ background: "linear-gradient(135deg, #0891b2 0%, #0369a1 100%)" }}
+                  style={{ background: "linear-gradient(135deg, var(--primary-hex) 0%, var(--primary-light-hex) 100%)" }}
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
                 >
                   <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300"
-                    style={{ background: "linear-gradient(135deg, #0e7490 0%, #075985 100%)" }}
+                    style={{ background: "linear-gradient(135deg, var(--primary-hex) 0%, var(--primary-light-hex) 100%)", filter: "brightness(0.85)" }}
                   />
                   <Terminal className="w-4 h-4 relative z-10" />
                   <span className="relative z-10">Start Generating</span>
                   <ChevronRight className="w-4 h-4 relative z-10" />
                   <div className="absolute -inset-1 rounded-2xl opacity-60 blur-lg -z-10"
-                    style={{ background: "linear-gradient(135deg, #0891b2, #0369a1)" }}
+                    style={{ background: "linear-gradient(135deg, var(--primary-hex), var(--primary-light-hex))" }}
                   />
                 </motion.div>
               </MagneticButton>
             </Link>
             <Link href="/app/specs">
               <motion.span
-                whileHover={{ scale: 1.03, borderColor: "rgba(0,180,216,0.4)" }}
+                whileHover={{ scale: 1.03, borderColor: "rgba(var(--primary-rgb),0.4)" }}
                 whileTap={{ scale: 0.97 }}
                 className="cursor-pointer inline-flex items-center gap-2 border border-white/10 bg-white/[0.04] hover:bg-white/[0.07] text-white/80 font-mono text-base px-8 py-4 rounded-2xl transition-colors"
               >
@@ -824,14 +825,14 @@ export default function Landing() {
             <LiveActivityTicker />
           </div>
           <div className="absolute -inset-8 rounded-3xl opacity-30 blur-3xl pointer-events-none -z-10"
-            style={{ background: "radial-gradient(ellipse, rgba(0,180,216,0.18) 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(ellipse, rgba(var(--primary-rgb),0.18) 0%, transparent 70%)" }}
           />
         </motion.div>
       </section>
 
       {/* ── Stats ──────────────────────────────────────────── */}
       <section className="relative py-16 overflow-hidden" style={{ borderTop: "1px solid rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 60% 100% at 50% 50%, rgba(0,180,216,0.04), transparent)" }} />
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 60% 100% at 50% 50%, rgba(var(--primary-rgb),0.04), transparent)" }} />
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center relative z-10">
           {[
             { val: 4,   suffix: " types", label: "Spec formats" },
@@ -857,7 +858,7 @@ export default function Landing() {
       {/* ── How it works ────────────────────────────────────── */}
       <section className="py-28 px-6 relative">
         <div className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,180,216,0.05), transparent)" }}
+          style={{ background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(var(--primary-rgb),0.05), transparent)" }}
         />
 
         <div className="max-w-4xl mx-auto relative z-10">
@@ -883,7 +884,7 @@ export default function Landing() {
           {/* Steps with connecting line — wrapped in GSAP stagger reveal */}
           <div className="relative space-y-6">
             <div className="hidden md:block absolute left-[calc(50%-0.5px)] top-10 bottom-10 w-px"
-              style={{ background: "linear-gradient(to bottom, transparent, rgba(0,180,216,0.4) 20%, rgba(0,180,216,0.4) 80%, transparent)" }}
+              style={{ background: "linear-gradient(to bottom, transparent, rgba(var(--primary-rgb),0.4) 20%, rgba(var(--primary-rgb),0.4) 80%, transparent)" }}
             />
 
             <GSAPScrollReveal stagger={0.18} y={56}>
@@ -897,14 +898,14 @@ export default function Landing() {
                   className={`flex items-center gap-6 ${i % 2 === 1 ? "md:flex-row-reverse" : ""}`}
                 >
                   <TiltCard className={`flex-1 p-6 ${i % 2 === 1 ? "md:text-right" : ""}`}>
-                    <span className="font-mono text-5xl font-bold" style={{ color: "rgba(0,180,216,0.2)" }}>{s.n}</span>
+                    <span className="font-mono text-5xl font-bold" style={{ color: "rgba(var(--primary-rgb),0.2)" }}>{s.n}</span>
                     <h3 className="text-xl font-bold mt-1 mb-2">{s.title}</h3>
                     <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{s.desc}</p>
                   </TiltCard>
 
                   <motion.div
                     className="hidden md:flex w-12 h-12 rounded-full items-center justify-center shrink-0 relative z-10 font-mono font-bold text-sm text-white"
-                    style={{ background: "linear-gradient(135deg, #0891b2, #0369a1)", boxShadow: "0 0 28px rgba(0,180,216,0.4)" }}
+                    style={{ background: "linear-gradient(135deg, var(--primary-hex), var(--primary-light-hex))", boxShadow: "0 0 28px rgba(var(--primary-rgb),0.4)" }}
                     whileHover={{ scale: 1.2 }}
                     transition={{ type: "spring", stiffness: 400 }}
                   >
@@ -938,7 +939,7 @@ export default function Landing() {
 
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { emoji: "⚙️", label: "System Design",   desc: "Architecture, component interactions, data flow", color: "#0891b2" },
+              { emoji: "⚙️", label: "System Design",   desc: "Architecture, component interactions, data flow", color: "hsl(var(--primary))" },
               { emoji: "🔗", label: "API Design",       desc: "Endpoints, auth, request/response schemas",       color: "#2563eb" },
               { emoji: "🗄️", label: "Database Schema", desc: "Tables, relationships, indexes, constraints",    color: "#059669" },
               { emoji: "📋", label: "Feature Spec",     desc: "User stories, acceptance criteria, edge cases",  color: "#d97706" },
@@ -976,7 +977,7 @@ export default function Landing() {
           <motion.div
             className="absolute w-[700px] h-[700px] rounded-full"
             style={{
-              background: "radial-gradient(circle, hsl(191,100%,40%) 0%, transparent 70%)",
+              background: "radial-gradient(circle, var(--primary-hex) 0%, transparent 70%)",
               left: "50%", top: "50%",
               x: "-50%", y: "-50%",
               opacity: 0.12,
@@ -997,7 +998,7 @@ export default function Landing() {
           <div
             className="absolute inset-0"
             style={{
-              backgroundImage: "linear-gradient(rgba(0,180,216,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,180,216,0.03) 1px, transparent 1px)",
+              backgroundImage: "linear-gradient(rgba(var(--primary-rgb),0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--primary-rgb),0.03) 1px, transparent 1px)",
               backgroundSize: "48px 48px",
             }}
           />
@@ -1041,7 +1042,7 @@ export default function Landing() {
               <MagneticButton>
                 <motion.div
                   className="relative inline-flex items-center gap-3 text-white font-mono text-lg px-10 py-5 rounded-2xl overflow-hidden"
-                  style={{ background: "linear-gradient(135deg, #0891b2 0%, #0369a1 100%)" }}
+                  style={{ background: "linear-gradient(135deg, var(--primary-hex) 0%, var(--primary-light-hex) 100%)" }}
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
                 >
@@ -1049,7 +1050,7 @@ export default function Landing() {
                   Generate Free Spec
                   <ArrowRight className="w-4 h-4" />
                   <div className="absolute -inset-1 rounded-2xl blur-xl -z-10 opacity-70"
-                    style={{ background: "linear-gradient(135deg, #0891b2, #0369a1)" }}
+                    style={{ background: "linear-gradient(135deg, var(--primary-hex), var(--primary-light-hex))" }}
                   />
                 </motion.div>
               </MagneticButton>

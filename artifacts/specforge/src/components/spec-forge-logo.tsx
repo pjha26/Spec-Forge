@@ -189,9 +189,9 @@ export function SpecForgeLogo({
             <span
               className="text-[9px] font-mono px-1.5 py-0.5 rounded-sm"
               style={{
-                background: "rgba(0,180,216,0.12)",
-                color: "hsl(191,100%,65%)",
-                border: "1px solid rgba(0,180,216,0.25)",
+                background: "rgba(var(--primary-rgb),0.12)",
+                color: "hsl(var(--primary))",
+                border: "1px solid rgba(var(--primary-rgb),0.25)",
               }}
             >
               BETA

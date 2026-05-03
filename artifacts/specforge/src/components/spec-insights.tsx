@@ -50,14 +50,14 @@ export function SpecInsights({ specId }: SpecInsightsProps) {
         <div className="relative">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
             style={{
-              background: "linear-gradient(135deg, rgba(0,180,216,0.12), rgba(56,189,248,0.08))",
-              border: "1px solid rgba(0,180,216,0.22)",
+              background: "linear-gradient(135deg, rgba(var(--primary-rgb),0.12), rgba(var(--primary-rgb),0.06))",
+              border: "1px solid rgba(var(--primary-rgb),0.22)",
             }}
           >
-            <Sparkles className="w-7 h-7" style={{ color: "hsl(191,100%,52%)" }} />
+            <Sparkles className="w-7 h-7" style={{ color: "hsl(var(--primary))" }} />
           </div>
           <div className="absolute -inset-4 rounded-3xl opacity-20 blur-xl"
-            style={{ background: "radial-gradient(circle, rgba(0,180,216,0.5), transparent)" }}
+            style={{ background: "radial-gradient(circle, rgba(var(--primary-rgb),0.5), transparent)" }}
           />
         </div>
         <div className="text-center space-y-1.5 max-w-xs">
@@ -84,9 +84,9 @@ export function SpecInsights({ specId }: SpecInsightsProps) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <div className="relative">
-          <Loader2 className="w-8 h-8 animate-spin" style={{ color: "hsl(191,100%,52%)" }} />
+          <Loader2 className="w-8 h-8 animate-spin" style={{ color: "hsl(var(--primary))" }} />
           <div className="absolute -inset-4 rounded-full opacity-20 blur-lg"
-            style={{ background: "rgba(0,180,216,0.5)" }}
+            style={{ background: "rgba(var(--primary-rgb),0.5)" }}
           />
         </div>
         <p className="text-sm font-mono text-muted-foreground">Analyzing spec with Claude…</p>
@@ -184,17 +184,17 @@ export function SpecInsights({ specId }: SpecInsightsProps) {
       {/* Suggestions */}
       {insights.suggestions.length > 0 && (
         <div className="rounded-xl p-4 space-y-2.5"
-          style={{ background: "rgba(0,180,216,0.05)", border: "1px solid rgba(0,180,216,0.15)" }}
+          style={{ background: "rgba(var(--primary-rgb),0.05)", border: "1px solid rgba(var(--primary-rgb),0.15)" }}
         >
           <div className="flex items-center gap-2">
-            <Lightbulb className="w-3.5 h-3.5" style={{ color: "hsl(191,100%,65%)" }} />
-            <span className="text-xs font-bold font-mono" style={{ color: "hsl(191,100%,65%)" }}>IMPROVEMENT SUGGESTIONS</span>
+            <Lightbulb className="w-3.5 h-3.5" style={{ color: "hsl(var(--primary))" }} />
+            <span className="text-xs font-bold font-mono" style={{ color: "hsl(var(--primary))" }}>IMPROVEMENT SUGGESTIONS</span>
           </div>
           <ol className="space-y-2">
             {insights.suggestions.map((s, i) => (
               <li key={i} className="flex items-start gap-3 text-xs text-foreground/80">
                 <span className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0"
-                  style={{ background: "rgba(0,180,216,0.15)", color: "hsl(191,100%,65%)" }}
+                  style={{ background: "rgba(var(--primary-rgb),0.15)", color: "hsl(var(--primary))" }}
                 >
                   {i + 1}
                 </span>

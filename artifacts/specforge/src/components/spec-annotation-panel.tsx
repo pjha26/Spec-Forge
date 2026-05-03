@@ -173,7 +173,7 @@ export function SpecAnnotationPanel({ specId, specStatus, isGitHub, teamRole, cu
         style={{ borderBottom: expanded ? "1px solid rgba(255,255,255,0.06)" : "none" }}
         onClick={() => setExpanded(v => !v)}
       >
-        <MessageSquare className="w-3.5 h-3.5 shrink-0" style={{ color: "#22d3ee" }} />
+        <MessageSquare className="w-3.5 h-3.5 shrink-0" style={{ color: "hsl(var(--primary))" }} />
         <h3 className="text-xs font-mono font-bold text-foreground flex-1">Annotations</h3>
 
         <div className="flex items-center gap-1.5 mr-1">
@@ -192,15 +192,15 @@ export function SpecAnnotationPanel({ specId, specStatus, isGitHub, teamRole, cu
         <div className="p-3 space-y-3">
           {/* ── AI Audit ──────────────────────────────────────────────────── */}
           {isCompleted && canAnnotate && (
-            <div className="rounded-lg overflow-hidden" style={{ border: "1px solid rgba(0,180,216,0.18)" }}>
+            <div className="rounded-lg overflow-hidden" style={{ border: "1px solid rgba(var(--primary-rgb),0.18)" }}>
               <div
                 className="flex items-center gap-2 px-3 py-2 cursor-pointer"
-                style={{ background: "rgba(0,180,216,0.06)" }}
+                style={{ background: "rgba(var(--primary-rgb),0.06)" }}
                 onClick={() => setAuditExpanded(v => !v)}
               >
-                <Sparkles className="w-3 h-3 shrink-0" style={{ color: "#22d3ee" }} />
-                <span className="text-[10px] font-mono font-bold flex-1" style={{ color: "#22d3ee" }}>AI AUDIT</span>
-                {audit?.status === "running" && <Loader2 className="w-3 h-3 animate-spin" style={{ color: "#22d3ee" }} />}
+                <Sparkles className="w-3 h-3 shrink-0" style={{ color: "hsl(var(--primary))" }} />
+                <span className="text-[10px] font-mono font-bold flex-1" style={{ color: "hsl(var(--primary))" }}>AI AUDIT</span>
+                {audit?.status === "running" && <Loader2 className="w-3 h-3 animate-spin" style={{ color: "hsl(var(--primary))" }} />}
                 {audit?.status === "completed" && (
                   <span className="text-[9px] font-mono opacity-60">
                     {audit.discrepancies?.length ?? 0} issues found
@@ -210,7 +210,7 @@ export function SpecAnnotationPanel({ specId, specStatus, isGitHub, teamRole, cu
                   onClick={e => { e.stopPropagation(); handleRunAudit(); }}
                   disabled={auditing || audit?.status === "running"}
                   className="ml-2 text-[9px] font-mono font-bold px-2 py-0.5 rounded disabled:opacity-50 transition-colors"
-                  style={{ background: "rgba(0,180,216,0.15)", color: "#22d3ee" }}
+                  style={{ background: "rgba(var(--primary-rgb),0.15)", color: "hsl(var(--primary))" }}
                 >
                   {auditing || audit?.status === "running" ? "Running…" : "Run"}
                 </button>
@@ -273,7 +273,7 @@ export function SpecAnnotationPanel({ specId, specStatus, isGitHub, teamRole, cu
             <button
               onClick={() => setShowAdd(v => !v)}
               className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold transition-colors"
-              style={{ background: "rgba(0,180,216,0.08)", border: "1px solid rgba(0,180,216,0.18)", color: "hsl(191,100%,65%)" }}
+              style={{ background: "rgba(var(--primary-rgb),0.08)", border: "1px solid rgba(var(--primary-rgb),0.18)", color: "hsl(var(--primary))" }}
             >
               <Plus className="w-3 h-3" />
               Add Annotation
@@ -282,7 +282,7 @@ export function SpecAnnotationPanel({ specId, specStatus, isGitHub, teamRole, cu
 
           {showAdd && (
             <form onSubmit={handleSaveAnnotation} className="space-y-2 p-3 rounded-lg"
-              style={{ background: "rgba(0,180,216,0.04)", border: "1px solid rgba(0,180,216,0.15)" }}>
+              style={{ background: "rgba(var(--primary-rgb),0.04)", border: "1px solid rgba(var(--primary-rgb),0.15)" }}>
 
               <select
                 value={form.status}
@@ -325,7 +325,7 @@ export function SpecAnnotationPanel({ specId, specStatus, isGitHub, teamRole, cu
                 </button>
                 <button type="submit" disabled={saving || !form.comment.trim()}
                   className="text-[10px] font-mono font-bold px-3 py-1 rounded transition-colors disabled:opacity-50"
-                  style={{ background: "rgba(0,180,216,0.2)", color: "hsl(191,100%,65%)" }}>
+                  style={{ background: "rgba(var(--primary-rgb),0.2)", color: "hsl(var(--primary))" }}>
                   {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
                 </button>
               </div>

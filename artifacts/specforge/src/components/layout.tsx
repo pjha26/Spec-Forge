@@ -46,7 +46,7 @@ function Scanlines() {
 }
 
 // ── Corner brackets on active nav item ────────────────────────────────────────
-function CornerBrackets({ color = "#0891b2" }: { color?: string }) {
+function CornerBrackets({ color = "hsl(var(--primary))" }: { color?: string }) {
   return (
     <>
       <span className="absolute top-0.5 left-0.5 w-2 h-2 pointer-events-none"
@@ -95,9 +95,9 @@ function useSparkOnClick() {
       const dist  = 24 + Math.random() * 20;
       spark.style.cssText = `
         position:absolute; width:3px; height:3px; border-radius:50%;
-        background:hsl(${260 + Math.random() * 60},90%,75%);
+        background:var(--primary-hex);
         left:${cx}px; top:${cy}px; pointer-events:none; z-index:999;
-        box-shadow:0 0 4px hsl(${260 + Math.random() * 60},90%,75%);
+        box-shadow:0 0 6px var(--primary-hex);
       `;
       el.appendChild(spark);
       gsap.to(spark, {
@@ -158,7 +158,7 @@ function DataStream() {
       <div
         style={{
           position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-          background: "linear-gradient(180deg, transparent 0%, #00b4d8 20%, #38bdf8 50%, #00b4d8 80%, transparent 100%)",
+          background: "linear-gradient(180deg, transparent 0%, var(--primary-hex) 20%, var(--primary-light-hex) 50%, var(--primary-hex) 80%, transparent 100%)",
           animation: "dataStream 3s linear infinite",
           height: "200%",
         }}
@@ -170,9 +170,9 @@ function DataStream() {
 // ── Hex grid background ────────────────────────────────────────────────────────
 function HexGrid() {
   return (
-    <div className="absolute inset-0 pointer-events-none opacity-[0.035] overflow-hidden"
+    <div className="absolute inset-0 pointer-events-none opacity-[0.04] overflow-hidden"
       style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49'%3E%3Cpath d='M14 0 L28 8 L28 24 L14 32 L0 24 L0 8 Z' fill='none' stroke='%238b5cf6' stroke-width='0.5'/%3E%3Cpath d='M14 17 L28 25 L28 41 L14 49 L0 41 L0 25 Z' fill='none' stroke='%238b5cf6' stroke-width='0.5'/%3E%3C/svg%3E")`,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49'%3E%3Cpath d='M14 0 L28 8 L28 24 L14 32 L0 24 L0 8 Z' fill='none' stroke='%23ffffff' stroke-width='0.5'/%3E%3Cpath d='M14 17 L28 25 L28 41 L14 49 L0 41 L0 25 Z' fill='none' stroke='%23ffffff' stroke-width='0.5'/%3E%3C/svg%3E")`,
         backgroundSize: "28px 49px",
       }}
     />
@@ -217,9 +217,9 @@ function EnergyRing() {
           strokeDasharray="8 4" style={{ animation: "spinRing 4s linear infinite" }} />
         <defs>
           <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#00b4d8" />
-            <stop offset="50%" stopColor="#38bdf8" />
-            <stop offset="100%" stopColor="#00b4d8" />
+            <stop offset="0%" stopColor="var(--primary-hex)" />
+            <stop offset="50%" stopColor="var(--primary-light-hex)" />
+            <stop offset="100%" stopColor="var(--primary-hex)" />
           </linearGradient>
         </defs>
       </svg>
@@ -313,8 +313,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, [justOpened]);
 
   const navItems = [
-    { href: "/app",            label: "Generator",    icon: FileCode2, exact: true,  color: "#0891b2" },
-    { href: "/app/specs",      label: "History",      icon: History,   exact: false, color: "#0891b2" },
+    { href: "/app",            label: "Generator",    icon: FileCode2, exact: true,  color: "hsl(var(--primary))" },
+    { href: "/app/specs",      label: "History",      icon: History,   exact: false, color: "hsl(var(--primary))" },
     { href: "/app/search",     label: "Search",       icon: Search,    exact: false, color: "#06b6d4" },
     { href: "/app/graph",      label: "Dep Graph",    icon: Network,   exact: false, color: "#10b981" },
     { href: "/app/teams",      label: "Teams",        icon: Users,     exact: false, color: "#f59e0b" },
@@ -339,10 +339,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           to   { transform: rotate(360deg); }
         }
         @keyframes rgbBorder {
-          0%   { border-color: #00b4d8; box-shadow: 0 0 8px #00b4d840; }
-          33%  { border-color: #06b6d4; box-shadow: 0 0 8px #06b6d440; }
-          66%  { border-color: #10b981; box-shadow: 0 0 8px #10b98140; }
-          100% { border-color: #00b4d8; box-shadow: 0 0 8px #00b4d840; }
+          0%   { border-color: var(--primary-hex); box-shadow: 0 0 8px color-mix(in srgb, var(--primary-hex) 25%, transparent); }
+          100% { border-color: var(--primary-hex); box-shadow: 0 0 8px color-mix(in srgb, var(--primary-hex) 25%, transparent); }
         }
         @keyframes sweepScan {
           0%   { left: -100%; }
@@ -395,8 +393,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       >
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono"
           style={{
-            background: "rgba(0,180,216,0.9)", backdropFilter: "blur(12px)",
-            boxShadow: "0 4px 24px rgba(0,180,216,0.4)", color: "white",
+            background: "rgba(var(--primary-rgb),0.9)", backdropFilter: "blur(12px)",
+            boxShadow: "0 4px 24px rgba(var(--primary-rgb),0.4)", color: "white",
           }}
         >
           <Sparkles className="w-3 h-3" />
@@ -409,9 +407,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         ref={sidebarRef}
         className="w-full md:w-64 flex flex-col relative overflow-hidden shrink-0"
         style={{
-          background: "linear-gradient(180deg, hsl(240,20%,4%) 0%, hsl(240,18%,5%) 100%)",
-          borderRight: "1px solid rgba(0,180,216,0.15)",
-          boxShadow: "4px 0 40px rgba(0,180,216,0.06)",
+          background: "hsl(var(--sidebar))",
+          borderRight: "1px solid rgba(var(--primary-rgb),0.15)",
+          boxShadow: "4px 0 40px rgba(var(--primary-rgb),0.06)",
         }}
       >
         <HexGrid />
@@ -421,7 +419,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* Top energy line */}
         <div className="absolute top-0 left-0 right-0 h-px z-10"
           style={{
-            background: "linear-gradient(90deg, transparent, #00b4d8, #38bdf8, #00b4d8, transparent)",
+            background: "linear-gradient(90deg, transparent, var(--primary-hex), var(--primary-light-hex), var(--primary-hex), transparent)",
             animation: "borderSweep 4s linear infinite",
             backgroundSize: "300% 100%",
           }}
@@ -431,7 +429,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Link href="/">
           <div
             className="p-4 px-5 flex items-center gap-0 relative cursor-pointer group"
-            style={{ borderBottom: "1px solid rgba(0,180,216,0.1)" }}
+            style={{ borderBottom: "1px solid rgba(var(--primary-rgb),0.1)" }}
             onClick={spark}
           >
             <SpecForgeLogo size={38} showBeta textSize="text-sm" />
@@ -550,9 +548,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="pt-5">
                 <div className="flex items-center justify-between px-3 mb-2">
                   <div className="flex items-center gap-2">
-                    <Activity className="w-2.5 h-2.5" style={{ color: "rgba(0,180,216,0.6)" }} />
+                    <Activity className="w-2.5 h-2.5" style={{ color: "rgba(var(--primary-rgb),0.6)" }} />
                     <span className="text-[9px] font-mono font-bold uppercase tracking-widest"
-                      style={{ color: "rgba(0,180,216,0.6)" }}>
+                      style={{ color: "rgba(var(--primary-rgb),0.6)" }}>
                       Recent
                     </span>
                   </div>
@@ -568,7 +566,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <div className="mx-3 mb-2 h-px relative overflow-hidden">
                   <div style={{
                     position: "absolute", inset: 0,
-                    background: "linear-gradient(90deg, transparent, rgba(0,180,216,0.4), rgba(56,189,248,0.25), transparent)",
+                    background: "linear-gradient(90deg, transparent, rgba(var(--primary-rgb),0.4), rgba(var(--primary-rgb),0.2), transparent)",
                     animation: "borderSweep 3s linear infinite",
                     backgroundSize: "300% 100%",
                   }} />
@@ -624,15 +622,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="px-3 py-2 rounded-lg mx-0"
               style={{ border: "1px solid rgba(255,255,255,0.04)", background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center gap-1.5 mb-1.5">
-                <Shield className="w-2.5 h-2.5" style={{ color: "rgba(0,180,216,0.6)" }} />
-                <span className="text-[8px] font-mono uppercase tracking-widest" style={{ color: "rgba(0,180,216,0.6)" }}>
+                <Shield className="w-2.5 h-2.5" style={{ color: "rgba(var(--primary-rgb),0.6)" }} />
+                <span className="text-[8px] font-mono uppercase tracking-widest" style={{ color: "rgba(var(--primary-rgb),0.6)" }}>
                   System Status
                 </span>
               </div>
               {[
                 { label: "API", value: 98, color: "#22c55e" },
-                { label: "AI", value: 100, color: "#00b4d8" },
-                { label: "DB", value: 95, color: "#06b6d4" },
+                { label: "AI", value: 100, color: "hsl(var(--primary))" },
+                { label: "DB", value: 95, color: "hsl(var(--primary))" },
               ].map(({ label, value, color }) => (
                 <div key={label} className="flex items-center gap-2 mb-1">
                   <span className="text-[8px] font-mono w-5 shrink-0" style={{ color: "rgba(255,255,255,0.35)" }}>{label}</span>
@@ -647,24 +645,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* ── AI Assistant button ── */}
-        <div className="p-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(0,180,216,0.08)" }}>
+        <div className="p-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(var(--primary-rgb),0.08)" }}>
           <NotificationBell />
           <button
             onClick={() => { setAiOpen(true); }}
             className="flex-1 flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-mono text-xs relative overflow-hidden group transition-all duration-200"
             style={{
               background: aiOpen
-                ? "linear-gradient(135deg, rgba(0,180,216,0.25) 0%, rgba(56,189,248,0.15) 100%)"
-                : "linear-gradient(135deg, rgba(0,180,216,0.1) 0%, rgba(56,189,248,0.06) 100%)",
-              border: aiOpen ? "1px solid rgba(0,180,216,0.6)" : "1px solid rgba(0,180,216,0.22)",
-              color: "hsl(191,100%,65%)",
-              boxShadow: aiOpen ? "0 0 24px rgba(0,180,216,0.3), inset 0 0 20px rgba(0,180,216,0.04)" : "0 0 12px rgba(0,180,216,0.08)",
+                ? "linear-gradient(135deg, rgba(var(--primary-rgb),0.25) 0%, rgba(var(--primary-rgb),0.12) 100%)"
+                : "linear-gradient(135deg, rgba(var(--primary-rgb),0.1) 0%, rgba(var(--primary-rgb),0.05) 100%)",
+              border: aiOpen ? "1px solid rgba(var(--primary-rgb),0.6)" : "1px solid rgba(var(--primary-rgb),0.22)",
+              color: "hsl(var(--primary))",
+              boxShadow: aiOpen ? "0 0 24px rgba(var(--primary-rgb),0.3), inset 0 0 20px rgba(var(--primary-rgb),0.04)" : "0 0 12px rgba(var(--primary-rgb),0.08)",
               animation: "rgbBorder 4s linear infinite",
             }}
           >
             {/* Sweep */}
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              style={{ background: "linear-gradient(135deg, rgba(0,180,216,0.15) 0%, rgba(56,189,248,0.1) 100%)" }}
+              style={{ background: "linear-gradient(135deg, rgba(var(--primary-rgb),0.15) 0%, rgba(var(--primary-rgb),0.08) 100%)" }}
             />
             {/* Scan line on hover */}
             <div className="nav-sweep absolute inset-y-0 w-16 pointer-events-none"
@@ -698,10 +696,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <div className="nav-sweep absolute inset-y-0 w-16 pointer-events-none"
                     style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", left: "-100%" }}
                   />
-                  <Avatar className="w-7 h-7 shrink-0" style={{ boxShadow: "0 0 8px rgba(0,180,216,0.35)", border: "1px solid rgba(0,180,216,0.3)" }}>
+                  <Avatar className="w-7 h-7 shrink-0" style={{ boxShadow: "0 0 8px rgba(var(--primary-rgb),0.35)", border: "1px solid rgba(var(--primary-rgb),0.3)" }}>
                     {user.profileImageUrl && <AvatarImage src={user.profileImageUrl} alt={initials} />}
                     <AvatarFallback className="text-xs font-bold"
-                      style={{ background: "linear-gradient(135deg, hsl(191,100%,35%), hsl(210,90%,45%))", color: "white" }}>
+                      style={{ background: "linear-gradient(135deg, var(--primary-hex), var(--primary-light-hex))", color: "white" }}>
                       {initials}
                     </AvatarFallback>
                   </Avatar>
@@ -710,7 +708,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email ?? "User"}
                     </p>
                     {user.email && (
-                      <p className="text-[10px] font-mono truncate leading-tight" style={{ color: "rgba(0,180,216,0.7)" }}>
+                      <p className="text-[10px] font-mono truncate leading-tight" style={{ color: "rgba(var(--primary-rgb),0.7)" }}>
                         {user.email}
                       </p>
                     )}
@@ -757,7 +755,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* Bottom energy line */}
         <div className="absolute bottom-0 left-0 right-0 h-px"
           style={{
-            background: "linear-gradient(90deg, transparent, #00b4d860, #38bdf860, transparent)",
+            background: "linear-gradient(90deg, transparent, rgba(var(--primary-rgb),0.38), rgba(var(--primary-rgb),0.22), transparent)",
           }}
         />
       </aside>
@@ -770,8 +768,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           style={{
             width: "min(440px, 100vw)",
             background: "hsl(var(--card))",
-            borderLeft: "1px solid rgba(0,180,216,0.2)",
-            boxShadow: "-8px 0 48px rgba(0,180,216,0.1)",
+            borderLeft: "1px solid rgba(var(--primary-rgb),0.2)",
+            boxShadow: "-8px 0 48px rgba(var(--primary-rgb),0.1)",
           }}
         >
           <AIChat />
@@ -783,9 +781,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0 line-grid-bg opacity-40" />
           <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full"
-            style={{ background: "radial-gradient(circle, rgba(0,180,216,0.03) 0%, transparent 70%)" }} />
+            style={{ background: "radial-gradient(circle, rgba(var(--primary-rgb),0.03) 0%, transparent 70%)" }} />
           <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full"
-            style={{ background: "radial-gradient(circle, rgba(6,182,212,0.03) 0%, transparent 70%)" }} />
+            style={{ background: "radial-gradient(circle, rgba(var(--primary-rgb),0.03) 0%, transparent 70%)" }} />
         </div>
         <div className="relative z-10 flex-1 flex flex-col h-full overflow-hidden">
           {import.meta.env.VITE_LOCAL_DEV === "true" && (

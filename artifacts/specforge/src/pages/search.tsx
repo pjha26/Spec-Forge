@@ -10,8 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
 const TYPE_META: Record<string, { label: string; icon: any; color: string; bg: string; border: string }> = {
-  system_design:   { label: "System Design",   icon: Server,   color: "#22D3EE", bg: "rgba(0,180,216,0.12)",  border: "rgba(0,180,216,0.35)" },
-  api_design:      { label: "API Design",       icon: Cpu,      color: "#22D3EE", bg: "rgba(6,182,212,0.12)",  border: "rgba(6,182,212,0.35)" },
+  system_design:   { label: "System Design",   icon: Server,   color: "hsl(var(--primary))", bg: "rgba(var(--primary-rgb),0.12)",  border: "rgba(var(--primary-rgb),0.35)" },
+  api_design:      { label: "API Design",       icon: Cpu,      color: "hsl(var(--primary))", bg: "rgba(var(--primary-rgb),0.12)",  border: "rgba(var(--primary-rgb),0.35)" },
   database_schema: { label: "Database Schema",  icon: Database, color: "#34D399", bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.35)" },
   feature_spec:    { label: "Feature Spec",     icon: BookOpen, color: "#FCD34D", bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.35)" },
 };
@@ -118,9 +118,9 @@ export default function SearchPage() {
         >
           <div className="flex items-center justify-center gap-2 mb-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: "rgba(0,180,216,0.12)", border: "1px solid rgba(0,180,216,0.25)" }}
+              style={{ background: "rgba(var(--primary-rgb),0.12)", border: "1px solid rgba(var(--primary-rgb),0.25)" }}
             >
-              <Sparkles className="w-4.5 h-4.5" style={{ color: "hsl(191,100%,52%)" }} />
+              <Sparkles className="w-4.5 h-4.5" style={{ color: "hsl(var(--primary))" }} />
             </div>
           </div>
           <h1 className="text-2xl font-bold mb-1">Search your specs</h1>
@@ -145,8 +145,8 @@ export default function SearchPage() {
             className="pl-11 pr-10 h-12 text-sm font-mono"
             style={{
               background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(0,180,216,0.28)",
-              boxShadow: "0 0 0 4px rgba(0,180,216,0.05)",
+              border: "1px solid rgba(var(--primary-rgb),0.28)",
+              boxShadow: "0 0 0 4px rgba(var(--primary-rgb),0.05)",
             }}
           />
           {query && (
@@ -172,9 +172,9 @@ export default function SearchPage() {
               onClick={() => handleFilterChange(f.value)}
               className="px-3 py-1.5 rounded-lg text-xs font-mono transition-all duration-150"
               style={filterType === f.value ? {
-                background: "rgba(0,180,216,0.15)",
-                border: "1px solid rgba(0,180,216,0.35)",
-                color: "hsl(191,100%,65%)",
+                background: "rgba(var(--primary-rgb),0.15)",
+                border: "1px solid rgba(var(--primary-rgb),0.35)",
+                color: "hsl(var(--primary))",
               } : {
                 background: "rgba(255,255,255,0.03)",
                 border: "1px solid rgba(255,255,255,0.08)",
@@ -209,7 +209,7 @@ export default function SearchPage() {
                     color: "hsl(var(--muted-foreground))",
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = "rgba(0,180,216,0.35)";
+                    e.currentTarget.style.borderColor = "rgba(var(--primary-rgb),0.35)";
                     e.currentTarget.style.color = "white";
                   }}
                   onMouseLeave={e => {
@@ -274,8 +274,8 @@ export default function SearchPage() {
                             border: "1px solid rgba(255,255,255,0.07)",
                           }}
                           onMouseEnter={e => {
-                            (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,180,216,0.25)";
-                            (e.currentTarget as HTMLElement).style.background = "rgba(0,180,216,0.04)";
+                            (e.currentTarget as HTMLElement).style.borderColor = "rgba(var(--primary-rgb),0.25)";
+                            (e.currentTarget as HTMLElement).style.background = "rgba(var(--primary-rgb),0.04)";
                           }}
                           onMouseLeave={e => {
                             (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)";

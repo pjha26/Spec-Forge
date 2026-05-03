@@ -102,7 +102,7 @@ export default function TeamsPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Users className="w-6 h-6" style={{ color: "hsl(191,100%,52%)" }} />
+            <Users className="w-6 h-6" style={{ color: "hsl(var(--primary))" }} />
             Team Workspaces
           </h1>
           <p className="text-sm text-muted-foreground mt-1 font-mono">
@@ -112,7 +112,7 @@ export default function TeamsPage() {
         <Button
           onClick={() => setShowForm(true)}
           className="font-mono text-xs gap-2"
-          style={{ background: "linear-gradient(135deg,#0891b2,#0369a1)" }}
+          style={{ background: "linear-gradient(135deg,hsl(var(--primary)),hsl(var(--primary) / 0.7))" }}
         >
           <Plus className="w-3.5 h-3.5" />
           NEW TEAM
@@ -122,7 +122,7 @@ export default function TeamsPage() {
       {/* Create form */}
       {showForm && (
         <Card className="mb-6 p-5 border-cyan-500/30"
-          style={{ background: "rgba(0,180,216,0.04)" }}
+          style={{ background: "rgba(var(--primary-rgb),0.04)" }}
         >
           <form onSubmit={handleCreate} className="space-y-3">
             <h3 className="text-sm font-bold font-mono text-cyan-400">CREATE TEAM</h3>
@@ -160,9 +160,9 @@ export default function TeamsPage() {
       ) : teams.length === 0 ? (
         <div className="text-center py-16 space-y-3">
           <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center"
-            style={{ background: "rgba(0,180,216,0.08)", border: "1px solid rgba(0,180,216,0.18)" }}
+            style={{ background: "rgba(var(--primary-rgb),0.08)", border: "1px solid rgba(var(--primary-rgb),0.18)" }}
           >
-            <Users className="w-7 h-7" style={{ color: "hsl(191,100%,52%)" }} />
+            <Users className="w-7 h-7" style={{ color: "hsl(var(--primary))" }} />
           </div>
           <p className="text-muted-foreground text-sm">You're not in any teams yet.</p>
           <Button variant="outline" size="sm" className="font-mono text-xs" onClick={() => setShowForm(true)}>
@@ -187,9 +187,9 @@ export default function TeamsPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                          style={{ background: "rgba(0,180,216,0.12)", border: "1px solid rgba(0,180,216,0.22)" }}
+                          style={{ background: "rgba(var(--primary-rgb),0.12)", border: "1px solid rgba(var(--primary-rgb),0.22)" }}
                         >
-                          <Shield className="w-4 h-4" style={{ color: "hsl(191,100%,65%)" }} />
+                          <Shield className="w-4 h-4" style={{ color: "hsl(var(--primary))" }} />
                         </div>
                         <div className="min-w-0">
                           <p className="font-bold text-sm truncate">{team.name}</p>

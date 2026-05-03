@@ -68,6 +68,9 @@ export const THEMES: ThemeDefinition[] = [
       "--violet":                       "191 100% 42%",
       "--cyan":                         "180 100% 50%",
       "--button-outline":               "rgba(0,180,216,0.12)",
+      "--primary-rgb":                  "0, 180, 216",
+      "--primary-hex":                  "#00b4d8",
+      "--primary-light-hex":            "#38bdf8",
     },
   },
 
@@ -116,6 +119,9 @@ export const THEMES: ThemeDefinition[] = [
       "--violet":                       "38 95% 52%",
       "--cyan":                         "38 80% 65%",
       "--button-outline":               "rgba(245,158,11,0.12)",
+      "--primary-rgb":                  "245, 158, 11",
+      "--primary-hex":                  "#f59e0b",
+      "--primary-light-hex":            "#fcd34d",
     },
   },
 
@@ -164,6 +170,9 @@ export const THEMES: ThemeDefinition[] = [
       "--violet":                       "160 84% 39%",
       "--cyan":                         "160 70% 55%",
       "--button-outline":               "rgba(16,185,129,0.12)",
+      "--primary-rgb":                  "16, 185, 129",
+      "--primary-hex":                  "#10b981",
+      "--primary-light-hex":            "#34d399",
     },
   },
 
@@ -212,6 +221,9 @@ export const THEMES: ThemeDefinition[] = [
       "--violet":                       "347 90% 60%",
       "--cyan":                         "347 70% 72%",
       "--button-outline":               "rgba(244,63,94,0.12)",
+      "--primary-rgb":                  "244, 63, 94",
+      "--primary-hex":                  "#f43f5e",
+      "--primary-light-hex":            "#fb7185",
     },
   },
 
@@ -260,6 +272,9 @@ export const THEMES: ThemeDefinition[] = [
       "--violet":                       "225 80% 60%",
       "--cyan":                         "191 80% 45%",
       "--button-outline":               "rgba(79,110,247,0.15)",
+      "--primary-rgb":                  "79, 110, 247",
+      "--primary-hex":                  "#4f6ef7",
+      "--primary-light-hex":            "#818cf8",
       // Override elevate for light mode
       "--elevate-1":                    "rgba(0,0,0,0.04)",
       "--elevate-2":                    "rgba(0,0,0,0.08)",

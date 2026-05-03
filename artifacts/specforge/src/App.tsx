@@ -15,6 +15,7 @@ import TeamDetail from "@/pages/team-detail";
 import SearchPage from "@/pages/search";
 import GraphPage from "@/pages/graph";
 import IntegrationsPage from "@/pages/integrations";
+import { AuthGate } from "@/components/auth-gate";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,58 +33,74 @@ function Router() {
       <Route path="/share/:token" component={SharedSpec} />
       <Route path="/app">
         {() => (
-          <Layout>
-            <Home />
-          </Layout>
+          <AuthGate>
+            <Layout>
+              <Home />
+            </Layout>
+          </AuthGate>
         )}
       </Route>
       <Route path="/app/specs/:id">
         {() => (
-          <Layout>
-            <SpecDetail />
-          </Layout>
+          <AuthGate>
+            <Layout>
+              <SpecDetail />
+            </Layout>
+          </AuthGate>
         )}
       </Route>
       <Route path="/app/specs">
         {() => (
-          <Layout>
-            <SpecsList />
-          </Layout>
+          <AuthGate>
+            <Layout>
+              <SpecsList />
+            </Layout>
+          </AuthGate>
         )}
       </Route>
       <Route path="/app/teams/:id">
         {() => (
-          <Layout>
-            <TeamDetail />
-          </Layout>
+          <AuthGate>
+            <Layout>
+              <TeamDetail />
+            </Layout>
+          </AuthGate>
         )}
       </Route>
       <Route path="/app/teams">
         {() => (
-          <Layout>
-            <TeamsPage />
-          </Layout>
+          <AuthGate>
+            <Layout>
+              <TeamsPage />
+            </Layout>
+          </AuthGate>
         )}
       </Route>
       <Route path="/app/search">
         {() => (
-          <Layout>
-            <SearchPage />
-          </Layout>
+          <AuthGate>
+            <Layout>
+              <SearchPage />
+            </Layout>
+          </AuthGate>
         )}
       </Route>
       <Route path="/app/graph">
         {() => (
-          <Layout>
-            <GraphPage />
-          </Layout>
+          <AuthGate>
+            <Layout>
+              <GraphPage />
+            </Layout>
+          </AuthGate>
         )}
       </Route>
       <Route path="/app/integrations">
         {() => (
-          <Layout>
-            <IntegrationsPage />
-          </Layout>
+          <AuthGate>
+            <Layout>
+              <IntegrationsPage />
+            </Layout>
+          </AuthGate>
         )}
       </Route>
       <Route component={NotFound} />

@@ -390,12 +390,12 @@ export default function SpecDetail() {
             onClick={() => setShowScaffold(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-bold"
             style={{
-              background: "linear-gradient(135deg, rgba(0,180,216,0.2), rgba(56,189,248,0.12))",
-              border: "1px solid rgba(0,180,216,0.35)",
-              color: "hsl(191,100%,65%)",
-              boxShadow: "0 0 14px rgba(0,180,216,0.18)",
+              background: "linear-gradient(135deg, rgba(var(--primary-rgb),0.2), rgba(var(--primary-rgb),0.12))",
+              border: "1px solid rgba(var(--primary-rgb),0.35)",
+              color: "hsl(var(--primary))",
+              boxShadow: "0 0 14px rgba(var(--primary-rgb),0.18)",
             }}
-            whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(0,180,216,0.35)" } as any}
+            whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(var(--primary-rgb),0.35)" } as any}
             whileTap={{ scale: 0.95 }}
           >
             <Code2 className="w-3 h-3" />
@@ -605,11 +605,11 @@ export default function SpecDetail() {
               <div className="flex items-center gap-2 px-4 py-3"
                 style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
               >
-                <History className="w-3.5 h-3.5" style={{ color: "hsl(191,100%,52%)" }} />
+                <History className="w-3.5 h-3.5" style={{ color: "hsl(var(--primary))" }} />
                 <h3 className="text-xs font-mono font-bold text-foreground flex-1">Version History</h3>
                 {versions.length > 0 && (
                   <span className="text-[10px] font-mono px-1.5 py-0.5 rounded"
-                    style={{ background: "rgba(0,180,216,0.12)", color: "hsl(191,100%,65%)" }}
+                    style={{ background: "rgba(var(--primary-rgb),0.12)", color: "hsl(var(--primary))" }}
                   >
                     {versions.length}
                   </span>

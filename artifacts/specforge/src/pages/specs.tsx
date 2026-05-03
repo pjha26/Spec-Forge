@@ -26,18 +26,18 @@ const SPEC_TYPE_META: Record<string, { label: string; icon: any; color: string; 
   system_design: {
     label: "System Design",
     icon: Server,
-    color: "#22D3EE",
-    bg: "rgba(0,180,216,0.12)",
-    border: "rgba(0,180,216,0.35)",
-    glow: "rgba(0,180,216,0.2)",
+    color: "hsl(var(--primary))",
+    bg: "rgba(var(--primary-rgb),0.12)",
+    border: "rgba(var(--primary-rgb),0.35)",
+    glow: "rgba(var(--primary-rgb),0.2)",
   },
   api_design: {
     label: "API Design",
     icon: Cpu,
-    color: "#22D3EE",
-    bg: "rgba(6,182,212,0.12)",
-    border: "rgba(6,182,212,0.35)",
-    glow: "rgba(6,182,212,0.2)",
+    color: "hsl(var(--primary))",
+    bg: "rgba(var(--primary-rgb),0.12)",
+    border: "rgba(var(--primary-rgb),0.35)",
+    glow: "rgba(var(--primary-rgb),0.2)",
   },
   database_schema: {
     label: "Database Schema",
@@ -101,11 +101,11 @@ export default function SpecsList() {
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{
-                background: "linear-gradient(135deg, rgba(0,180,216,0.15) 0%, rgba(56,189,248,0.08) 100%)",
-                border: "1px solid rgba(0,180,216,0.25)",
+                background: "linear-gradient(135deg, rgba(var(--primary-rgb),0.15) 0%, rgba(var(--primary-rgb),0.08) 100%)",
+                border: "1px solid rgba(var(--primary-rgb),0.25)",
               }}
             >
-              <History className="w-4 h-4" style={{ color: "hsl(191,100%,52%)" }} />
+              <History className="w-4 h-4" style={{ color: "hsl(var(--primary))" }} />
             </div>
             <h1 className="text-2xl font-bold tracking-tight gradient-text">Spec History</h1>
           </div>
@@ -139,10 +139,10 @@ export default function SpecsList() {
                   onClick={() => setFilterType(value)}
                   className="px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 whitespace-nowrap"
                   style={active ? {
-                    background: meta ? meta.bg : "rgba(0,180,216,0.15)",
-                    color: meta ? meta.color : "#22D3EE",
-                    border: `1px solid ${meta ? meta.border : "rgba(0,180,216,0.28)"}`,
-                    boxShadow: `0 0 8px ${meta ? meta.glow : "rgba(0,180,216,0.15)"}`,
+                    background: meta ? meta.bg : "rgba(var(--primary-rgb),0.15)",
+                    color: meta ? meta.color : "hsl(var(--primary))",
+                    border: `1px solid ${meta ? meta.border : "rgba(var(--primary-rgb),0.28)"}`,
+                    boxShadow: `0 0 8px ${meta ? meta.glow : "rgba(var(--primary-rgb),0.15)"}`,
                   } : {
                     color: "hsl(var(--muted-foreground))",
                     border: "1px solid transparent",
@@ -165,7 +165,7 @@ export default function SpecsList() {
           <div className="py-20 text-center space-y-4 animate-pop-in">
             <div className="relative inline-block">
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto"
-                style={{ background: "rgba(0,180,216,0.06)", border: "1px solid rgba(0,180,216,0.14)" }}
+                style={{ background: "rgba(var(--primary-rgb),0.06)", border: "1px solid rgba(var(--primary-rgb),0.14)" }}
               >
                 <FileText className="w-7 h-7 opacity-30" />
               </div>

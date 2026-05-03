@@ -120,9 +120,9 @@ function ConflictCard({
               )}
               {conflict.suggestion && (
                 <div className="p-2 rounded text-[11px]"
-                  style={{ background: "rgba(0,180,216,0.06)", border: "1px solid rgba(0,180,216,0.18)" }}
+                  style={{ background: "rgba(var(--primary-rgb),0.06)", border: "1px solid rgba(var(--primary-rgb),0.18)" }}
                 >
-                  <span className="font-mono text-[9px] text-cyan-400 font-bold uppercase tracking-wider block mb-1">Suggestion</span>
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-wider block mb-1" style={{ color: "hsl(var(--primary))" }}>Suggestion</span>
                   <span className="text-muted-foreground">{conflict.suggestion}</span>
                 </div>
               )}
@@ -252,7 +252,7 @@ export function SpecConflictsPanel({ teamId }: { teamId: number }) {
           <button key={f} onClick={() => setFilter(f)}
             className="flex-1 py-1 text-[11px] font-mono rounded-md transition-all capitalize"
             style={filter === f ? {
-              background: "rgba(0,180,216,0.15)", color: "hsl(191,100%,65%)", border: "1px solid rgba(0,180,216,0.28)"
+              background: "rgba(var(--primary-rgb),0.15)", color: "hsl(var(--primary))", border: "1px solid rgba(var(--primary-rgb),0.28)"
             } : { color: "hsl(var(--muted-foreground))", border: "1px solid transparent" }}
           >{f}</button>
         ))}

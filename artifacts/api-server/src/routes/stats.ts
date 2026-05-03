@@ -101,8 +101,7 @@ router.get("/stats", async (req: Request, res: Response) => {
           : sql`TRUE`),
 
       db.select({ count: sql<number>`count(*)::int` })
-        .from(conversations)
-        .where(userId ? eq(conversations.userId, userId) : sql`TRUE`),
+        .from(conversations),
 
       db.select({ count: sql<number>`count(*)::int` })
         .from(specAnnotationsTable)

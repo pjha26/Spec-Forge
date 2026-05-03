@@ -48,10 +48,10 @@ const SPEC_TYPES = [
     value: "system_design" as const,
     label: "System Design",
     icon: Server,
-    color: "#0891b2",
-    glow: "rgba(0,180,216,0.4)",
-    gradient: "linear-gradient(135deg, rgba(0,180,216,0.15) 0%, rgba(56,189,248,0.06) 100%)",
-    border: "rgba(0,180,216,0.4)",
+    color: "hsl(var(--primary))",
+    glow: "rgba(var(--primary-rgb),0.4)",
+    gradient: "linear-gradient(135deg, rgba(var(--primary-rgb),0.15) 0%, rgba(var(--primary-rgb),0.06) 100%)",
+    border: "rgba(var(--primary-rgb),0.4)",
     desc: "Architecture & data flow",
   },
   {
@@ -317,11 +317,11 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center"
                 style={{
-                  background: "linear-gradient(135deg, rgba(0,180,216,0.15) 0%, rgba(56,189,248,0.08) 100%)",
-                  border: "1px solid rgba(0,180,216,0.25)",
+                  background: "linear-gradient(135deg, rgba(var(--primary-rgb),0.15) 0%, rgba(var(--primary-rgb),0.08) 100%)",
+                  border: "1px solid rgba(var(--primary-rgb),0.25)",
                 }}
               >
-                <Zap className="w-4 h-4" style={{ color: "hsl(191,100%,52%)" }} />
+                <Zap className="w-4 h-4" style={{ color: "hsl(var(--primary))" }} />
               </div>
               <h1 className="text-2xl font-bold tracking-tight gradient-text">Generate Spec</h1>
             </div>
@@ -350,12 +350,12 @@ export default function Home() {
               onClick={() => setShowTemplates(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-mono font-bold shrink-0"
               style={{
-                background: "linear-gradient(135deg, rgba(0,180,216,0.15), rgba(56,189,248,0.08))",
-                border: "1px solid rgba(0,180,216,0.3)",
-                color: "hsl(191,100%,65%)",
-                boxShadow: "0 0 18px rgba(0,180,216,0.12)",
+                background: "linear-gradient(135deg, rgba(var(--primary-rgb),0.15), rgba(var(--primary-rgb),0.08))",
+                border: "1px solid rgba(var(--primary-rgb),0.3)",
+                color: "hsl(var(--primary))",
+                boxShadow: "0 0 18px rgba(var(--primary-rgb),0.12)",
               }}
-              whileHover={{ scale: 1.04, boxShadow: "0 0 28px rgba(0,180,216,0.28)" } as any}
+              whileHover={{ scale: 1.04, boxShadow: "0 0 28px rgba(var(--primary-rgb),0.28)" } as any}
               whileTap={{ scale: 0.97 }}
               initial={{ opacity: 0, x: 12 }}
               animate={{ opacity: 1, x: 0 }}
@@ -451,10 +451,10 @@ export default function Home() {
                       onClick={() => setInputType(value)}
                       className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200"
                       style={inputType === value ? {
-                          background: "rgba(0,180,216,0.15)",
-                        color: "hsl(191,100%,65%)",
-                        border: "1px solid rgba(0,180,216,0.28)",
-                        boxShadow: "0 0 8px rgba(0,180,216,0.15)",
+                          background: "rgba(var(--primary-rgb),0.15)",
+                        color: "hsl(var(--primary))",
+                        border: "1px solid rgba(var(--primary-rgb),0.28)",
+                        boxShadow: "0 0 8px rgba(var(--primary-rgb),0.15)",
                       } : {
                         color: "hsl(var(--muted-foreground))",
                         border: "1px solid transparent",
@@ -473,7 +473,7 @@ export default function Home() {
                     onChange={(e) => setInputValue(e.target.value)}
                     className="font-mono text-sm"
                     style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", transition: "border-color 0.2s, box-shadow 0.2s" }}
-                    onFocus={e => { e.target.style.borderColor = "rgba(0,180,216,0.5)"; e.target.style.boxShadow = "0 0 0 3px rgba(0,180,216,0.1)"; }}
+                    onFocus={e => { e.target.style.borderColor = "hsl(var(--primary))"; e.target.style.boxShadow = "0 0 0 3px rgba(var(--primary-rgb),0.1)"; }}
                     onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; }}
                   />
                 ) : inputType === "description" ? (
@@ -489,7 +489,7 @@ export default function Home() {
                         border: isRecording ? "1px solid rgba(239,68,68,0.4)" : "1px solid rgba(255,255,255,0.08)",
                         boxShadow: isRecording ? "0 0 0 3px rgba(239,68,68,0.1)" : "none",
                       }}
-                      onFocus={e => { if (!isRecording) { e.target.style.borderColor = "rgba(0,180,216,0.5)"; e.target.style.boxShadow = "0 0 0 3px rgba(0,180,216,0.1)"; } }}
+                      onFocus={e => { if (!isRecording) { e.target.style.borderColor = "hsl(var(--primary))"; e.target.style.boxShadow = "0 0 0 3px rgba(var(--primary-rgb),0.1)"; } }}
                       onBlur={e => { if (!isRecording) { e.target.style.borderColor = "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; } }}
                     />
                     <button
@@ -530,7 +530,7 @@ export default function Home() {
                     />
                     {imagePreview ? (
                       <div className="relative rounded-lg overflow-hidden group"
-                        style={{ border: "1px solid rgba(0,180,216,0.25)" }}
+                        style={{ border: "1px solid rgba(var(--primary-rgb),0.25)" }}
                       >
                         <img src={imagePreview} alt="Preview" className="w-full h-32 object-cover" />
                         <button
@@ -550,9 +550,9 @@ export default function Home() {
                       <button
                         onClick={() => fileInputRef.current?.click()}
                         className="w-full h-20 rounded-lg flex flex-col items-center justify-center gap-2 transition-all"
-                        style={{ background: "rgba(0,180,216,0.04)", border: "1px dashed rgba(0,180,216,0.25)" }}
+                        style={{ background: "rgba(var(--primary-rgb),0.04)", border: "1px dashed rgba(var(--primary-rgb),0.25)" }}
                       >
-                        <ImagePlus className="w-5 h-5" style={{ color: "hsl(191,100%,52%)", opacity: 0.7 }} />
+                        <ImagePlus className="w-5 h-5" style={{ color: "hsl(var(--primary))", opacity: 0.7 }} />
                         <span className="text-xs font-mono text-muted-foreground">Click to upload image</span>
                         <span className="text-[10px] text-muted-foreground/50">JPG, PNG, WebP — diagrams, mockups, screenshots</span>
                       </button>
@@ -631,26 +631,26 @@ export default function Home() {
                     onClick={() => { setMultiAgent(m => !m); if (!multiAgent) setExtendedThinking(false); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left"
                     style={multiAgent ? {
-                      background: "rgba(0,180,216,0.12)",
-                      border: "1px solid rgba(0,180,216,0.28)",
+                      background: "rgba(var(--primary-rgb),0.12)",
+                      border: "1px solid rgba(var(--primary-rgb),0.28)",
                     } : {
                       background: "rgba(255,255,255,0.02)",
                       border: "1px solid rgba(255,255,255,0.06)",
                     }}
                   >
                     <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-                      style={{ background: multiAgent ? "rgba(0,180,216,0.2)" : "rgba(255,255,255,0.04)" }}
+                      style={{ background: multiAgent ? "rgba(var(--primary-rgb),0.2)" : "rgba(255,255,255,0.04)" }}
                     >
-                      <Bot className="w-3.5 h-3.5" style={{ color: multiAgent ? "#22d3ee" : undefined }} />
+                      <Bot className="w-3.5 h-3.5" style={{ color: multiAgent ? "hsl(var(--primary))" : undefined }} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold" style={{ color: multiAgent ? "#22d3ee" : undefined }}>
+                      <p className="text-xs font-semibold" style={{ color: multiAgent ? "hsl(var(--primary))" : undefined }}>
                         Multi-Agent
                       </p>
                       <p className="text-[10px] text-muted-foreground">4 specialists run in parallel</p>
                     </div>
                     <div className="w-8 h-4 rounded-full relative transition-all shrink-0"
-                      style={{ background: multiAgent ? "#0891b2" : "rgba(255,255,255,0.1)" }}
+                      style={{ background: multiAgent ? "hsl(var(--primary))" : "rgba(255,255,255,0.1)" }}
                     >
                       <div className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all"
                         style={{ left: multiAgent ? "18px" : "2px" }}
@@ -702,7 +702,7 @@ export default function Home() {
                 onClick={handleGenerate}
                 disabled={isGenerating || (inputType === "image" ? !imageBase64 : !inputValue.trim())}
                 className="w-full py-3 px-4 rounded-lg font-mono font-bold text-sm text-white tracking-wide disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-gradient"
-                whileHover={!isGenerating ? { scale: 1.02, boxShadow: "0 0 32px rgba(0,180,216,0.45)" } as any : {}}
+                whileHover={!isGenerating ? { scale: 1.02, boxShadow: "0 0 32px rgba(var(--primary-rgb),0.45)" } as any : {}}
                 whileTap={!isGenerating ? { scale: 0.97 } : {}}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
               >
@@ -788,7 +788,7 @@ export default function Home() {
                       disabled={key === "diagram" && !diagramData && !isGenerating}
                       className="px-4 py-3 text-sm font-mono flex items-center gap-2 transition-all duration-200 border-b-2"
                       style={{
-                        borderBottomColor: activeTab === key ? "hsl(191,100%,52%)" : "transparent",
+                        borderBottomColor: activeTab === key ? "hsl(var(--primary))" : "transparent",
                         color: activeTab === key ? "white" : undefined,
                         opacity: key === "diagram" && !diagramData && !isGenerating ? 0.4 : 1,
                       }}
@@ -800,7 +800,7 @@ export default function Home() {
                 </div>
                 {isGenerating && (
                   <div className="flex items-center gap-2 pr-3">
-                    <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(191,100%,52%)" }} />
+                    <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(var(--primary))" }} />
                     <span className="text-xs font-mono text-muted-foreground">Generating…</span>
                   </div>
                 )}
@@ -811,12 +811,12 @@ export default function Home() {
                   <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-4 p-8">
                     <div className="relative">
                       <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                        style={{ background: "rgba(0,180,216,0.06)", border: "1px solid rgba(0,180,216,0.18)" }}
+                        style={{ background: "rgba(var(--primary-rgb),0.06)", border: "1px solid rgba(var(--primary-rgb),0.18)" }}
                       >
                         <Terminal className="w-7 h-7 opacity-40" />
                       </div>
                       <div className="absolute -inset-3 rounded-3xl opacity-20 blur-lg"
-                        style={{ background: "radial-gradient(circle, rgba(0,180,216,0.4), transparent)" }}
+                        style={{ background: "radial-gradient(circle, rgba(var(--primary-rgb),0.4), transparent)" }}
                       />
                     </div>
                     <div className="text-center space-y-1">
@@ -899,7 +899,7 @@ export default function Home() {
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{streamedContent}</ReactMarkdown>
                       {isGenerating && !diagramData && (
                         <span className="inline-block w-2 h-4 rounded-sm ml-1 animate-pulse align-middle"
-                          style={{ background: "hsl(191,100%,52%)" }}
+                          style={{ background: "hsl(var(--primary))" }}
                         />
                       )}
                       <div ref={contentEndRef} />

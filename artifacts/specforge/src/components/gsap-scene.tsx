@@ -108,7 +108,7 @@ const BLOB_PATHS = [
 
 export function MorphBlob({
   size = 520,
-  color = "rgba(0,180,216,0.15)",
+  color = "rgba(var(--primary-rgb),0.15)",
   className = "",
 }: {
   size?: number;
@@ -208,7 +208,7 @@ export function HorizontalScroll({ cards }: { cards: FeatureCard[] }) {
         <div className="flex items-center justify-between">
           <div>
             <span className="text-xs font-mono uppercase tracking-widest"
-              style={{ color: "rgba(0,180,216,0.8)" }}>
+              style={{ color: "rgba(var(--primary-rgb),0.8)" }}>
               Features — scroll to explore
             </span>
             <h2 className="text-4xl md:text-5xl font-bold mt-2 text-white">
@@ -224,7 +224,7 @@ export function HorizontalScroll({ cards }: { cards: FeatureCard[] }) {
                 style={{
                   width:      i === active ? 24 : 6,
                   height:     6,
-                  background: i === active ? "#0891b2" : "rgba(255,255,255,0.2)",
+                  background: i === active ? "hsl(var(--primary))" : "rgba(255,255,255,0.2)",
                 }}
               />
             ))}

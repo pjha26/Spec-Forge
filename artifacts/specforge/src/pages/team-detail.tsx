@@ -261,9 +261,9 @@ export default function TeamDetail() {
               onClick={() => setActiveTab(tab.id)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all"
               style={active ? {
-                background: "rgba(0,180,216,0.18)",
-                border: "1px solid rgba(0,180,216,0.3)",
-                color: "hsl(191,100%,65%)",
+                background: "rgba(var(--primary-rgb),0.18)",
+                border: "1px solid rgba(var(--primary-rgb),0.3)",
+                color: "hsl(var(--primary))",
               } : {
                 background: "transparent",
                 border: "1px solid transparent",
@@ -274,7 +274,7 @@ export default function TeamDetail() {
               {tab.label}
               {tab.id === "knowledge" && (
                 <span className="ml-0.5 px-1 py-0.5 rounded text-[9px] font-bold"
-                  style={{ background: "rgba(0,180,216,0.15)", color: "hsl(191,100%,65%)" }}
+                  style={{ background: "rgba(var(--primary-rgb),0.15)", color: "hsl(var(--primary))" }}
                 >
                   RAG
                 </span>
@@ -298,7 +298,7 @@ export default function TeamDetail() {
                 <button
                   onClick={() => setShowInvite(v => !v)}
                   className="text-[10px] font-mono font-bold px-2 py-1 rounded flex items-center gap-1 transition-colors"
-                  style={{ color: "hsl(191,100%,65%)", background: "rgba(0,180,216,0.1)" }}
+                  style={{ color: "hsl(var(--primary))", background: "rgba(var(--primary-rgb),0.1)" }}
                 >
                   <Plus className="w-2.5 h-2.5" /> ADD
                 </button>
@@ -307,7 +307,7 @@ export default function TeamDetail() {
 
             {showInvite && (
               <form onSubmit={handleInvite} className="mb-4 space-y-2 p-3 rounded-lg"
-                style={{ background: "rgba(0,180,216,0.05)", border: "1px solid rgba(0,180,216,0.18)" }}
+                style={{ background: "rgba(var(--primary-rgb),0.05)", border: "1px solid rgba(var(--primary-rgb),0.18)" }}
               >
                 <p className="text-[10px] font-mono text-cyan-400 font-bold">ADD BY REPLIT USER ID</p>
                 <input
@@ -336,7 +336,7 @@ export default function TeamDetail() {
                   <button type="button" onClick={() => setShowInvite(false)} className="text-[10px] font-mono text-muted-foreground hover:text-foreground px-2 py-1">Cancel</button>
                   <button type="submit" disabled={inviting || !inviteId.trim()}
                     className="text-[10px] font-mono font-bold px-3 py-1 rounded transition-colors disabled:opacity-50"
-                    style={{ background: "rgba(0,180,216,0.2)", color: "hsl(191,100%,65%)" }}
+                    style={{ background: "rgba(var(--primary-rgb),0.2)", color: "hsl(var(--primary))" }}
                   >
                     {inviting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Add"}
                   </button>
@@ -416,9 +416,9 @@ export default function TeamDetail() {
                       style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}
                     >
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: "rgba(0,180,216,0.1)", border: "1px solid rgba(0,180,216,0.18)" }}
+                        style={{ background: "rgba(var(--primary-rgb),0.1)", border: "1px solid rgba(var(--primary-rgb),0.18)" }}
                       >
-                        <SpecIcon className="w-3.5 h-3.5" style={{ color: "hsl(191,100%,65%)" } as React.CSSProperties} />
+                        <SpecIcon className="w-3.5 h-3.5" style={{ color: "hsl(var(--primary))" } as React.CSSProperties} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold truncate">{spec.title}</p>
