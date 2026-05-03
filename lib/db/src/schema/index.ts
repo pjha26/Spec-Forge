@@ -11,3 +11,4 @@ export * from "./audit-logs";
 export * from "./sso-config";
 export * from "./spec-conflicts";
 export * from "./spec-health";
+export * from "./spec-dependencies";

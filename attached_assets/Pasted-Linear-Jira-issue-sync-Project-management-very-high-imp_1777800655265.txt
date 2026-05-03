@@ -1,0 +1,29 @@
+Linear / Jira issue sync
+Project management
+very high impact
+what it does
+After generating a spec, one click creates Linear or Jira issues from every task and action item in the spec. Each issue links back to the spec section it came from. When an issue is closed, SpecForge marks that section as implemented.
+why it matters
+This closes the biggest gap in every developer workflow — the spec and the task tracker are always out of sync. SpecForge becomes the bridge between design and execution. Teams that use Linear religiously will adopt SpecForge the moment this exists.
+how to build it
+Linear GraphQL API or Jira REST API. Parse spec for action items and tasks. POST each as an issue with a backlink. Store issue_id per spec section. Webhook from Linear/Jira to update implementation status.
+Get the full code ↗
+Slack / Teams bot
+Communication
+high impact
+what it does
+/specforge generate "user auth system" in Slack generates a spec and posts a summary card in the channel. @specforge review @teammate's-spec triggers an AI review and posts the feedback. Spec health alerts sent automatically to a designated channel.
+why it matters
+Slack is where engineering teams live. A bot that surfaces SpecForge inside Slack removes the context switch entirely. Teams who discover SpecForge through Slack adopt it faster because it fits their existing workflow.
+how to build it
+Slack Bolt SDK for Node.js. Slash commands + interactive components. Post spec summaries as Block Kit cards with "Open full spec" button. Incoming webhooks for health alerts.
+Get the full code ↗
+Zapier / Make.com webhook triggers
+Automation
+high impact
+what it does
+SpecForge fires webhooks on: spec generated, spec shared, spec health declined, team member joined. Users connect these to Zapier or Make.com to trigger any downstream action — create Notion page, send email, update Airtable, post to Slack channel.
+why it matters
+Zapier has 5 million users. Being in the Zapier ecosystem means SpecForge gets discovered by users you would never reach through SEO or Product Hunt. No-code users will build workflows you never imagined.
+how to build it
+outbound_webhooks table: user_id, event_type, url, secret. On each event, POST payload to registered URLs with HMAC signature. UI page to manage webhooks. Submit to Zapier app directory.

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Zap, FileCode2, History, LogIn, LogOut, User, Sparkles, Server, Code2, Database, BookOpen, ChevronRight, Users } from "lucide-react";
+import { Zap, FileCode2, History, LogIn, LogOut, User, Sparkles, Server, Code2, Database, BookOpen, ChevronRight, Users, Search, Network } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -68,6 +68,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/app", label: "Generator", icon: FileCode2, exact: true },
     { href: "/app/specs", label: "History", icon: History, exact: false },
+    { href: "/app/search", label: "Search", icon: Search, exact: false },
+    { href: "/app/graph", label: "Dep Graph", icon: Network, exact: false },
     { href: "/app/teams", label: "Teams", icon: Users, exact: false },
   ];
 

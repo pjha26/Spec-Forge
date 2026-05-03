@@ -12,6 +12,8 @@ import Landing from "@/pages/landing";
 import SharedSpec from "@/pages/shared-spec";
 import TeamsPage from "@/pages/teams";
 import TeamDetail from "@/pages/team-detail";
+import SearchPage from "@/pages/search";
+import GraphPage from "@/pages/graph";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +61,20 @@ function Router() {
         {() => (
           <Layout>
             <TeamsPage />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/app/search">
+        {() => (
+          <Layout>
+            <SearchPage />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/app/graph">
+        {() => (
+          <Layout>
+            <GraphPage />
           </Layout>
         )}
       </Route>

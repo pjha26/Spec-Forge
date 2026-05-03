@@ -1,0 +1,42 @@
+AI-powered semantic search
+Search
+very high impact
+what it does
+Search across all your specs using natural language — "find my specs about authentication", "show me all database schemas from last month", "which spec mentions Redis?" Uses embeddings to find semantically similar content, not just keyword matches.
+why it matters
+Once a user has 20+ specs, finding anything becomes painful. Semantic search is the feature that makes a large spec library usable. Users who generate many specs will stay because they can find anything instantly.
+how to build it
+pgvector extension. Embed spec content on generation. /api/search endpoint: embed query → cosine similarity search → return ranked results. Replace the current text-search history page with semantic search UI.
+Get the full code ↗
+Spec dependency graph
+Visualisation
+high impact
+what it does
+A visual graph showing how all team specs relate to each other — which specs reference the same data models, which specs depend on shared APIs, which specs are orphaned. Click a node to open the spec. Drag to rearrange. Filter by team or doc type.
+why it matters
+Teams with 10+ specs lose track of how everything fits together. A visual dependency map is the "big picture" view that PMs and architects desperately want. It is also a beautiful demo feature — nothing else in the market has this.
+how to build it
+D3.js force-directed graph or React Flow. AI extracts dependencies between specs during generation. Store as spec_dependencies table with source_spec_id, target_spec_id, relationship_type.
+Get the full code ↗
+Progressive onboarding with AI guide
+Activation
+high impact
+what it does
+First-time user sees a 3-step guided experience: "Describe your first project" → live spec generates as they type → "Here is what we created — here is what each section means". An AI assistant bubble explains features contextually as the user discovers them.
+why it matters
+The biggest drop-off in any SaaS product is the first 5 minutes. A user who generates one spec and understands what they got is 10x more likely to return. Guided onboarding is the highest-ROI UX investment you can make.
+how to build it
+Onboarding state in user profile (onboarding_completed, onboarding_step). Tooltip component that appears based on current page and user action. Pre-filled example input for the first spec so users see immediate value.
+Get the full code ↗
+Keyboard-first power mode
+Power users
+medium impact
+Dark / light / custom theme engine
+Personalisation
+medium impact
+what it does
+Beyond dark/light toggle: let users pick an accent color, choose a font (Inter, JetBrains Mono, Geist), and set code block syntax highlighting theme (GitHub, Dracula, Nord, Catppuccin). Settings persist to user profile.
+why it matters
+Personalisation increases attachment. A user who has customised their SpecForge theme has invested in it emotionally and is less likely to switch. It is also a signal of craft that resonates with developer audiences.
+how to build it
+CSS custom properties for all theme values. Theme stored in user_preferences. CSS-in-JS or Tailwind CSS variables. Preview live as user changes settings.

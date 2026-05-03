@@ -40,6 +40,7 @@ import { MermaidDiagram } from "@/components/mermaid-diagram";
 import { SpecTemplatesModal, type SpecTemplate } from "@/components/spec-templates-modal";
 import { PreferencesModal } from "@/components/preferences-modal";
 import { MultiAgentProgress } from "@/components/multi-agent-progress";
+import { OnboardingOverlay, useOnboarding } from "@/components/onboarding-overlay";
 
 const SPEC_TYPES = [
   {
@@ -113,6 +114,7 @@ export default function Home() {
 
   const createSpec = useCreateSpec();
   const { data: recentSpecs } = useListRecentSpecs();
+  const { show: showOnboarding, dismiss: dismissOnboarding } = useOnboarding(!recentSpecs || recentSpecs.specs.length === 0);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamedContent, setStreamedContent] = useState("");
@@ -931,6 +933,13 @@ export default function Home() {
       <AnimatePresence>
         {showPreferences && (
           <PreferencesModal onClose={() => setShowPreferences(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* Onboarding overlay */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <OnboardingOverlay onDismiss={dismissOnboarding} />
         )}
       </AnimatePresence>
     </div>

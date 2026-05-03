@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Save, Brain, Cpu, Globe, Layers, StickyNote, Loader2, Check } from "lucide-react";
+import { X, Save, Brain, Cpu, Globe, Layers, StickyNote, Loader2, Check, Palette, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/components/theme-provider";
+import { ACCENT_PRESETS, FONT_OPTIONS, SYNTAX_THEMES } from "@/lib/theme";
 
 const SECTION_OPTIONS = [
   "Security Considerations",
@@ -26,6 +28,7 @@ interface Props {
 
 export function PreferencesModal({ onClose }: Props) {
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -216,6 +219,93 @@ export function PreferencesModal({ onClose }: Props) {
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
               />
               <p className="text-[10px] text-muted-foreground/60">Free-form context injected into every generation. The more specific, the better the output.</p>
+            </div>
+
+            {/* ── Theme Engine ── */}
+            <div className="space-y-4 pt-2 border-t border-border/40">
+              <label className="flex items-center gap-2 text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest">
+                <Palette className="w-3 h-3" /> Appearance
+              </label>
+
+              {/* Accent color */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-mono text-muted-foreground">Accent Color</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {ACCENT_PRESETS.map(p => (
+                    <button
+                      key={p.hue}
+                      onClick={() => setTheme({ ...theme, accentHue: p.hue })}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all"
+                      style={theme.accentHue === p.hue ? {
+                        background: `${p.hex}22`,
+                        border: `1px solid ${p.hex}88`,
+                        color: p.hex,
+                      } : {
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        color: "hsl(var(--muted-foreground))",
+                      }}
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: p.hex }} />
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Font */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-mono text-muted-foreground flex items-center gap-1"><Type className="w-3 h-3" /> Font</p>
+                <div className="flex items-center gap-2">
+                  {FONT_OPTIONS.map(f => (
+                    <button
+                      key={f.value}
+                      onClick={() => setTheme({ ...theme, font: f.value })}
+                      className="px-3 py-1.5 rounded-lg text-xs transition-all"
+                      style={{
+                        fontFamily: f.css,
+                        ...(theme.font === f.value ? {
+                          background: "rgba(139,92,246,0.2)",
+                          border: "1px solid rgba(139,92,246,0.4)",
+                          color: "hsl(263,90%,74%)",
+                        } : {
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          color: "hsl(var(--muted-foreground))",
+                        }),
+                      }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Syntax theme */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-mono text-muted-foreground">Code Block Theme</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {SYNTAX_THEMES.map(s => (
+                    <button
+                      key={s.value}
+                      onClick={() => setTheme({ ...theme, syntaxTheme: s.value })}
+                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all"
+                      style={theme.syntaxTheme === s.value ? {
+                        background: "rgba(139,92,246,0.2)",
+                        border: "1px solid rgba(139,92,246,0.4)",
+                        color: "hsl(263,90%,74%)",
+                      } : {
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        color: "hsl(var(--muted-foreground))",
+                      }}
+                    >
+                      <span className="w-3 h-3 rounded-sm" style={{ background: s.preview }} />
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
           </div>
