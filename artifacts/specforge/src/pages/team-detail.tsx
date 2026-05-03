@@ -8,9 +8,11 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Users, Plus, Trash2, Crown, Edit3, Eye,
   Loader2, Shield, FileText, Server, Database, BookOpen, Cpu,
-  Settings, Check, X, BookMarked,
+  Settings, Check, X, BookMarked, ScrollText,
 } from "lucide-react";
 import { TeamKnowledgePanel } from "@/components/team-knowledge-panel";
+import { AuditLogPanel } from "@/components/audit-log-panel";
+import { TeamSettingsPanel } from "@/components/team-settings-panel";
 
 interface Member {
   id: number;
@@ -36,6 +38,8 @@ interface TeamDetail {
   description: string;
   ownerId: string;
   role: "owner" | "editor" | "viewer";
+  customSystemPrompt: string | null;
+  ssoEnabled: string | null;
   createdAt: string;
   members: Member[];
   specs: TeamSpec[];
@@ -54,7 +58,7 @@ const SPEC_ICON: Record<string, React.ComponentType<{ className?: string; style?
   feature_spec:    BookOpen,
 };
 
-type ActiveTab = "overview" | "knowledge";
+type ActiveTab = "overview" | "knowledge" | "audit" | "settings";
 
 export default function TeamDetail() {
   const { id } = useParams();
@@ -189,10 +193,12 @@ export default function TeamDetail() {
   const isOwner = team.role === "owner";
   const canEdit = team.role !== "viewer";
 
-  const TABS: { id: ActiveTab; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: "overview",   label: "Members & Specs", Icon: Users      },
-    { id: "knowledge",  label: "Knowledge Base",  Icon: BookMarked },
-  ];
+  const TABS: { id: ActiveTab; label: string; Icon: React.ComponentType<{ className?: string }>; badge?: string; ownerOnly?: boolean }[] = [
+    { id: "overview",  label: "Members & Specs", Icon: Users       },
+    { id: "knowledge", label: "Knowledge Base",  Icon: BookMarked, badge: "RAG" },
+    { id: "audit",     label: "Audit Log",       Icon: ScrollText, ownerOnly: true },
+    { id: "settings",  label: "Settings",        Icon: Settings,   ownerOnly: true },
+  ].filter(t => !t.ownerOnly || isOwner);
 
   return (
     <div className="flex-1 overflow-auto p-6 max-w-5xl mx-auto w-full space-y-6">
@@ -440,6 +446,24 @@ export default function TeamDetail() {
       {activeTab === "knowledge" && (
         <Card className="border-border bg-card p-5">
           <TeamKnowledgePanel teamId={team.id} canEdit={canEdit} />
+        </Card>
+      )}
+
+      {/* ── Audit Log tab ────────────────────────────────────────────── */}
+      {activeTab === "audit" && isOwner && (
+        <Card className="border-border bg-card p-5">
+          <AuditLogPanel teamId={team.id} />
+        </Card>
+      )}
+
+      {/* ── Settings tab ─────────────────────────────────────────────── */}
+      {activeTab === "settings" && isOwner && (
+        <Card className="border-border bg-card p-5">
+          <TeamSettingsPanel
+            teamId={team.id}
+            initialPrompt={team.customSystemPrompt}
+            ssoEnabled={team.ssoEnabled === "true"}
+          />
         </Card>
       )}
     </div>

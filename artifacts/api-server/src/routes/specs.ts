@@ -8,6 +8,7 @@ import { randomBytes, createHmac, timingSafeEqual } from "crypto";
 import { createNotification } from "./notifications";
 import { saveSpecVersion } from "./versions";
 import { retrieveTeamKnowledge } from "./team-knowledge";
+import { createAuditLog } from "./audit-logs";
 import {
   CreateSpecBody,
   GetSpecParams,
@@ -676,7 +677,19 @@ router.post("/:id/stream", async (req, res) => {
     await db.update(specsTable).set({ status: "generating", updatedAt: new Date() }).where(eq(specsTable.id, spec.id));
 
     const modelToUse = isValidModel(spec.aiModel) ? spec.aiModel : "claude-sonnet-4-6";
-    const systemPrompt = SPEC_PROMPTS[spec.specType] || SPEC_PROMPTS.feature_spec;
+    let systemPrompt = SPEC_PROMPTS[spec.specType] || SPEC_PROMPTS.feature_spec;
+
+    // Inject team custom system prompt (prepended — team conventions override defaults)
+    if (spec.teamId) {
+      try {
+        const { teamsTable: teamsT } = await import("@workspace/db");
+        const [teamRow] = await db.select({ customSystemPrompt: teamsT.customSystemPrompt })
+          .from(teamsT).where(eq(teamsT.id, spec.teamId));
+        if (teamRow?.customSystemPrompt?.trim()) {
+          systemPrompt = `[Team Conventions — follow these strictly]\n${teamRow.customSystemPrompt.trim()}\n\n[Default Spec Instructions]\n${systemPrompt}`;
+        }
+      } catch {}
+    }
 
     // Load user preferences for context enrichment
     let prefContext = "";

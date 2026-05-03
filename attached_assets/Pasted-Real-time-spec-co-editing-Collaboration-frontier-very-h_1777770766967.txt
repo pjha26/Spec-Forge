@@ -1,0 +1,54 @@
+Real-time spec co-editing
+Collaboration frontier
+very high impact
+Multiple users edit the same spec simultaneously with live cursor positions, conflict-free merging (CRDTs), and section-level locking. Like Google Docs but for AI-generated technical specs. When two people edit the same section, an AI mediator reconciles the changes.
+
+why it matters
+You have real-time presence already — users can see who's reading. The next step is letting them edit together. This is the feature that makes SpecForge the team's primary spec writing environment, not just a generation tool.
+
+how to build it
+Yjs CRDT library for conflict-free merging. WebSocket server (or SSE with operational transforms). Section-level locks in Redis with TTL. AI reconciliation via Claude when conflicts are detected.
+Get the full code ↗
+Spec-to-PR auto-description agent
+Agentic AI
+high impact
+Connect a GitHub PR. The agent reads the PR diff, cross-references it against the spec, and writes a PR description that maps every changed file back to the spec section it implements. Flags deviations from the spec. Posts the description as a PR comment.
+
+why it matters
+Engineers hate writing PR descriptions. A description auto-generated from the spec and the diff is both faster and better than what most engineers write. Closes the design-to-implementation loop completely.
+
+how to build it
+GitHub API: fetch PR diff. Claude: compare diff to spec, generate description JSON. GitHub API: post as PR comment via GitHub App installation. Show PR link in spec detail sidebar.
+Get the full code ↗
+AI spec conflict detector
+Multi-spec intelligence
+high impact
+When a team has 5+ specs, AI analyses them together to find conflicts: "Your auth spec defines User as { id, email, role } but your payments spec defines User as { userId, emailAddress }. These will cause integration bugs." Shows a conflict map across all team specs.
+
+why it matters
+This is uniquely possible at the platform level — no individual tool can do cross-spec analysis. Teams with multiple specs have zero visibility into how they fit together. This feature is invisible until you need it, then indispensable.
+
+how to build it
+Nightly job: embed all team specs with pgvector. Pairwise similarity + Claude comparison for high-similarity pairs. Store conflicts in a spec_conflicts table. Dashboard widget showing unresolved conflicts.
+Get the full code ↗
+Voice-to-spec
+Multimodal AI
+medium impact
+Click a microphone, describe your project out loud for 60–90 seconds, SpecForge transcribes and generates the spec. The most natural input for developers who hate writing. Opens SpecForge to a completely different type of user.
+
+why it matters
+Voice removes blank-page paralysis entirely. Developers who dread writing can just talk through what they're building. Whisper transcription is accurate enough for technical vocabulary in 2026.
+
+how to build it
+Web Speech API for in-browser recording (no backend needed for capture). POST audio blob to /api/transcribe using Whisper API. Feed transcript into existing spec generation pipeline as plain-text input.
+Get the full code ↗
+Spec health monitoring (cron)
+Autonomous AI agent
+high impact
+A nightly agent job that runs on all connected repos. Compares the latest commit log and file tree against each spec. Generates a drift report: "3 new files were added that are not in your spec. Your auth implementation now differs from the spec in 2 places." Sends a weekly digest email.
+
+why it matters
+This is the feature that makes teams open SpecForge every week without being prompted. A weekly email saying "your spec is 78% aligned with your codebase — here are the 3 drifts" creates a habit loop that no other feature can.
+
+how to build it
+node-cron for scheduling. GitHub API for latest file tree + commit log. Claude for drift analysis. Nodemailer for weekly digest. spec_health_reports table to store results and trend over time.
