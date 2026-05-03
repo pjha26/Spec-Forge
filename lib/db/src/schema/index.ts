@@ -5,3 +5,4 @@ export * from "./auth";
 export * from "./notifications";
 export * from "./spec-versions";
 export * from "./teams";
+export * from "./preferences";

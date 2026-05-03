@@ -1,9 +1,9 @@
-import { pgTable, serial, text, timestamp, integer, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, integer, jsonb, uniqueIndex, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export const specTypeEnum = ["system_design", "api_design", "database_schema", "feature_spec"] as const;
-export const inputTypeEnum = ["github_url", "description"] as const;
+export const inputTypeEnum = ["github_url", "description", "image"] as const;
 export const statusEnum = ["pending", "generating", "completed", "failed"] as const;
 
 export const specsTable = pgTable("specs", {
@@ -12,6 +12,7 @@ export const specsTable = pgTable("specs", {
   specType: text("spec_type", { enum: specTypeEnum }).notNull(),
   inputType: text("input_type", { enum: inputTypeEnum }).notNull(),
   inputValue: text("input_value").notNull(),
+  imageInput: text("image_input"),
   content: text("content").notNull().default(""),
   status: text("status", { enum: statusEnum }).notNull().default("pending"),
   complexityScore: integer("complexity_score"),
@@ -25,6 +26,9 @@ export const specsTable = pgTable("specs", {
   lastSyncedAt: timestamp("last_synced_at"),
   teamId: integer("team_id"),
   aiModel: text("ai_model").notNull().default("claude-sonnet-4-6"),
+  multiAgent: boolean("multi_agent").notNull().default(false),
+  extendedThinking: boolean("extended_thinking").notNull().default(false),
+  thinkingContent: text("thinking_content"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => [

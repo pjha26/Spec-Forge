@@ -21,12 +21,22 @@ import {
   Network,
   Zap,
   LayoutTemplate,
+  ImagePlus,
+  Bot,
+  BrainCircuit,
+  Settings2,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ComplexityScoreCard } from "@/components/complexity-score-card";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
 import { SpecTemplatesModal, type SpecTemplate } from "@/components/spec-templates-modal";
+import { PreferencesModal } from "@/components/preferences-modal";
+import { MultiAgentProgress } from "@/components/multi-agent-progress";
 
 const SPEC_TYPES = [
   {
@@ -75,10 +85,25 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const [inputType, setInputType] = useState<"github_url" | "description">("github_url");
+  const [inputType, setInputType] = useState<"github_url" | "description" | "image">("github_url");
   const [inputValue, setInputValue] = useState("");
   const [specType, setSpecType] = useState<"system_design" | "api_design" | "database_schema" | "feature_spec">("system_design");
   const [aiModel, setAiModel] = useState<"claude-sonnet-4-6" | "gpt-5.4" | "gpt-5.1" | "gemini-2.5-pro" | "gemini-2.5-flash">("claude-sonnet-4-6");
+
+  // New feature state
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [multiAgent, setMultiAgent] = useState(false);
+  const [extendedThinking, setExtendedThinking] = useState(false);
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [thinkingContent, setThinkingContent] = useState("");
+  const [showThinking, setShowThinking] = useState(false);
+  const [generationPhase, setGenerationPhase] = useState<"idle" | "thinking" | "generating" | "multi_agent" | "analyzing">("idle");
+  const [agentProgress, setAgentProgress] = useState<Record<string, number>>({});
+  const [activeAgents, setActiveAgents] = useState<Set<string>>(new Set());
+  const [completedAgents, setCompletedAgents] = useState<Set<string>>(new Set());
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createSpec = useCreateSpec();
   const { data: recentSpecs } = useListRecentSpecs();
@@ -99,9 +124,23 @@ export default function Home() {
     setTimeout(() => textareaRef.current?.focus(), 80);
   };
 
+  const handleImageUpload = (file: File) => {
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      setImagePreview(dataUrl);
+      // Strip the data URL prefix to get pure base64
+      const base64 = dataUrl.split(",")[1];
+      setImageBase64(base64 ?? null);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleGenerate = async () => {
-    if (!inputValue.trim()) {
-      toast({ title: "Input required", description: "Please provide a GitHub URL or project description.", variant: "destructive" });
+    const hasInput = inputType === "image" ? !!imageBase64 : !!inputValue.trim();
+    if (!hasInput) {
+      toast({ title: "Input required", description: "Please provide a GitHub URL, description, or upload an image.", variant: "destructive" });
       return;
     }
     try {
@@ -109,19 +148,62 @@ export default function Home() {
       setStreamedContent("");
       setAnalysisData(null);
       setDiagramData(null);
+      setThinkingContent("");
+      setShowThinking(false);
+      setAgentProgress({});
+      setActiveAgents(new Set());
+      setCompletedAgents(new Set());
+      setGenerationPhase("generating");
       setActiveTab("document");
 
       const title = inputType === "github_url"
         ? inputValue.split("/").pop() || "Project Spec"
-        : "Generated Spec";
+        : inputType === "image"
+          ? "Image Spec"
+          : "Generated Spec";
 
-      const spec = await createSpec.mutateAsync({ data: { inputType, inputValue, specType, title, aiModel } });
-      const response = await fetch(`/api/specs/${spec.id}/stream`, { method: "POST" });
+      const createPayload: any = {
+        data: {
+          inputType: inputType === "image" ? "description" : inputType,
+          inputValue: inputType === "image" ? "Generated from uploaded image" : inputValue,
+          specType, title, aiModel,
+        },
+      };
+
+      const spec = await createSpec.mutateAsync(createPayload);
+
+      // Patch extra fields not in the generated hook schema
+      await fetch(`/api/specs/${spec.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ multiAgent, extendedThinking, imageInput: imageBase64 }),
+      }).catch(() => {});
+
+      // Send directly via fetch to include extra fields
+      const createRes = await fetch("/api/specs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          specType,
+          inputType: inputType === "image" ? "description" : inputType,
+          inputValue: inputType === "image" ? (inputValue.trim() || "Generated from uploaded image") : inputValue,
+          aiModel,
+          multiAgent,
+          extendedThinking,
+          imageInput: imageBase64,
+          imageDescription: inputValue.trim() || undefined,
+        }),
+      });
+      const freshSpec = await createRes.json();
+
+      const response = await fetch(`/api/specs/${freshSpec.id}/stream`, { method: "POST" });
       if (!response.body) throw new Error("No response body");
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      const agentCharCounts: Record<string, number> = {};
 
       while (true) {
         const { done, value } = await reader.read();
@@ -133,20 +215,46 @@ export default function Home() {
           if (line.startsWith("data: ")) {
             try {
               const data = JSON.parse(line.slice(6));
-              if (data.content) setStreamedContent(prev => prev + data.content);
-              else if (data.analysis) setAnalysisData(data.analysis);
-              else if (data.diagram) setDiagramData(data.diagram);
-              else if (data.error) toast({ title: "Generation Error", description: data.error, variant: "destructive" });
+              if (data.content) {
+                setStreamedContent(prev => prev + data.content);
+              } else if (data.thinking) {
+                setThinkingContent(data.thinking);
+              } else if (data.agent && data.chunk) {
+                const ag = data.agent as string;
+                agentCharCounts[ag] = (agentCharCounts[ag] ?? 0) + (data.chunk as string).length;
+                setAgentProgress({ ...agentCharCounts });
+                setActiveAgents(prev => new Set([...prev, ag]));
+              } else if (data.phase === "thinking") {
+                setGenerationPhase("thinking");
+              } else if (data.phase === "multi_agent") {
+                setGenerationPhase("multi_agent");
+              } else if (data.phase === "analyzing") {
+                setGenerationPhase("analyzing");
+                // Mark all agents as done
+                if (multiAgent) {
+                  setCompletedAgents(new Set(["architect", "security", "database", "api", "coordinator"]));
+                  setActiveAgents(new Set());
+                }
+              } else if (data.analysis) {
+                setAnalysisData(data.analysis);
+              } else if (data.diagram) {
+                setDiagramData(data.diagram);
+              } else if (data.done) {
+                setGenerationPhase("idle");
+              } else if (data.error) {
+                toast({ title: "Generation Error", description: data.error, variant: "destructive" });
+              }
             } catch {}
           }
         }
       }
 
-      toast({ title: "Spec generated!", description: "Your technical document is ready." });
+      toast({ title: "Spec generated!", description: multiAgent ? "4 specialist agents merged." : extendedThinking ? "Extended reasoning complete." : "Your technical document is ready." });
     } catch {
       toast({ title: "Error", description: "Failed to generate spec.", variant: "destructive" });
     } finally {
       setIsGenerating(false);
+      setGenerationPhase("idle");
     }
   };
 
@@ -177,24 +285,44 @@ export default function Home() {
             </div>
             <p className="text-muted-foreground text-sm ml-11">Instantly produce professional-grade technical specs from a codebase or description.</p>
           </div>
-          <motion.button
-            onClick={() => setShowTemplates(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-mono font-bold shrink-0"
-            style={{
-              background: "linear-gradient(135deg, rgba(139,92,246,0.18), rgba(6,182,212,0.1))",
-              border: "1px solid rgba(139,92,246,0.35)",
-              color: "hsl(263,90%,74%)",
-              boxShadow: "0 0 18px rgba(139,92,246,0.15)",
-            }}
-            whileHover={{ scale: 1.04, boxShadow: "0 0 28px rgba(139,92,246,0.35)" } as any}
-            whileTap={{ scale: 0.97 }}
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.12, type: "spring", stiffness: 360, damping: 28 }}
-          >
-            <LayoutTemplate className="w-4 h-4" />
-            Templates
-          </motion.button>
+          <div className="flex items-center gap-2">
+            <motion.button
+              onClick={() => setShowPreferences(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-mono font-bold shrink-0"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                color: "hsl(var(--muted-foreground))",
+              }}
+              whileHover={{ scale: 1.04 } as any}
+              whileTap={{ scale: 0.97 }}
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.08, type: "spring", stiffness: 360, damping: 28 }}
+              title="AI Memory & Preferences"
+            >
+              <Settings2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Preferences</span>
+            </motion.button>
+            <motion.button
+              onClick={() => setShowTemplates(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-mono font-bold shrink-0"
+              style={{
+                background: "linear-gradient(135deg, rgba(139,92,246,0.18), rgba(6,182,212,0.1))",
+                border: "1px solid rgba(139,92,246,0.35)",
+                color: "hsl(263,90%,74%)",
+                boxShadow: "0 0 18px rgba(139,92,246,0.15)",
+              }}
+              whileHover={{ scale: 1.04, boxShadow: "0 0 28px rgba(139,92,246,0.35)" } as any}
+              whileTap={{ scale: 0.97 }}
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.12, type: "spring", stiffness: 360, damping: 28 }}
+            >
+              <LayoutTemplate className="w-4 h-4" />
+              Templates
+            </motion.button>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -271,6 +399,7 @@ export default function Home() {
                   {[
                     { value: "github_url" as const, label: "GitHub", icon: Github },
                     { value: "description" as const, label: "Text", icon: FileText },
+                    { value: "image" as const, label: "Image", icon: ImagePlus },
                   ].map(({ value, label, icon: Icon }) => (
                     <button
                       key={value}
@@ -298,40 +427,67 @@ export default function Home() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     className="font-mono text-sm"
-                    style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      transition: "border-color 0.2s, box-shadow 0.2s",
-                    }}
-                    onFocus={e => {
-                      e.target.style.borderColor = "rgba(139,92,246,0.5)";
-                      e.target.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.1)";
-                    }}
-                    onBlur={e => {
-                      e.target.style.borderColor = "rgba(255,255,255,0.08)";
-                      e.target.style.boxShadow = "none";
-                    }}
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", transition: "border-color 0.2s, box-shadow 0.2s" }}
+                    onFocus={e => { e.target.style.borderColor = "rgba(139,92,246,0.5)"; e.target.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.1)"; }}
+                    onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; }}
                   />
-                ) : (
+                ) : inputType === "description" ? (
                   <Textarea
                     ref={textareaRef}
                     placeholder="Describe your project, architecture, or feature requirements..."
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     className="min-h-[100px] text-sm resize-none"
-                    style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                    }}
-                    onFocus={e => {
-                      e.target.style.borderColor = "rgba(139,92,246,0.5)";
-                      e.target.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.1)";
-                    }}
-                    onBlur={e => {
-                      e.target.style.borderColor = "rgba(255,255,255,0.08)";
-                      e.target.style.boxShadow = "none";
-                    }}
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                    onFocus={e => { e.target.style.borderColor = "rgba(139,92,246,0.5)"; e.target.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.1)"; }}
+                    onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; }}
                   />
+                ) : (
+                  <div className="space-y-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }}
+                    />
+                    {imagePreview ? (
+                      <div className="relative rounded-lg overflow-hidden group"
+                        style={{ border: "1px solid rgba(139,92,246,0.3)" }}
+                      >
+                        <img src={imagePreview} alt="Preview" className="w-full h-32 object-cover" />
+                        <button
+                          onClick={() => { setImageFile(null); setImagePreview(null); setImageBase64(null); }}
+                          className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{ background: "rgba(0,0,0,0.7)" }}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                        <div className="absolute bottom-0 inset-x-0 px-2 py-1 text-[10px] font-mono truncate"
+                          style={{ background: "rgba(0,0,0,0.6)", color: "rgba(255,255,255,0.7)" }}
+                        >
+                          {imageFile?.name}
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full h-20 rounded-lg flex flex-col items-center justify-center gap-2 transition-all"
+                        style={{ background: "rgba(139,92,246,0.05)", border: "1px dashed rgba(139,92,246,0.3)" }}
+                      >
+                        <ImagePlus className="w-5 h-5" style={{ color: "hsl(263,90%,64%)", opacity: 0.7 }} />
+                        <span className="text-xs font-mono text-muted-foreground">Click to upload image</span>
+                        <span className="text-[10px] text-muted-foreground/50">JPG, PNG, WebP — diagrams, mockups, screenshots</span>
+                      </button>
+                    )}
+                    <Textarea
+                      placeholder="Optional: describe what you want to spec from this image…"
+                      value={inputValue}
+                      onChange={e => setInputValue(e.target.value)}
+                      className="min-h-[60px] text-xs resize-none"
+                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                    />
+                  </div>
                 )}
               </div>
 
@@ -389,9 +545,85 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* Advanced Mode Toggles */}
+              <div className="space-y-2">
+                <label className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest">Generation Mode</label>
+                <div className="space-y-1.5">
+                  {/* Multi-Agent toggle */}
+                  <button
+                    onClick={() => { setMultiAgent(m => !m); if (!multiAgent) setExtendedThinking(false); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left"
+                    style={multiAgent ? {
+                      background: "rgba(124,58,237,0.15)",
+                      border: "1px solid rgba(124,58,237,0.35)",
+                    } : {
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}
+                  >
+                    <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+                      style={{ background: multiAgent ? "rgba(124,58,237,0.25)" : "rgba(255,255,255,0.04)" }}
+                    >
+                      <Bot className="w-3.5 h-3.5" style={{ color: multiAgent ? "#A78BFA" : undefined }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold" style={{ color: multiAgent ? "#A78BFA" : undefined }}>
+                        Multi-Agent
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">4 specialists run in parallel</p>
+                    </div>
+                    <div className="w-8 h-4 rounded-full relative transition-all shrink-0"
+                      style={{ background: multiAgent ? "#7C3AED" : "rgba(255,255,255,0.1)" }}
+                    >
+                      <div className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all"
+                        style={{ left: multiAgent ? "18px" : "2px" }}
+                      />
+                    </div>
+                  </button>
+
+                  {/* Extended Thinking toggle — Claude only */}
+                  <button
+                    onClick={() => { setExtendedThinking(e => !e); if (!extendedThinking) setMultiAgent(false); }}
+                    disabled={!aiModel.startsWith("claude")}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left disabled:opacity-40"
+                    style={extendedThinking ? {
+                      background: "rgba(6,182,212,0.12)",
+                      border: "1px solid rgba(6,182,212,0.3)",
+                    } : {
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}
+                  >
+                    <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+                      style={{ background: extendedThinking ? "rgba(6,182,212,0.2)" : "rgba(255,255,255,0.04)" }}
+                    >
+                      <BrainCircuit className="w-3.5 h-3.5" style={{ color: extendedThinking ? "#06B6D4" : undefined }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-semibold" style={{ color: extendedThinking ? "#06B6D4" : undefined }}>
+                          Extended Thinking
+                        </p>
+                        <span className="text-[9px] font-mono px-1 py-0.5 rounded"
+                          style={{ background: "rgba(192,132,252,0.15)", color: "#C084FC", border: "1px solid rgba(192,132,252,0.2)" }}
+                        >Claude</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">Deeper reasoning, better quality</p>
+                    </div>
+                    <div className="w-8 h-4 rounded-full relative transition-all shrink-0"
+                      style={{ background: extendedThinking ? "#06B6D4" : "rgba(255,255,255,0.1)" }}
+                    >
+                      <div className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all"
+                        style={{ left: extendedThinking ? "18px" : "2px" }}
+                      />
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               <motion.button
                 onClick={handleGenerate}
-                disabled={isGenerating || !inputValue.trim()}
+                disabled={isGenerating || (inputType === "image" ? !imageBase64 : !inputValue.trim())}
                 className="w-full py-3 px-4 rounded-lg font-mono font-bold text-sm text-white tracking-wide disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-gradient"
                 whileHover={!isGenerating ? { scale: 1.02, boxShadow: "0 0 32px rgba(139,92,246,0.5)" } as any : {}}
                 whileTap={!isGenerating ? { scale: 0.97 } : {}}
@@ -502,10 +734,7 @@ export default function Home() {
                   <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-4 p-8">
                     <div className="relative">
                       <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                        style={{
-                          background: "rgba(139,92,246,0.08)",
-                          border: "1px solid rgba(139,92,246,0.2)",
-                        }}
+                        style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.2)" }}
                       >
                         <Terminal className="w-7 h-7 opacity-40" />
                       </div>
@@ -519,14 +748,85 @@ export default function Home() {
                     </div>
                   </div>
                 ) : activeTab === "document" ? (
-                  <div className="p-6 prose prose-invert prose-sm max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{streamedContent}</ReactMarkdown>
-                    {isGenerating && !diagramData && (
-                      <span className="inline-block w-2 h-4 rounded-sm ml-1 animate-pulse align-middle"
-                        style={{ background: "hsl(263,90%,64%)" }}
-                      />
+                  <div className="flex flex-col h-full">
+                    {/* Extended thinking panel */}
+                    {thinkingContent && (
+                      <div className="border-b" style={{ borderColor: "rgba(6,182,212,0.2)", background: "rgba(6,182,212,0.04)" }}>
+                        <button
+                          onClick={() => setShowThinking(s => !s)}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-mono"
+                          style={{ color: "#06B6D4" }}
+                        >
+                          <BrainCircuit className="w-3.5 h-3.5" />
+                          <span>Extended Thinking</span>
+                          <span className="ml-1 opacity-60">({thinkingContent.length.toLocaleString()} chars)</span>
+                          <div className="flex-1" />
+                          {showThinking ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </button>
+                        <AnimatePresence>
+                          {showThinking && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="px-4 pb-3 text-[11px] font-mono leading-relaxed whitespace-pre-wrap max-h-40 overflow-y-auto"
+                                style={{ color: "rgba(6,182,212,0.7)" }}
+                              >
+                                {thinkingContent}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     )}
-                    <div ref={contentEndRef} />
+
+                    {/* Multi-agent progress panel */}
+                    {(generationPhase === "multi_agent" || (isGenerating && multiAgent && activeAgents.size > 0)) && (
+                      <div className="border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+                        <MultiAgentProgress
+                          agentProgress={agentProgress}
+                          activeAgents={activeAgents}
+                          completedAgents={completedAgents}
+                        />
+                      </div>
+                    )}
+
+                    {/* Thinking phase indicator */}
+                    {generationPhase === "thinking" && !thinkingContent && (
+                      <div className="flex items-center gap-3 px-4 py-3 border-b"
+                        style={{ borderColor: "rgba(6,182,212,0.2)", background: "rgba(6,182,212,0.05)" }}
+                      >
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                        >
+                          <BrainCircuit className="w-4 h-4" style={{ color: "#06B6D4" }} />
+                        </motion.div>
+                        <span className="text-xs font-mono" style={{ color: "#06B6D4" }}>
+                          Engaging extended reasoning…
+                        </span>
+                        <div className="flex gap-1 ml-auto">
+                          {[0,1,2].map(i => (
+                            <motion.div key={i} className="w-1 h-1 rounded-full" style={{ background: "#06B6D4" }}
+                              animate={{ opacity: [0.3, 1, 0.3] }}
+                              transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.2 }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex-1 overflow-auto p-6 prose prose-invert prose-sm max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{streamedContent}</ReactMarkdown>
+                      {isGenerating && !diagramData && (
+                        <span className="inline-block w-2 h-4 rounded-sm ml-1 animate-pulse align-middle"
+                          style={{ background: "hsl(263,90%,64%)" }}
+                        />
+                      )}
+                      <div ref={contentEndRef} />
+                    </div>
                   </div>
                 ) : (
                   <div className="h-full w-full min-h-[400px]">
@@ -553,6 +853,13 @@ export default function Home() {
             onClose={() => setShowTemplates(false)}
             onSelect={handleTemplateSelect}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Preferences modal */}
+      <AnimatePresence>
+        {showPreferences && (
+          <PreferencesModal onClose={() => setShowPreferences(false)} />
         )}
       </AnimatePresence>
     </div>

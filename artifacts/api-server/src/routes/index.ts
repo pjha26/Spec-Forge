@@ -10,6 +10,10 @@ import notificationsRouter from "./notifications";
 import versionsRouter from "./versions";
 import exportRouter from "./export";
 import teamsRouter from "./teams";
+import preferencesRouter from "./preferences";
+import mcpRouter from "./mcp";
+import shareRouter from "./share";
+import githubSyncRouter from "./github-sync";
 
 const router: IRouter = Router();
 
@@ -18,11 +22,15 @@ router.use(authRouter);
 router.use("/specs", specsRouter);
 router.use("/specs", versionsRouter);
 router.use("/specs", exportRouter);
+router.use("/specs", shareRouter);
+router.use("/specs", githubSyncRouter);
 router.use("/teams", teamsRouter);
 router.use("/anthropic", anthropicRouter);
 router.use(webhooksRouter);
 router.use(presenceRouter);
 router.use(insightsRouter);
 router.use(notificationsRouter);
+router.use(preferencesRouter);
+router.use("/mcp", mcpRouter);
 
 export default router;

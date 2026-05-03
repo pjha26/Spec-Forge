@@ -2,7 +2,7 @@ import { Router, type Request, type Response } from "express";
 import { db, specsTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
-import { streamCompletion, generateCompletion, isValidModel, type SupportedModel } from "../lib/model-router.js";
+import { streamCompletion, generateCompletion, generateCompletionWithThinking, generateMultiAgent, isValidModel, type SupportedModel } from "../lib/model-router.js";
 import { db as dbClient, conversations as conversationsTable } from "@workspace/db";
 import { randomBytes, createHmac, timingSafeEqual } from "crypto";
 import { createNotification } from "./notifications";
@@ -114,7 +114,7 @@ function verifyGitHubSignature(payload: Buffer, secret: string, signature: strin
 
 const router = Router();
 
-const SPEC_PROMPTS: Record<string, string> = {
+export const SPEC_PROMPTS: Record<string, string> = {
   system_design: `You are a senior software architect. Generate a comprehensive System Design Document for the following project.
 
 Include these sections:
@@ -419,6 +419,14 @@ router.post("/", async (req, res) => {
   }
 
   const { title, specType, inputType, inputValue, aiModel } = parsed.data;
+  const { multiAgent, extendedThinking, imageInput } = req.body as {
+    multiAgent?: boolean;
+    extendedThinking?: boolean;
+    imageInput?: string;
+  };
+
+  // Load user preferences to enrich system prompts at generation time
+  const userId = (req as any).session?.user?.id as string | undefined;
 
   try {
     const [spec] = await db
@@ -426,11 +434,14 @@ router.post("/", async (req, res) => {
       .values({
         title,
         specType,
-        inputType,
-        inputValue,
+        inputType: (inputType === "image" ? "description" : inputType) as any,
+        inputValue: inputType === "image" ? (req.body.imageDescription ?? "Generated from uploaded image") : inputValue,
+        imageInput: imageInput ?? null,
         content: "",
         status: "pending",
-        ...(aiModel ? { aiModel } : {}),
+        aiModel: aiModel ?? "claude-sonnet-4-6",
+        multiAgent: multiAgent ?? false,
+        extendedThinking: extendedThinking ?? false,
       })
       .returning();
 
@@ -649,51 +660,116 @@ router.post("/:id/stream", async (req, res) => {
     return;
   }
 
-  const [spec] = await db
-    .select()
-    .from(specsTable)
-    .where(eq(specsTable.id, parsed.data.id));
-
-  if (!spec) {
-    res.status(404).json({ error: "Spec not found" });
-    return;
-  }
+  const [spec] = await db.select().from(specsTable).where(eq(specsTable.id, parsed.data.id));
+  if (!spec) { res.status(404).json({ error: "Spec not found" }); return; }
 
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
 
   try {
-    await db
-      .update(specsTable)
-      .set({ status: "generating", updatedAt: new Date() })
-      .where(eq(specsTable.id, spec.id));
-
-    const systemPrompt =
-      SPEC_PROMPTS[spec.specType] || SPEC_PROMPTS.feature_spec;
-    const userMessage =
-      spec.inputType === "github_url"
-        ? `Generate a ${spec.specType.replace(/_/g, " ")} for this GitHub repository: ${spec.inputValue}\n\nAnalyze the repository URL and make reasonable assumptions about the project based on the URL structure and naming. Create a detailed, professional document.`
-        : `Generate a ${spec.specType.replace(/_/g, " ")} for this project:\n\n${spec.inputValue}\n\nCreate a detailed, professional document based on this description.`;
-
-    let fullContent = "";
+    await db.update(specsTable).set({ status: "generating", updatedAt: new Date() }).where(eq(specsTable.id, spec.id));
 
     const modelToUse = isValidModel(spec.aiModel) ? spec.aiModel : "claude-sonnet-4-6";
+    const systemPrompt = SPEC_PROMPTS[spec.specType] || SPEC_PROMPTS.feature_spec;
 
-    for await (const chunk of streamCompletion({
-      model: modelToUse,
-      system: systemPrompt,
-      userMessage,
-      maxTokens: 8192,
-    })) {
-      fullContent += chunk;
-      res.write(`data: ${JSON.stringify({ content: chunk })}\n\n`);
+    // Load user preferences for context enrichment
+    let prefContext = "";
+    const userId = (req as any).session?.user?.id as string | undefined;
+    if (userId) {
+      try {
+        const { userPreferencesTable } = await import("@workspace/db");
+        const [prefs] = await db.select().from(userPreferencesTable).where(eq(userPreferencesTable.userId, userId));
+        if (prefs) {
+          const parts: string[] = [];
+          if (prefs.preferredStack) parts.push(`Preferred tech stack: ${prefs.preferredStack}`);
+          if (prefs.domain) parts.push(`Working domain: ${prefs.domain}`);
+          if (prefs.alwaysIncludeSections?.length) parts.push(`Always include these sections: ${(prefs.alwaysIncludeSections as string[]).join(", ")}`);
+          if (prefs.extraContext) parts.push(prefs.extraContext);
+          if (parts.length) prefContext = `\n\n[User Preferences]\n${parts.join("\n")}`;
+        }
+      } catch {}
     }
 
-    await db
-      .update(specsTable)
-      .set({ content: fullContent, status: "generating", updatedAt: new Date() })
-      .where(eq(specsTable.id, spec.id));
+    const baseUserMessage = spec.inputType === "github_url"
+      ? `Generate a ${spec.specType.replace(/_/g, " ")} for this GitHub repository: ${spec.inputValue}\n\nAnalyze the repository URL and create a detailed, professional document.${prefContext}`
+      : `Generate a ${spec.specType.replace(/_/g, " ")} for this project:\n\n${spec.inputValue}\n\nCreate a detailed, professional document.${prefContext}`;
+
+    const imageBase64 = spec.imageInput ?? undefined;
+
+    let fullContent = "";
+    let thinkingContent = "";
+
+    // ── EXTENDED THINKING MODE (Claude only) ──────────────────────────────
+    if (spec.extendedThinking) {
+      res.write(`data: ${JSON.stringify({ phase: "thinking" })}\n\n`);
+
+      const { thinking, text } = await generateCompletionWithThinking({
+        model: modelToUse,
+        system: systemPrompt + prefContext,
+        userMessage: spec.inputType === "github_url"
+          ? `Generate a ${spec.specType.replace(/_/g, " ")} for: ${spec.inputValue}. Consider multiple architectural approaches, evaluate trade-offs, then produce the best possible document.`
+          : `Generate a ${spec.specType.replace(/_/g, " ")} for:\n\n${spec.inputValue}\n\nConsider multiple approaches, evaluate trade-offs, then produce the best possible document.`,
+        imageBase64,
+        thinkingBudget: 10000,
+        maxTokens: 16000,
+      });
+
+      thinkingContent = thinking;
+      fullContent = text;
+
+      if (thinking) {
+        res.write(`data: ${JSON.stringify({ thinking })}\n\n`);
+      }
+      // Stream content character by character for consistency with the UI
+      const chunkSize = 80;
+      for (let i = 0; i < fullContent.length; i += chunkSize) {
+        res.write(`data: ${JSON.stringify({ content: fullContent.slice(i, i + chunkSize) })}\n\n`);
+      }
+
+    // ── MULTI-AGENT MODE ──────────────────────────────────────────────────
+    } else if (spec.multiAgent) {
+      res.write(`data: ${JSON.stringify({ phase: "multi_agent", agents: ["architect", "security", "database", "api", "coordinator"] })}\n\n`);
+
+      const agentBuffers: Record<string, string> = {};
+
+      fullContent = await generateMultiAgent({
+        model: modelToUse,
+        specType: spec.specType,
+        userMessage: baseUserMessage,
+        imageBase64,
+        onProgress: (agent, chunk) => {
+          agentBuffers[agent] = (agentBuffers[agent] ?? "") + chunk;
+          res.write(`data: ${JSON.stringify({ agent, chunk })}\n\n`);
+        },
+      });
+
+      // Re-stream the final merged content for the document view
+      const chunkSize = 80;
+      for (let i = 0; i < fullContent.length; i += chunkSize) {
+        res.write(`data: ${JSON.stringify({ content: fullContent.slice(i, i + chunkSize) })}\n\n`);
+      }
+
+    // ── STANDARD STREAMING MODE ───────────────────────────────────────────
+    } else {
+      for await (const chunk of streamCompletion({
+        model: modelToUse,
+        system: systemPrompt,
+        userMessage: baseUserMessage,
+        maxTokens: 8192,
+        imageBase64,
+      })) {
+        fullContent += chunk;
+        res.write(`data: ${JSON.stringify({ content: chunk })}\n\n`);
+      }
+    }
+
+    await db.update(specsTable).set({
+      content: fullContent,
+      thinkingContent: thinkingContent || null,
+      status: "generating",
+      updatedAt: new Date(),
+    }).where(eq(specsTable.id, spec.id));
 
     res.write(`data: ${JSON.stringify({ phase: "analyzing" })}\n\n`);
 
@@ -702,30 +778,22 @@ router.post("/:id/stream", async (req, res) => {
       generateMermaidDiagram(fullContent, spec.specType),
     ]);
 
-    const analysisData =
-      analysis.status === "fulfilled" ? analysis.value : null;
-    const diagramData =
-      diagram.status === "fulfilled" ? diagram.value : null;
+    const analysisData = analysis.status === "fulfilled" ? analysis.value : null;
+    const diagramData = diagram.status === "fulfilled" ? diagram.value : null;
 
-    if (analysisData) {
-      res.write(`data: ${JSON.stringify({ analysis: analysisData })}\n\n`);
-    }
-    if (diagramData) {
-      res.write(`data: ${JSON.stringify({ diagram: diagramData })}\n\n`);
-    }
+    if (analysisData) res.write(`data: ${JSON.stringify({ analysis: analysisData })}\n\n`);
+    if (diagramData) res.write(`data: ${JSON.stringify({ diagram: diagramData })}\n\n`);
 
-    await db
-      .update(specsTable)
-      .set({
-        content: fullContent,
-        status: "completed",
-        complexityScore: analysisData?.score ?? null,
-        techDebtRisks: analysisData?.risks ?? null,
-        complexitySummary: analysisData?.summary ?? null,
-        mermaidDiagram: diagramData ?? null,
-        updatedAt: new Date(),
-      })
-      .where(eq(specsTable.id, spec.id));
+    await db.update(specsTable).set({
+      content: fullContent,
+      thinkingContent: thinkingContent || null,
+      status: "completed",
+      complexityScore: analysisData?.score ?? null,
+      techDebtRisks: analysisData?.risks ?? null,
+      complexitySummary: analysisData?.summary ?? null,
+      mermaidDiagram: diagramData ?? null,
+      updatedAt: new Date(),
+    }).where(eq(specsTable.id, spec.id));
 
     saveSpecVersion(spec.id, {
       content: fullContent,
@@ -740,10 +808,7 @@ router.post("/:id/stream", async (req, res) => {
     res.end();
   } catch (err) {
     req.log.error({ err }, "Failed to stream spec");
-    await db
-      .update(specsTable)
-      .set({ status: "failed", updatedAt: new Date() })
-      .where(eq(specsTable.id, spec.id));
+    await db.update(specsTable).set({ status: "failed", updatedAt: new Date() }).where(eq(specsTable.id, spec.id));
     res.write(`data: ${JSON.stringify({ error: "Generation failed" })}\n\n`);
     res.end();
   }
