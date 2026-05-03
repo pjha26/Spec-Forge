@@ -474,6 +474,8 @@ export default function TeamDetail() {
             teamId={team.id}
             initialPrompt={team.customSystemPrompt}
             ssoEnabled={team.ssoEnabled === "true"}
+            initialNotifyEmail={(team as any).notifyEmail ?? null}
+            initialDigestFrequency={(team as any).digestFrequency ?? "off"}
           />
         </Card>
       )}

@@ -1,16 +1,19 @@
 /**
  * Nightly spec health monitoring cron job
- * Runs at 2 AM every night for all completed GitHub-backed specs
+ * Runs at 2 AM every night for all completed GitHub-backed specs.
+ * Weekly digest: every Sunday at 8 AM
+ * Daily digest:  every day at 8 AM
  */
 
 import cron from "node-cron";
 import { db, specsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { runHealthAnalysis } from "../routes/spec-health.js";
+import { sendAllDigests } from "./digest.js";
 import { logger } from "./logger.js";
 
 export function startHealthCron(): void {
-  // Run nightly at 2:00 AM
+  // ── Nightly health analysis at 2:00 AM ──────────────────────────────────
   cron.schedule("0 2 * * *", async () => {
     logger.info("Starting nightly spec health analysis");
     try {
@@ -28,7 +31,6 @@ export function startHealthCron(): void {
         } catch (err) {
           logger.error({ err, specId: spec.id }, "Health analysis failed for spec");
         }
-        // Stagger requests to avoid rate limiting
         await new Promise(r => setTimeout(r, 2000));
       }
 
@@ -38,5 +40,25 @@ export function startHealthCron(): void {
     }
   });
 
-  logger.info("Spec health monitoring cron scheduled (nightly at 2 AM)");
+  // ── Weekly digest every Sunday at 8:00 AM ───────────────────────────────
+  cron.schedule("0 8 * * 0", async () => {
+    logger.info("Sending weekly spec health digests");
+    try {
+      await sendAllDigests("weekly");
+    } catch (err) {
+      logger.error({ err }, "Weekly digest cron failed");
+    }
+  });
+
+  // ── Daily digest every day at 8:00 AM ───────────────────────────────────
+  cron.schedule("0 8 * * *", async () => {
+    logger.info("Sending daily spec health digests");
+    try {
+      await sendAllDigests("daily");
+    } catch (err) {
+      logger.error({ err }, "Daily digest cron failed");
+    }
+  });
+
+  logger.info("Spec health monitoring cron scheduled (nightly at 2 AM · weekly digest Sun 8 AM · daily digest 8 AM)");
 }

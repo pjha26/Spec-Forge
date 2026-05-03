@@ -11,6 +11,8 @@ export const teamsTable = pgTable("teams", {
   ownerId: text("owner_id").notNull(),
   customSystemPrompt: text("custom_system_prompt"),
   ssoEnabled: text("sso_enabled").default("false"),
+  notifyEmail: text("notify_email"),
+  digestFrequency: text("digest_frequency", { enum: ["weekly", "daily", "off"] }).notNull().default("off"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

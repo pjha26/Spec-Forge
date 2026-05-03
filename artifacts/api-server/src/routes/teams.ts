@@ -117,13 +117,18 @@ router.put("/:id", async (req: Request, res: Response) => {
   if (!access) { res.status(404).json({ error: "Team not found" }); return; }
   if (access.role !== "owner") { res.status(403).json({ error: "Only owners can update team settings" }); return; }
 
-  const { name, description, customSystemPrompt } = req.body as { name?: string; description?: string; customSystemPrompt?: string };
+  const { name, description, customSystemPrompt, notifyEmail, digestFrequency } = req.body as {
+    name?: string; description?: string; customSystemPrompt?: string;
+    notifyEmail?: string | null; digestFrequency?: "weekly" | "daily" | "off";
+  };
   const [updated] = await db
     .update(teamsTable)
     .set({
       ...(name?.trim() ? { name: name.trim() } : {}),
       ...(description !== undefined ? { description: description.trim() } : {}),
       ...(customSystemPrompt !== undefined ? { customSystemPrompt: customSystemPrompt.trim() || null } : {}),
+      ...(notifyEmail !== undefined ? { notifyEmail: notifyEmail?.trim() || null } : {}),
+      ...(digestFrequency !== undefined ? { digestFrequency } : {}),
       updatedAt: new Date(),
     })
     .where(eq(teamsTable.id, teamId))
