@@ -1,8 +1,8 @@
 // ─── Theme System ─────────────────────────────────────────────────────────────
-// 6 hand-crafted themes: 5 dark + 1 light.
+// 7 hand-crafted themes: 6 dark + 1 light.
 // Each theme sets ALL CSS custom properties so the whole UI repaints.
 
-export type ThemeId = "midnight" | "ember" | "verdant" | "crimson" | "daylight" | "gotham";
+export type ThemeId = "midnight" | "ember" | "verdant" | "crimson" | "daylight" | "gotham" | "vengeance";
 
 export interface ThemeConfig {
   themeId: ThemeId;
@@ -278,7 +278,58 @@ export const THEMES: ThemeDefinition[] = [
     },
   },
 
-  // ─── 6. Daylight — warm cream + indigo (light mode) ──────────────────────
+  // ─── 6. Vengeance — The Batman (2022) near-black + blood red ────────────
+  {
+    id: "vengeance",
+    label: "Vengeance",
+    description: "The Batman (2022) — blood red",
+    mode: "dark",
+    swatches: ["#080407", "#BB1C1C", "#7F1D1D"],
+    vars: {
+      "--background":                   "345 20% 2%",
+      "--foreground":                   "0 10% 90%",
+      "--card":                         "345 16% 4%",
+      "--card-foreground":              "0 10% 90%",
+      "--card-border":                  "345 14% 9%",
+      "--popover":                      "345 16% 4%",
+      "--popover-foreground":           "0 10% 90%",
+      "--popover-border":               "345 14% 9%",
+      "--primary":                      "0 76% 42%",
+      "--primary-foreground":           "0 0% 96%",
+      "--secondary":                    "345 12% 8%",
+      "--secondary-foreground":         "0 10% 90%",
+      "--muted":                        "345 12% 7%",
+      "--muted-foreground":             "345 8% 44%",
+      "--accent":                       "0 76% 42%",
+      "--accent-foreground":            "0 0% 96%",
+      "--destructive":                  "0 84% 60%",
+      "--destructive-foreground":       "0 0% 98%",
+      "--border":                       "345 12% 10%",
+      "--input":                        "345 12% 10%",
+      "--ring":                         "0 76% 42%",
+      "--sidebar":                      "345 20% 2.5%",
+      "--sidebar-foreground":           "0 10% 90%",
+      "--sidebar-border":               "345 12% 8%",
+      "--sidebar-primary":              "0 76% 42%",
+      "--sidebar-primary-foreground":   "0 0% 96%",
+      "--sidebar-accent":               "345 12% 8%",
+      "--sidebar-accent-foreground":    "0 10% 90%",
+      "--sidebar-ring":                 "0 76% 42%",
+      "--chart-1":                      "0 76% 42%",
+      "--chart-2":                      "20 90% 48%",
+      "--chart-3":                      "47 96% 48%",
+      "--chart-4":                      "263 80% 65%",
+      "--chart-5":                      "191 100% 42%",
+      "--violet":                       "0 76% 42%",
+      "--cyan":                         "0 60% 58%",
+      "--button-outline":               "rgba(187,28,28,0.14)",
+      "--primary-rgb":                  "187, 28, 28",
+      "--primary-hex":                  "#BB1C1C",
+      "--primary-light-hex":            "#EF4444",
+    },
+  },
+
+  // ─── 7. Daylight — warm cream + indigo (light mode) ──────────────────────
   {
     id: "daylight",
     label: "Daylight",
