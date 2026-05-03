@@ -749,6 +749,130 @@ router.post("/:id/stream", async (req, res) => {
   }
 });
 
+router.post("/:id/export/notion", async (req, res) => {
+  const parsed = GetSpecParams.safeParse({ id: Number(req.params.id) });
+  if (!parsed.success) { res.status(400).json({ error: "Invalid spec ID" }); return; }
+
+  const notionToken = process.env.NOTION_API_KEY;
+  if (!notionToken) { res.status(503).json({ error: "Notion API key not configured" }); return; }
+
+  try {
+    const [spec] = await db.select().from(specsTable).where(eq(specsTable.id, parsed.data.id));
+    if (!spec) { res.status(404).json({ error: "Spec not found" }); return; }
+    if (!spec.content) { res.status(400).json({ error: "Spec has no content yet" }); return; }
+
+    // Convert markdown content into Notion blocks
+    const lines = spec.content.split("\n");
+    const blocks: any[] = [];
+
+    for (const line of lines) {
+      if (line.startsWith("# ")) {
+        blocks.push({ object: "block", type: "heading_1", heading_1: { rich_text: [{ type: "text", text: { content: line.slice(2).trim() } }] } });
+      } else if (line.startsWith("## ")) {
+        blocks.push({ object: "block", type: "heading_2", heading_2: { rich_text: [{ type: "text", text: { content: line.slice(3).trim() } }] } });
+      } else if (line.startsWith("### ")) {
+        blocks.push({ object: "block", type: "heading_3", heading_3: { rich_text: [{ type: "text", text: { content: line.slice(4).trim() } }] } });
+      } else if (line.startsWith("- ") || line.startsWith("* ")) {
+        blocks.push({ object: "block", type: "bulleted_list_item", bulleted_list_item: { rich_text: [{ type: "text", text: { content: line.slice(2).trim() } }] } });
+      } else if (/^\d+\. /.test(line)) {
+        blocks.push({ object: "block", type: "numbered_list_item", numbered_list_item: { rich_text: [{ type: "text", text: { content: line.replace(/^\d+\. /, "").trim() } }] } });
+      } else if (line.startsWith("```") || line.startsWith("    ")) {
+        blocks.push({ object: "block", type: "code", code: { rich_text: [{ type: "text", text: { content: line.replace(/^```\w*/, "").trim() } }], language: "plain text" } });
+      } else if (line.startsWith("> ")) {
+        blocks.push({ object: "block", type: "quote", quote: { rich_text: [{ type: "text", text: { content: line.slice(2).trim() } }] } });
+      } else if (line.trim() === "" || line.trim() === "---" || line.trim() === "***") {
+        blocks.push({ object: "block", type: "divider", divider: {} });
+      } else if (line.trim()) {
+        // Parse inline bold/italic into rich_text
+        const richText = parseInlineMarkdown(line.trim());
+        blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: richText } });
+      }
+    }
+
+    // Notion API allows max 100 blocks per request — chunk them
+    const CHUNK = 100;
+    const chunked: any[][] = [];
+    for (let i = 0; i < blocks.length; i += CHUNK) chunked.push(blocks.slice(i, i + CHUNK));
+
+    // Search for a parent page — use the first page accessible to the integration
+    const searchRes = await fetch("https://api.notion.com/v1/search", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${notionToken}`, "Notion-Version": "2022-06-28", "Content-Type": "application/json" },
+      body: JSON.stringify({ filter: { value: "page", property: "object" }, page_size: 1 }),
+    });
+
+    if (!searchRes.ok) {
+      const errBody = await searchRes.text();
+      req.log.error({ status: searchRes.status, body: errBody }, "Notion search failed");
+      res.status(502).json({ error: "Could not access Notion workspace. Make sure your integration has access to at least one page." });
+      return;
+    }
+
+    const searchData = await searchRes.json();
+    const parentPageId = searchData.results?.[0]?.id;
+
+    if (!parentPageId) {
+      res.status(502).json({ error: "No Notion pages found. Share at least one page with your integration in Notion." });
+      return;
+    }
+
+    // Create the page
+    const createRes = await fetch("https://api.notion.com/v1/pages", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${notionToken}`, "Notion-Version": "2022-06-28", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        parent: { page_id: parentPageId },
+        icon: { type: "emoji", emoji: "📋" },
+        properties: { title: { title: [{ type: "text", text: { content: spec.title } }] } },
+        children: chunked[0] ?? [],
+      }),
+    });
+
+    if (!createRes.ok) {
+      const errBody = await createRes.text();
+      req.log.error({ status: createRes.status, body: errBody }, "Notion page creation failed");
+      res.status(502).json({ error: "Failed to create Notion page" });
+      return;
+    }
+
+    const page = await createRes.json();
+    const pageId = page.id;
+    const pageUrl = page.url;
+
+    // Append remaining chunks if any
+    for (let i = 1; i < chunked.length; i++) {
+      await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, {
+        method: "PATCH",
+        headers: { "Authorization": `Bearer ${notionToken}`, "Notion-Version": "2022-06-28", "Content-Type": "application/json" },
+        body: JSON.stringify({ children: chunked[i] }),
+      });
+    }
+
+    res.json({ pageUrl, pageId, title: spec.title });
+  } catch (err) {
+    req.log.error({ err }, "Notion export failed");
+    res.status(500).json({ error: "Notion export failed" });
+  }
+});
+
+function parseInlineMarkdown(text: string): any[] {
+  const result: any[] = [];
+  const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(`(.+?)`)|(.+?(?=\*\*|\*|`|$))/g;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    if (match[1]) {
+      result.push({ type: "text", text: { content: match[2] }, annotations: { bold: true } });
+    } else if (match[3]) {
+      result.push({ type: "text", text: { content: match[4] }, annotations: { italic: true } });
+    } else if (match[5]) {
+      result.push({ type: "text", text: { content: match[6] }, annotations: { code: true } });
+    } else if (match[7]) {
+      result.push({ type: "text", text: { content: match[7] } });
+    }
+  }
+  return result.length > 0 ? result : [{ type: "text", text: { content: text } }];
+}
+
 router.post("/:id/scaffold", async (req, res) => {
   const parsed = GetSpecParams.safeParse({ id: Number(req.params.id) });
   if (!parsed.success) {
