@@ -17,6 +17,9 @@ import githubSyncRouter from "./github-sync";
 import teamKnowledgeRouter from "./team-knowledge";
 import auditLogsRouter from "./audit-logs";
 import ssoRouter from "./sso";
+import prAgentRouter from "./pr-agent";
+import specConflictsRouter from "./spec-conflicts";
+import specHealthRouter from "./spec-health";
 
 const router: IRouter = Router();
 
@@ -31,6 +34,9 @@ router.use("/teams", teamsRouter);
 router.use("/teams", teamKnowledgeRouter);
 router.use("/teams", auditLogsRouter);
 router.use(ssoRouter);
+router.use("/specs", prAgentRouter);
+router.use("/specs", specHealthRouter);
+router.use("/teams", specConflictsRouter);
 router.use("/anthropic", anthropicRouter);
 router.use(webhooksRouter);
 router.use(presenceRouter);

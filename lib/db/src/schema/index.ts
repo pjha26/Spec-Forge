@@ -9,3 +9,5 @@ export * from "./preferences";
 export * from "./team-knowledge";
 export * from "./audit-logs";
 export * from "./sso-config";
+export * from "./spec-conflicts";
+export * from "./spec-health";

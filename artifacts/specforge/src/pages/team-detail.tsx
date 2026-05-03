@@ -8,11 +8,12 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Users, Plus, Trash2, Crown, Edit3, Eye,
   Loader2, Shield, FileText, Server, Database, BookOpen, Cpu,
-  Settings, Check, X, BookMarked, ScrollText,
+  Settings, Check, X, BookMarked, ScrollText, AlertTriangle,
 } from "lucide-react";
 import { TeamKnowledgePanel } from "@/components/team-knowledge-panel";
 import { AuditLogPanel } from "@/components/audit-log-panel";
 import { TeamSettingsPanel } from "@/components/team-settings-panel";
+import { SpecConflictsPanel } from "@/components/spec-conflicts-panel";
 
 interface Member {
   id: number;
@@ -58,7 +59,7 @@ const SPEC_ICON: Record<string, React.ComponentType<{ className?: string; style?
   feature_spec:    BookOpen,
 };
 
-type ActiveTab = "overview" | "knowledge" | "audit" | "settings";
+type ActiveTab = "overview" | "knowledge" | "conflicts" | "audit" | "settings";
 
 export default function TeamDetail() {
   const { id } = useParams();
@@ -195,10 +196,11 @@ export default function TeamDetail() {
 
   type TabDef = { id: ActiveTab; label: string; Icon: React.ComponentType<{ className?: string }>; badge?: string; ownerOnly?: boolean };
   const ALL_TABS: TabDef[] = [
-    { id: "overview",  label: "Members & Specs", Icon: Users       },
-    { id: "knowledge", label: "Knowledge Base",  Icon: BookMarked, badge: "RAG" },
-    { id: "audit",     label: "Audit Log",       Icon: ScrollText, ownerOnly: true },
-    { id: "settings",  label: "Settings",        Icon: Settings,   ownerOnly: true },
+    { id: "overview",   label: "Members & Specs", Icon: Users          },
+    { id: "knowledge",  label: "Knowledge Base",  Icon: BookMarked,     badge: "RAG" },
+    { id: "conflicts",  label: "Conflicts",       Icon: AlertTriangle,  badge: "AI", ownerOnly: true },
+    { id: "audit",      label: "Audit Log",       Icon: ScrollText,     ownerOnly: true },
+    { id: "settings",   label: "Settings",        Icon: Settings,       ownerOnly: true },
   ];
   const TABS = ALL_TABS.filter((t): t is TabDef => !t.ownerOnly || isOwner);
 
@@ -448,6 +450,13 @@ export default function TeamDetail() {
       {activeTab === "knowledge" && (
         <Card className="border-border bg-card p-5">
           <TeamKnowledgePanel teamId={team.id} canEdit={canEdit} />
+        </Card>
+      )}
+
+      {/* ── Conflicts tab ────────────────────────────────────────────── */}
+      {activeTab === "conflicts" && isOwner && (
+        <Card className="border-border bg-card p-5">
+          <SpecConflictsPanel teamId={team.id} />
         </Card>
       )}
 

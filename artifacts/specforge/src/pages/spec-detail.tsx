@@ -23,6 +23,8 @@ import { PresenceBar } from "@/components/presence-bar";
 import { SpecInsights } from "@/components/spec-insights";
 import { SpecVersionHistory } from "@/components/spec-version-history";
 import { SpecScaffold } from "@/components/spec-scaffold";
+import { PrAgentPanel } from "@/components/pr-agent-panel";
+import { SpecHealthCard } from "@/components/spec-health-card";
 
 export default function SpecDetail() {
   const { id } = useParams();
@@ -677,6 +679,23 @@ export default function SpecDetail() {
                     Last synced {formatDistanceToNow(new Date(spec.lastSyncedAt))} ago
                   </p>
                 )}
+              </Card>
+            )}
+
+            {/* Spec Health Card */}
+            {spec.status === "completed" && (
+              <SpecHealthCard specId={spec.id} specStatus={spec.status} />
+            )}
+
+            {/* PR Description Agent */}
+            {spec.status === "completed" && (
+              <Card className="border-border bg-card overflow-hidden">
+                <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  <h3 className="text-xs font-mono font-bold text-foreground">PR Agent</h3>
+                </div>
+                <div className="p-4">
+                  <PrAgentPanel specId={spec.id} />
+                </div>
               </Card>
             )}
           </div>

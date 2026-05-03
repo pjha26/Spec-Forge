@@ -29,6 +29,9 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  Mic,
+  MicOff,
+  Radio,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -104,6 +107,9 @@ export default function Home() {
   const [activeAgents, setActiveAgents] = useState<Set<string>>(new Set());
   const [completedAgents, setCompletedAgents] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [voiceSupported] = useState(() => typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window));
+  const recognitionRef = useRef<any>(null);
 
   const createSpec = useCreateSpec();
   const { data: recentSpecs } = useListRecentSpecs();
@@ -116,6 +122,39 @@ export default function Home() {
   const [analysisData, setAnalysisData] = useState<any>(null);
   const [diagramData, setDiagramData] = useState<string | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
+
+  const handleVoiceToggle = () => {
+    if (!voiceSupported) {
+      toast({ title: "Voice not supported", description: "Your browser doesn't support speech recognition. Try Chrome.", variant: "destructive" });
+      return;
+    }
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      return;
+    }
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const rec = new SR();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = "en-US";
+    let final = inputValue;
+    rec.onresult = (e: any) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) { final += (final ? " " : "") + t; }
+        else { interim = t; }
+      }
+      setInputValue(final + (interim ? " " + interim : ""));
+    };
+    rec.onend = () => { setIsRecording(false); setInputValue(final); };
+    rec.onerror = () => { setIsRecording(false); toast({ title: "Voice error", description: "Could not capture audio.", variant: "destructive" }); };
+    recognitionRef.current = rec;
+    rec.start();
+    setIsRecording(true);
+    setInputType("description");
+    toast({ title: "Recording…", description: "Speak now. Click the mic again to stop." });
+  };
 
   const handleTemplateSelect = (tpl: SpecTemplate) => {
     setSpecType(tpl.specType as any);
@@ -432,16 +471,48 @@ export default function Home() {
                     onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; }}
                   />
                 ) : inputType === "description" ? (
-                  <Textarea
-                    ref={textareaRef}
-                    placeholder="Describe your project, architecture, or feature requirements..."
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    className="min-h-[100px] text-sm resize-none"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
-                    onFocus={e => { e.target.style.borderColor = "rgba(139,92,246,0.5)"; e.target.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.1)"; }}
-                    onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; }}
-                  />
+                  <div className="relative">
+                    <Textarea
+                      ref={textareaRef}
+                      placeholder="Describe your project, architecture, or feature requirements…"
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      className="min-h-[100px] text-sm resize-none pr-10"
+                      style={{
+                        background: isRecording ? "rgba(239,68,68,0.05)" : "rgba(255,255,255,0.04)",
+                        border: isRecording ? "1px solid rgba(239,68,68,0.4)" : "1px solid rgba(255,255,255,0.08)",
+                        boxShadow: isRecording ? "0 0 0 3px rgba(239,68,68,0.1)" : "none",
+                      }}
+                      onFocus={e => { if (!isRecording) { e.target.style.borderColor = "rgba(139,92,246,0.5)"; e.target.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.1)"; } }}
+                      onBlur={e => { if (!isRecording) { e.target.style.borderColor = "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; } }}
+                    />
+                    <button
+                      onClick={handleVoiceToggle}
+                      className="absolute top-2 right-2 w-7 h-7 rounded-md flex items-center justify-center transition-all duration-200"
+                      title={isRecording ? "Stop recording" : "Speak to describe (Voice-to-Spec)"}
+                      style={isRecording ? {
+                        background: "rgba(239,68,68,0.2)",
+                        border: "1px solid rgba(239,68,68,0.4)",
+                        color: "#f87171",
+                        boxShadow: "0 0 8px rgba(239,68,68,0.3)",
+                      } : {
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        color: "hsl(var(--muted-foreground))",
+                      }}
+                    >
+                      {isRecording
+                        ? <Radio className="w-3.5 h-3.5 animate-pulse" />
+                        : voiceSupported ? <Mic className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5 opacity-40" />
+                      }
+                    </button>
+                    {isRecording && (
+                      <div className="absolute bottom-2 left-2 flex items-center gap-1.5 text-[10px] font-mono text-red-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                        Recording…
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div className="space-y-2">
                     <input
