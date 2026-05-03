@@ -14,3 +14,5 @@ export * from "./spec-health";
 export * from "./spec-dependencies";
 export * from "./spec-issues";
 export * from "./outbound-webhooks";
+export * from "./spec-annotations";
+export * from "./spec-audit-runs";

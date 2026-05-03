@@ -26,6 +26,7 @@ import { SpecScaffold } from "@/components/spec-scaffold";
 import { PrAgentPanel } from "@/components/pr-agent-panel";
 import { SpecHealthCard } from "@/components/spec-health-card";
 import { LinearSyncPanel } from "@/components/linear-sync-panel";
+import { SpecAnnotationPanel } from "@/components/spec-annotation-panel";
 
 export default function SpecDetail() {
   const { id } = useParams();
@@ -107,6 +108,15 @@ export default function SpecDetail() {
   const [isExportingDocx, setIsExportingDocx] = useState(false);
   const [isExportingNotion, setIsExportingNotion] = useState(false);
   const [notionPageUrl, setNotionPageUrl] = useState<string | null>(null);
+
+  // Current user identity (for annotation authoring)
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+  useEffect(() => {
+    fetch("/api/auth/user")
+      .then(r => r.ok ? r.json() : null)
+      .then((d: { user?: { id?: string } } | null) => { if (d?.user?.id) setCurrentUserId(d.user.id); })
+      .catch(() => {});
+  }, []);
 
   // Team assignment
   const [userTeams, setUserTeams] = useState<Array<{ id: number; name: string; role: string }>>([]);
@@ -570,6 +580,17 @@ export default function SpecDetail() {
           <div className="lg:col-span-1 space-y-6 print-hide">
             {spec.status === "completed" && spec.content && (
               <LinearSyncPanel specId={spec.id} specContent={spec.content} />
+            )}
+
+            {/* Annotation & Audit panel — visible when spec belongs to a team */}
+            {currentTeamId && (
+              <SpecAnnotationPanel
+                specId={spec.id}
+                specStatus={spec.status}
+                isGitHub={isGitHub}
+                teamRole={userTeams.find(t => t.id === currentTeamId)?.role ?? null}
+                currentUserId={currentUserId}
+              />
             )}
 
             <ComplexityScoreCard

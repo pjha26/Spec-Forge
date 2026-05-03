@@ -2,7 +2,7 @@ import { pgTable, serial, text, timestamp, integer, uniqueIndex } from "drizzle-
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
-export const teamRoleEnum = ["owner", "editor", "viewer"] as const;
+export const teamRoleEnum = ["owner", "editor", "auditor", "viewer"] as const;
 
 export const teamsTable = pgTable("teams", {
   id: serial("id").primaryKey(),

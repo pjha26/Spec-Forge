@@ -20,7 +20,7 @@ interface Member {
   teamId: number;
   userId: string;
   username: string;
-  role: "owner" | "editor" | "viewer";
+  role: "owner" | "editor" | "auditor" | "viewer";
   joinedAt: string;
 }
 
@@ -38,7 +38,7 @@ interface TeamDetail {
   name: string;
   description: string;
   ownerId: string;
-  role: "owner" | "editor" | "viewer";
+  role: "owner" | "editor" | "auditor" | "viewer";
   customSystemPrompt: string | null;
   ssoEnabled: string | null;
   createdAt: string;
@@ -47,9 +47,10 @@ interface TeamDetail {
 }
 
 const ROLE_META: Record<string, { label: string; color: string; Icon: React.ComponentType<{ className?: string }> }> = {
-  owner:  { label: "Owner",  color: "#F59E0B", Icon: Crown  },
-  editor: { label: "Editor", color: "#06B6D4", Icon: Edit3  },
-  viewer: { label: "Viewer", color: "#6B7280", Icon: Eye    },
+  owner:   { label: "Owner",   color: "#F59E0B", Icon: Crown  },
+  editor:  { label: "Editor",  color: "#06B6D4", Icon: Edit3  },
+  auditor: { label: "Auditor", color: "#A78BFA", Icon: Shield },
+  viewer:  { label: "Viewer",  color: "#6B7280", Icon: Eye    },
 };
 
 const SPEC_ICON: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
@@ -72,7 +73,7 @@ export default function TeamDetail() {
   const [showInvite, setShowInvite] = useState(false);
   const [inviteId, setInviteId] = useState("");
   const [inviteUsername, setInviteUsername] = useState("");
-  const [inviteRole, setInviteRole] = useState<"editor" | "viewer">("editor");
+  const [inviteRole, setInviteRole] = useState<"editor" | "auditor" | "viewer">("editor");
   const [inviting, setInviting] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
@@ -125,7 +126,7 @@ export default function TeamDetail() {
     }
   };
 
-  const handleRoleChange = async (member: Member, role: "editor" | "viewer") => {
+  const handleRoleChange = async (member: Member, role: "editor" | "auditor" | "viewer") => {
     if (!team) return;
     try {
       const res = await fetch(`/api/teams/${team.id}/members/${member.id}`, {
@@ -192,7 +193,7 @@ export default function TeamDetail() {
   }
 
   const isOwner = team.role === "owner";
-  const canEdit = team.role !== "viewer";
+  const canEdit = team.role === "owner" || team.role === "editor";
 
   type TabDef = { id: ActiveTab; label: string; Icon: React.ComponentType<{ className?: string }>; badge?: string; ownerOnly?: boolean };
   const ALL_TABS: TabDef[] = [
@@ -324,10 +325,11 @@ export default function TeamDetail() {
                 />
                 <select
                   value={inviteRole}
-                  onChange={e => setInviteRole(e.target.value as "editor" | "viewer")}
+                  onChange={e => setInviteRole(e.target.value as "editor" | "auditor" | "viewer")}
                   className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-black/40 border border-border outline-none"
                 >
                   <option value="editor">Editor — can generate & sync specs</option>
+                  <option value="auditor">Auditor — can annotate & review specs</option>
                   <option value="viewer">Viewer — read-only access</option>
                 </select>
                 <div className="flex gap-2 justify-end">
@@ -362,11 +364,12 @@ export default function TeamDetail() {
                     {isOwner && member.role !== "owner" ? (
                       <select
                         value={member.role}
-                        onChange={e => handleRoleChange(member, e.target.value as "editor" | "viewer")}
+                        onChange={e => handleRoleChange(member, e.target.value as "editor" | "auditor" | "viewer")}
                         className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border bg-black/40 outline-none cursor-pointer"
                         style={{ color: rm.color }}
                       >
                         <option value="editor">Editor</option>
+                        <option value="auditor">Auditor</option>
                         <option value="viewer">Viewer</option>
                       </select>
                     ) : (

@@ -166,7 +166,7 @@ router.post("/:id/members", async (req: Request, res: Response) => {
 
   const { userId: newUserId, username, role } = req.body as { userId?: string; username?: string; role?: string };
   if (!newUserId?.trim()) { res.status(400).json({ error: "userId is required" }); return; }
-  const validRole = (["editor", "viewer"] as const).includes(role as "editor" | "viewer") ? role as "editor" | "viewer" : "viewer";
+  const validRole = (["editor", "auditor", "viewer"] as const).includes(role as "editor" | "auditor" | "viewer") ? role as "editor" | "auditor" | "viewer" : "viewer";
 
   const [existing] = await db
     .select()
@@ -216,7 +216,7 @@ router.put("/:id/members/:memberId", async (req: Request, res: Response) => {
   if (access.role !== "owner") { res.status(403).json({ error: "Only owners can change roles" }); return; }
 
   const { role } = req.body as { role?: string };
-  const validRole = (["editor", "viewer"] as const).includes(role as "editor" | "viewer") ? role as "editor" | "viewer" : "viewer";
+  const validRole = (["editor", "auditor", "viewer"] as const).includes(role as "editor" | "auditor" | "viewer") ? role as "editor" | "auditor" | "viewer" : "viewer";
 
   const [updated] = await db
     .update(teamMembersTable)

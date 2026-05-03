@@ -25,6 +25,7 @@ import specHealthRouter from "./spec-health";
 import linearSyncRouter from "./linear-sync";
 import outboundWebhooksRouter from "./outbound-webhooks";
 import integrationsRouter from "./integrations";
+import specAnnotationsRouter from "./spec-annotations";
 
 const router: IRouter = Router();
 
@@ -54,5 +55,6 @@ router.use("/mcp", mcpRouter);
 router.use("/specs", linearSyncRouter);
 router.use("/integrations", outboundWebhooksRouter);
 router.use(integrationsRouter);
+router.use("/specs", specAnnotationsRouter);
 
 export default router;

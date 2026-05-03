@@ -129,6 +129,39 @@ AI-powered technical design document generator. Drop in a GitHub URL, text descr
 - `artifacts/specforge/src/components/team-knowledge-panel.tsx` — upload/list/delete UI panel
 - `artifacts/specforge/src/pages/team-detail.tsx` — tabbed layout with new "Knowledge Base" tab
 
+## Collaborative Audit Feature
+
+Adds the "Auditor" role, inline spec annotations, AI-assisted discrepancy detection, and GitHub commit-back.
+
+### Roles (updated)
+| Role | Generate | Annotate | Approve/Commit |
+|---|---|---|---|
+| owner | ✓ | ✓ | ✓ |
+| editor | ✓ | ✓ | — |
+| auditor | — | ✓ | — |
+| viewer | — | — | — |
+
+### New DB Tables
+- `spec_annotations` — per-spec review notes with status `verified | outdated | missing`
+- `spec_audit_runs` — AI audit run history with discrepancies JSON
+
+### New API Routes (all under `/api/specs/:id/`)
+- `GET  /annotations` — list all annotations
+- `POST /annotations` — create (owner/editor/auditor only)
+- `PATCH /annotations/:aId` — update own annotation
+- `DELETE /annotations/:aId` — delete own (or owner can delete any)
+- `POST /audit` — trigger AI audit → Claude compares spec vs repo, returns JSON discrepancies
+- `GET  /audit/latest` — fetch latest audit run (polls every 3 s while running)
+- `POST /commit-to-github` — PUT SPEC.md to repo via GitHub Contents API (owner + `GITHUB_TOKEN` required)
+
+### New Frontend
+- `artifacts/specforge/src/components/spec-annotation-panel.tsx` — collapsible sidebar card with:
+  - AI Audit panel (run/poll/display discrepancies by severity)
+  - "Commit SPEC.md to Repo" button (owner + GitHub-backed specs only)
+  - Add Annotation form (status, section title, selected text, comment)
+  - Annotation list grouped with color-coded status badges
+- Panel appears automatically on `spec-detail` when the spec is assigned to a team
+
 ## Local Dev Mode (VS Code / self-hosted without Replit account)
 
 Set these two env vars and the entire Replit OIDC auth flow is bypassed. A stable
