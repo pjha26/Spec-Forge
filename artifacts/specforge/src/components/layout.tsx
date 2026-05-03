@@ -15,6 +15,7 @@ import { AIChat } from "@/components/ai-chat";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useListSpecs } from "@workspace/api-client-react";
 import { NotificationBell } from "@/components/notification-bell";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
@@ -156,7 +157,7 @@ function DataStream() {
       <div
         style={{
           position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-          background: "linear-gradient(180deg, transparent 0%, #7c3aed 20%, #06b6d4 50%, #7c3aed 80%, transparent 100%)",
+          background: "linear-gradient(180deg, transparent 0%, #00b4d8 20%, #38bdf8 50%, #00b4d8 80%, transparent 100%)",
           animation: "dataStream 3s linear infinite",
           height: "200%",
         }}
@@ -215,9 +216,9 @@ function EnergyRing() {
           strokeDasharray="8 4" style={{ animation: "spinRing 4s linear infinite" }} />
         <defs>
           <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#7c3aed" />
-            <stop offset="50%" stopColor="#06b6d4" />
-            <stop offset="100%" stopColor="#7c3aed" />
+            <stop offset="0%" stopColor="#00b4d8" />
+            <stop offset="50%" stopColor="#38bdf8" />
+            <stop offset="100%" stopColor="#00b4d8" />
           </linearGradient>
         </defs>
       </svg>
@@ -687,7 +688,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           >
             {/* Sweep */}
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(6,182,212,0.12) 100%)" }}
+              style={{ background: "linear-gradient(135deg, rgba(0,180,216,0.15) 0%, rgba(56,189,248,0.1) 100%)" }}
             />
             {/* Scan line on hover */}
             <div className="nav-sweep absolute inset-y-0 w-16 pointer-events-none"
@@ -721,10 +722,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <div className="nav-sweep absolute inset-y-0 w-16 pointer-events-none"
                     style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", left: "-100%" }}
                   />
-                  <Avatar className="w-7 h-7 shrink-0" style={{ boxShadow: "0 0 8px rgba(124,58,237,0.4)", border: "1px solid rgba(124,58,237,0.35)" }}>
+                  <Avatar className="w-7 h-7 shrink-0" style={{ boxShadow: "0 0 8px rgba(0,180,216,0.35)", border: "1px solid rgba(0,180,216,0.3)" }}>
                     {user.profileImageUrl && <AvatarImage src={user.profileImageUrl} alt={initials} />}
                     <AvatarFallback className="text-xs font-bold"
-                      style={{ background: "linear-gradient(135deg, hsl(263,90%,50%), hsl(213,90%,55%))", color: "white" }}>
+                      style={{ background: "linear-gradient(135deg, hsl(191,100%,35%), hsl(210,90%,45%))", color: "white" }}>
                       {initials}
                     </AvatarFallback>
                   </Avatar>
@@ -733,7 +734,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email ?? "User"}
                     </p>
                     {user.email && (
-                      <p className="text-[10px] font-mono truncate leading-tight" style={{ color: "rgba(124,58,237,0.7)" }}>
+                      <p className="text-[10px] font-mono truncate leading-tight" style={{ color: "rgba(0,180,216,0.7)" }}>
                         {user.email}
                       </p>
                     )}
@@ -768,16 +769,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
           )}
         </div>
 
-        {/* Version footer */}
-        <div className="px-4 pb-3 flex items-center justify-between">
-          <span className="text-[9px] font-mono opacity-25">v1.0.0-beta</span>
-          <span className="text-[9px] font-mono opacity-25" style={{ color: "#22c55e" }}>● ONLINE</span>
+        {/* Theme switcher + version footer */}
+        <div className="px-3 pb-3 space-y-2">
+          <ThemeSwitcher />
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[9px] font-mono opacity-25">v1.0.0-beta</span>
+            <span className="text-[9px] font-mono opacity-25" style={{ color: "#22c55e" }}>● ONLINE</span>
+          </div>
         </div>
 
         {/* Bottom energy line */}
         <div className="absolute bottom-0 left-0 right-0 h-px"
           style={{
-            background: "linear-gradient(90deg, transparent, #7c3aed60, #06b6d460, transparent)",
+            background: "linear-gradient(90deg, transparent, #00b4d860, #38bdf860, transparent)",
           }}
         />
       </aside>
@@ -789,9 +793,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           className="p-0 flex flex-col"
           style={{
             width: "min(440px, 100vw)",
-            background: "rgba(6,6,12,0.98)",
-            borderLeft: "1px solid rgba(124,58,237,0.25)",
-            boxShadow: "-8px 0 48px rgba(124,58,237,0.15)",
+            background: "hsl(var(--card))",
+            borderLeft: "1px solid rgba(0,180,216,0.2)",
+            boxShadow: "-8px 0 48px rgba(0,180,216,0.1)",
           }}
         >
           <AIChat />

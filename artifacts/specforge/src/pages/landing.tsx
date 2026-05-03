@@ -10,6 +10,7 @@ import {
   Terminal, ArrowRight, Github, Zap, Network, Bot,
   ChevronRight, Star, Shield, GitBranch, Layers,
 } from "lucide-react";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import {
   ScrambleText, HorizontalScroll, MorphBlob,
   GSAPScrollReveal, GSAPCounter, CursorTrail,
@@ -112,7 +113,7 @@ function NeuralCanvas() {
             ctx.beginPath();
             ctx.moveTo(pts[i].x, pts[i].y);
             ctx.lineTo(pts[j].x, pts[j].y);
-            ctx.strokeStyle = `rgba(139,92,246,${alpha})`;
+            ctx.strokeStyle = `rgba(0,180,216,${alpha})`;
             ctx.lineWidth = 0.8;
             ctx.stroke();
           }
@@ -127,8 +128,8 @@ function NeuralCanvas() {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r + (near ? 1.2 : 0), 0, Math.PI * 2);
         ctx.fillStyle = near
-          ? "rgba(192,132,252,0.9)"
-          : "rgba(139,92,246,0.55)";
+          ? "rgba(103,232,249,0.9)"
+          : "rgba(0,180,216,0.55)";
         ctx.fill();
       }
 
@@ -160,11 +161,11 @@ function NeuralCanvas() {
 // ── Floating Orbs ──────────────────────────────────────────────────────────
 function FloatingOrbs() {
   const orbs = useMemo(() => [
-    { size: 520, x: "55%",  y: "-10%", color: "hsl(270,100%,60%)", delay: 0,   dur: 18 },
-    { size: 380, x: "8%",   y: "20%",  color: "hsl(200,100%,60%)", delay: 3,   dur: 22 },
-    { size: 300, x: "80%",  y: "5%",   color: "hsl(310,100%,55%)", delay: 1.5, dur: 16 },
-    { size: 240, x: "20%",  y: "60%",  color: "hsl(180,100%,50%)", delay: 4,   dur: 20 },
-    { size: 200, x: "70%",  y: "55%",  color: "hsl(250,100%,65%)", delay: 2,   dur: 24 },
+    { size: 520, x: "55%",  y: "-10%", color: "hsl(191,100%,45%)", delay: 0,   dur: 18 },
+    { size: 380, x: "8%",   y: "20%",  color: "hsl(210,100%,55%)", delay: 3,   dur: 22 },
+    { size: 300, x: "80%",  y: "5%",   color: "hsl(160,80%,45%)",  delay: 1.5, dur: 16 },
+    { size: 240, x: "20%",  y: "60%",  color: "hsl(220,90%,55%)",  delay: 4,   dur: 20 },
+    { size: 200, x: "70%",  y: "55%",  color: "hsl(175,100%,40%)", delay: 2,   dur: 24 },
   ], []);
 
   return (
@@ -252,7 +253,7 @@ function TiltCard({ children, className = "" }: { children: React.ReactNode; cla
           background: useTransform(
             [glowX, glowY],
             ([gx, gy]) =>
-              `radial-gradient(380px circle at ${gx}% ${gy}%, rgba(139,92,246,0.14), transparent 65%)`
+              `radial-gradient(380px circle at ${gx}% ${gy}%, rgba(0,180,216,0.12), transparent 65%)`
           ),
         }}
       />
@@ -312,7 +313,7 @@ function PageBeam() {
         background: useTransform(
           [sx, sy],
           ([mx, my]) =>
-            `radial-gradient(520px circle at ${mx}px ${my}px, rgba(139,92,246,0.045), transparent 65%)`
+            `radial-gradient(520px circle at ${mx}px ${my}px, rgba(0,180,216,0.04), transparent 65%)`
         ),
       }}
     />
@@ -350,7 +351,7 @@ function LiveActivityTicker() {
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/8 bg-black/40 backdrop-blur-xl p-4 min-h-[200px]"
-      style={{ boxShadow: "0 0 40px rgba(139,92,246,0.08) inset, 0 0 0 1px rgba(139,92,246,0.08)" }}
+      style={{ boxShadow: "0 0 40px rgba(0,180,216,0.06) inset, 0 0 0 1px rgba(0,180,216,0.08)" }}
     >
       <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/6">
         <motion.div
@@ -371,7 +372,7 @@ function LiveActivityTicker() {
               transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
               className="flex items-start gap-2 text-[11px] font-mono"
             >
-              <span className="text-purple-400 shrink-0 mt-0.5">›</span>
+              <span className="text-cyan-400 shrink-0 mt-0.5">›</span>
               <span className="text-muted-foreground leading-relaxed">{item.text}</span>
             </motion.div>
           ))}
@@ -390,7 +391,7 @@ function ScrollProgress() {
       className="fixed top-0 left-0 right-0 h-[2px] z-[100] origin-left"
       style={{
         scaleX,
-        background: "linear-gradient(90deg, hsl(270,100%,65%), hsl(200,100%,65%))",
+        background: "linear-gradient(90deg, hsl(191,100%,52%), hsl(220,90%,65%))",
       }}
     />
   );
@@ -450,7 +451,7 @@ function FloatingBadges() {
             },
           }}
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-purple-400/70" />
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400/70" />
           {b.label}
         </motion.div>
       ))}
@@ -461,7 +462,7 @@ function FloatingBadges() {
 // ── Animated Terminal ──────────────────────────────────────────────────────
 function TerminalWindow() {
   const lines = [
-    { t: 0.3,  text: "> specforge generate --type system_design", color: "#a78bfa" },
+    { t: 0.3,  text: "> specforge generate --type system_design", color: "#22d3ee" },
     { t: 0.9,  text: "✓ Scanning repository structure...",        color: "#6b7280" },
     { t: 1.35, text: "✓ Analysing components & dependencies...",  color: "#6b7280" },
     { t: 1.8,  text: "✓ Generating architecture diagram...",      color: "#6b7280" },
@@ -474,7 +475,7 @@ function TerminalWindow() {
 
   return (
     <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
-      style={{ boxShadow: "0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,92,246,0.12) inset" }}
+      style={{ boxShadow: "0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,180,216,0.1) inset" }}
     >
       <div className="flex items-center gap-2 px-4 py-3 bg-white/[0.04] border-b border-white/6">
         <motion.span className="w-3 h-3 rounded-full bg-red-500/80"    whileHover={{ scale: 1.3 }} />
@@ -499,7 +500,7 @@ function TerminalWindow() {
           animate={{ opacity: [0, 1, 0] }}
           transition={{ delay: 3.7, duration: 0.8, repeat: Infinity }}
           className="inline-block w-2 h-[15px] rounded-sm align-middle"
-          style={{ background: "#a78bfa" }}
+          style={{ background: "#22d3ee" }}
         />
       </div>
     </div>
@@ -537,12 +538,12 @@ function GrainOverlay() {
 // ── Feature data ────────────────────────────────────────────────────────────
 const features = [
   {
-    icon: <Zap className="w-5 h-5" style={{ color: "#a78bfa" }} />,
-    color: "#7c3aed",
+    icon: <Zap className="w-5 h-5" style={{ color: "#22d3ee" }} />,
+    color: "#0891b2",
     title: "Complexity Analysis",
     desc: "Instant 1–10 complexity score with tech debt risks, severity prioritisation, and suggested mitigations.",
     tag: "AI Analysis",
-    glow: "rgba(124,58,237,0.18)",
+    glow: "rgba(8,145,178,0.18)",
   },
   {
     icon: <Network className="w-5 h-5" style={{ color: "#60a5fa" }} />,
@@ -588,7 +589,7 @@ const features = [
 
 // ── GSAP feature cards (maps existing feature data to FeatureCard interface) ─
 const GSAP_FEATURE_CARDS: FeatureCard[] = [
-  { icon: <Zap className="w-6 h-6" style={{ color: "#a78bfa" }} />,    color: "#7c3aed", title: "Complexity Analysis",   desc: "Instant 1–10 complexity score with tech-debt risks, severity prioritisation, and suggested mitigations.", tag: "AI Analysis" },
+  { icon: <Zap className="w-6 h-6" style={{ color: "#22d3ee" }} />,    color: "#0891b2", title: "Complexity Analysis",   desc: "Instant 1–10 complexity score with tech-debt risks, severity prioritisation, and suggested mitigations.", tag: "AI Analysis" },
   { icon: <Network className="w-6 h-6" style={{ color: "#60a5fa" }} />, color: "#2563eb", title: "Architecture Diagrams", desc: "Auto-generated Mermaid flowcharts, sequence diagrams, and ER diagrams — rendered in milliseconds.",         tag: "Visual" },
   { icon: <Bot className="w-6 h-6" style={{ color: "#34d399" }} />,     color: "#059669", title: "Ask Your Doc",          desc: "Chat with Claude about your spec — trade-offs, edge cases, implementation details, anything.",            tag: "Chat" },
   { icon: <Shield className="w-6 h-6" style={{ color: "#f59e0b" }} />,  color: "#d97706", title: "Team Collaboration",    desc: "Shared workspaces, annotation threads, AI audit runs, and role-based access control.",                    tag: "Teams" },
@@ -605,7 +606,7 @@ export default function Landing() {
   const heroO  = useTransform(heroScroll, [0, 0.7], [1, 0]);
 
   return (
-    <div className="min-h-screen text-foreground overflow-x-hidden" style={{ background: "#05050d" }}>
+    <div className="min-h-screen text-foreground overflow-x-hidden" style={{ background: "#040810" }}>
       <CursorTrail />
       <GrainOverlay />
       <PageBeam />
@@ -618,7 +619,7 @@ export default function Landing() {
       <style>{`
         @keyframes shimmer { from { background-position: -200% center; } to { background-position: 200% center; } }
         .shimmer-text {
-          background: linear-gradient(90deg, hsl(270,100%,78%) 0%, hsl(195,100%,78%) 35%, hsl(310,100%,78%) 65%, hsl(270,100%,78%) 100%);
+          background: linear-gradient(90deg, hsl(191,100%,65%) 0%, hsl(220,90%,72%) 35%, hsl(160,80%,60%) 65%, hsl(191,100%,65%) 100%);
           background-size: 200% auto;
           -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
           animation: shimmer 4s linear infinite;
@@ -628,7 +629,7 @@ export default function Landing() {
           100% { background-position: 200% 50%; }
         }
         .border-beam {
-          background: linear-gradient(90deg, transparent 0%, rgba(139,92,246,0.7) 40%, rgba(96,165,250,0.7) 60%, transparent 100%);
+          background: linear-gradient(90deg, transparent 0%, rgba(0,180,216,0.7) 40%, rgba(56,189,248,0.7) 60%, transparent 100%);
           background-size: 200% 100%;
           animation: borderBeam 2.8s linear infinite;
         }
@@ -647,14 +648,14 @@ export default function Landing() {
         <div className="flex items-center gap-2.5">
           <motion.div
             className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #7c3aed, #2563eb)" }}
+            style={{ background: "linear-gradient(135deg, #0891b2, #0284c7)" }}
             whileHover={{ rotate: [0, -8, 8, 0], scale: 1.1 }}
             transition={{ duration: 0.4 }}
           >
             <Terminal className="w-3.5 h-3.5 text-white" />
           </motion.div>
           <span className="font-mono font-bold text-sm tracking-tight">SpecForge</span>
-          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20">BETA</span>
+          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">BETA</span>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/app/specs">
@@ -665,9 +666,10 @@ export default function Landing() {
               History
             </motion.span>
           </Link>
+          <ThemeSwitcher compact />
           <Link href="/app">
             <MagneticButton className="inline-flex items-center gap-2 text-white text-sm font-mono px-4 py-2 rounded-xl transition-all"
-              style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)", boxShadow: "0 0 24px rgba(124,58,237,0.35)" } as React.CSSProperties}
+              style={{ background: "linear-gradient(135deg, #0891b2, #0369a1)", boxShadow: "0 0 24px rgba(0,180,216,0.3)" } as React.CSSProperties}
             >
               Launch App <ArrowRight className="w-3.5 h-3.5" />
             </MagneticButton>
@@ -684,15 +686,15 @@ export default function Landing() {
         {/* Gaming: floating code fragments drifting in background */}
         <FloatingCode />
         {/* GSAP morphing blobs in background */}
-        <MorphBlob size={600} color="rgba(124,58,237,0.12)" className="absolute -top-20 -left-32 pointer-events-none" />
-        <MorphBlob size={420} color="rgba(37,99,235,0.10)" className="absolute bottom-0 right-0 pointer-events-none" />
+        <MorphBlob size={600} color="rgba(0,180,216,0.10)" className="absolute -top-20 -left-32 pointer-events-none" />
+        <MorphBlob size={420} color="rgba(8,145,178,0.08)" className="absolute bottom-0 right-0 pointer-events-none" />
         {/* Lottie AI radar — floats top-right of hero */}
         <AIRadarPulse size={160} className="absolute top-28 right-8 md:right-16 opacity-60 pointer-events-none hidden md:block" />
 
         {/* Grid overlay */}
         <div className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: "linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px)",
+            backgroundImage: "linear-gradient(rgba(0,180,216,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,180,216,0.04) 1px, transparent 1px)",
             backgroundSize: "48px 48px",
             maskImage: "radial-gradient(ellipse 80% 70% at 50% 0%, black 30%, transparent 100%)",
           }}
@@ -707,7 +709,7 @@ export default function Landing() {
             initial={{ opacity: 0, scale: 0.85, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-purple-500/20 bg-purple-500/6 text-purple-300 text-xs font-mono mb-10 relative overflow-hidden"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/[0.06] text-cyan-300 text-xs font-mono mb-10 relative overflow-hidden"
           >
             <div className="absolute inset-x-0 bottom-0 h-px border-beam" />
             <Star className="w-3 h-3 fill-current" />
@@ -731,7 +733,7 @@ export default function Landing() {
                 animate={{ opacity: [1, 0] }}
                 transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
                 className="inline-block w-[3px] h-[0.82em] ml-1 align-middle rounded-sm"
-                style={{ background: "#a78bfa" }}
+                style={{ background: "#22d3ee" }}
               />
             </div>
             <motion.div
@@ -766,25 +768,25 @@ export default function Landing() {
               <MagneticButton>
                 <motion.div
                   className="relative inline-flex items-center gap-3 text-white font-mono text-base px-8 py-4 rounded-2xl overflow-hidden"
-                  style={{ background: "linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)" }}
+                  style={{ background: "linear-gradient(135deg, #0891b2 0%, #0369a1 100%)" }}
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
                 >
                   <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300"
-                    style={{ background: "linear-gradient(135deg, #6d28d9 0%, #3730a3 100%)" }}
+                    style={{ background: "linear-gradient(135deg, #0e7490 0%, #075985 100%)" }}
                   />
                   <Terminal className="w-4 h-4 relative z-10" />
                   <span className="relative z-10">Start Generating</span>
                   <ChevronRight className="w-4 h-4 relative z-10" />
                   <div className="absolute -inset-1 rounded-2xl opacity-60 blur-lg -z-10"
-                    style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)" }}
+                    style={{ background: "linear-gradient(135deg, #0891b2, #0369a1)" }}
                   />
                 </motion.div>
               </MagneticButton>
             </Link>
             <Link href="/app/specs">
               <motion.span
-                whileHover={{ scale: 1.03, borderColor: "rgba(139,92,246,0.4)" }}
+                whileHover={{ scale: 1.03, borderColor: "rgba(0,180,216,0.4)" }}
                 whileTap={{ scale: 0.97 }}
                 className="cursor-pointer inline-flex items-center gap-2 border border-white/10 bg-white/[0.04] hover:bg-white/[0.07] text-white/80 font-mono text-base px-8 py-4 rounded-2xl transition-colors"
               >
@@ -832,14 +834,14 @@ export default function Landing() {
             <LiveActivityTicker />
           </div>
           <div className="absolute -inset-8 rounded-3xl opacity-30 blur-3xl pointer-events-none -z-10"
-            style={{ background: "radial-gradient(ellipse, rgba(124,58,237,0.25) 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(ellipse, rgba(0,180,216,0.18) 0%, transparent 70%)" }}
           />
         </motion.div>
       </section>
 
       {/* ── Stats ──────────────────────────────────────────── */}
       <section className="relative py-16 overflow-hidden" style={{ borderTop: "1px solid rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 60% 100% at 50% 50%, rgba(124,58,237,0.05), transparent)" }} />
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 60% 100% at 50% 50%, rgba(0,180,216,0.04), transparent)" }} />
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center relative z-10">
           {[
             { val: 4,   suffix: " types", label: "Spec formats" },

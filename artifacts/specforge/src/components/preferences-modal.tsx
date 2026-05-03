@@ -96,9 +96,9 @@ export function PreferencesModal({ onClose }: Props) {
       <motion.div
         className="relative w-full max-w-xl max-h-[85vh] overflow-y-auto rounded-2xl flex flex-col"
         style={{
-          background: "rgba(10,10,18,0.98)",
-          border: "1px solid rgba(139,92,246,0.25)",
-          boxShadow: "0 0 60px rgba(139,92,246,0.15), 0 24px 48px rgba(0,0,0,0.6)",
+          background: "hsl(var(--card))",
+          border: "1px solid rgba(0,180,216,0.2)",
+          boxShadow: "0 0 60px rgba(0,180,216,0.1), 0 24px 48px rgba(0,0,0,0.6)",
         }}
         initial={{ opacity: 0, scale: 0.95, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -110,12 +110,12 @@ export function PreferencesModal({ onClose }: Props) {
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)" }}
+              style={{ background: "rgba(0,180,216,0.12)", border: "1px solid rgba(0,180,216,0.25)" }}
             >
-              <Brain className="w-4.5 h-4.5" style={{ color: "hsl(263,90%,70%)" }} />
+              <Brain className="w-4.5 h-4.5" style={{ color: "hsl(var(--primary))" }} />
             </div>
             <div>
-              <h2 className="text-base font-bold font-mono" style={{ color: "hsl(263,90%,80%)" }}>AI Memory</h2>
+              <h2 className="text-base font-bold font-mono" style={{ color: "hsl(var(--primary))" }}>AI Memory</h2>
               <p className="text-xs text-muted-foreground">Applied automatically to every spec you generate</p>
             </div>
           </div>
@@ -227,29 +227,38 @@ export function PreferencesModal({ onClose }: Props) {
                 <Palette className="w-3 h-3" /> Appearance
               </label>
 
-              {/* Accent color */}
+              {/* Theme picker */}
               <div className="space-y-2">
-                <p className="text-[10px] font-mono text-muted-foreground">Accent Color</p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {ACCENT_PRESETS.map(p => (
-                    <button
-                      key={p.hue}
-                      onClick={() => setTheme({ ...theme, accentHue: p.hue })}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all"
-                      style={theme.accentHue === p.hue ? {
-                        background: `${p.hex}22`,
-                        border: `1px solid ${p.hex}88`,
-                        color: p.hex,
-                      } : {
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        color: "hsl(var(--muted-foreground))",
-                      }}
-                    >
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: p.hex }} />
-                      {p.label}
-                    </button>
-                  ))}
+                <p className="text-[10px] font-mono text-muted-foreground">Color Theme</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {THEMES.map(t => {
+                    const active = theme.themeId === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => setTheme({ ...theme, themeId: t.id as ThemeId })}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-mono transition-all text-left"
+                        style={active ? {
+                          background: `${t.swatches[1]}18`,
+                          border: `1px solid ${t.swatches[1]}60`,
+                          color: t.swatches[1],
+                        } : {
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          color: "hsl(var(--muted-foreground))",
+                        }}
+                      >
+                        <span
+                          className="w-3 h-3 rounded-full shrink-0"
+                          style={{
+                            background: `linear-gradient(135deg, ${t.swatches[1]}, ${t.swatches[2]})`,
+                            boxShadow: active ? `0 0 6px ${t.swatches[1]}80` : "none",
+                          }}
+                        />
+                        <span>{t.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -265,9 +274,9 @@ export function PreferencesModal({ onClose }: Props) {
                       style={{
                         fontFamily: f.css,
                         ...(theme.font === f.value ? {
-                          background: "rgba(139,92,246,0.2)",
-                          border: "1px solid rgba(139,92,246,0.4)",
-                          color: "hsl(263,90%,74%)",
+                          background: "rgba(0,180,216,0.15)",
+                          border: "1px solid rgba(0,180,216,0.4)",
+                          color: "hsl(var(--primary))",
                         } : {
                           background: "rgba(255,255,255,0.03)",
                           border: "1px solid rgba(255,255,255,0.08)",
@@ -291,9 +300,9 @@ export function PreferencesModal({ onClose }: Props) {
                       onClick={() => setTheme({ ...theme, syntaxTheme: s.value })}
                       className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all"
                       style={theme.syntaxTheme === s.value ? {
-                        background: "rgba(139,92,246,0.2)",
-                        border: "1px solid rgba(139,92,246,0.4)",
-                        color: "hsl(263,90%,74%)",
+                        background: "rgba(0,180,216,0.15)",
+                        border: "1px solid rgba(0,180,216,0.4)",
+                        color: "hsl(var(--primary))",
                       } : {
                         background: "rgba(255,255,255,0.03)",
                         border: "1px solid rgba(255,255,255,0.08)",
@@ -322,8 +331,8 @@ export function PreferencesModal({ onClose }: Props) {
             style={{
               background: saved
                 ? "rgba(16,185,129,0.2)"
-                : "linear-gradient(135deg, rgba(139,92,246,0.8), rgba(99,102,241,0.7))",
-              border: saved ? "1px solid rgba(16,185,129,0.4)" : "1px solid rgba(139,92,246,0.5)",
+                : "linear-gradient(135deg, rgba(0,180,216,0.85), rgba(3,105,161,0.8))",
+              border: saved ? "1px solid rgba(16,185,129,0.4)" : "1px solid rgba(0,180,216,0.5)",
               color: saved ? "#10B981" : "white",
             }}
             whileHover={{ scale: 1.04 }}
