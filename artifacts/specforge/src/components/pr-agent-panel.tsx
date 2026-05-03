@@ -79,7 +79,7 @@ export function PrAgentPanel({ specId }: { specId: number }) {
         <GitPullRequest className="w-4 h-4" style={{ color: "#7C3AED" }} />
         <h3 className="text-sm font-semibold">PR Description Agent</h3>
         <span className="text-[10px] font-mono px-1.5 py-0.5 rounded ml-1"
-          style={{ background: "rgba(124,58,237,0.15)", color: "#a78bfa", border: "1px solid rgba(124,58,237,0.25)" }}
+          style={{ background: "rgba(0,180,216,0.12)", color: "#22d3ee", border: "1px solid rgba(0,180,216,0.22)" }}
         >
           AI
         </span>
@@ -153,7 +153,7 @@ export function PrAgentPanel({ specId }: { specId: number }) {
               <div className="flex-1 min-w-0">
                 <a href={result.prUrl} target="_blank" rel="noopener noreferrer"
                   className="text-xs font-semibold hover:underline flex items-center gap-1 truncate"
-                  style={{ color: "#a78bfa" }}
+                  style={{ color: "#22d3ee" }}
                 >
                   {result.prTitle} <ExternalLink className="w-3 h-3 shrink-0" />
                 </a>
@@ -224,9 +224,9 @@ export function PrAgentPanel({ specId }: { specId: number }) {
             {/* Generated description */}
             <div className="rounded-lg overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="flex items-center justify-between px-3 py-2"
-                style={{ background: "rgba(124,58,237,0.1)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+                style={{ background: "rgba(0,180,216,0.08)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
               >
-                <span className="text-xs font-mono font-bold" style={{ color: "#a78bfa" }}>GENERATED PR DESCRIPTION</span>
+                <span className="text-xs font-mono font-bold" style={{ color: "#22d3ee" }}>GENERATED PR DESCRIPTION</span>
                 <button onClick={handleCopy}
                   className="flex items-center gap-1 text-[11px] font-mono text-muted-foreground hover:text-foreground transition-colors"
                 >

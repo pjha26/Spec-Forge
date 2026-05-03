@@ -867,7 +867,7 @@ export default function Landing() {
       {/* ── How it works ────────────────────────────────────── */}
       <section className="py-28 px-6 relative">
         <div className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(124,58,237,0.06), transparent)" }}
+          style={{ background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,180,216,0.05), transparent)" }}
         />
 
         <div className="max-w-4xl mx-auto relative z-10">
@@ -876,7 +876,7 @@ export default function Landing() {
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              className="inline-block text-xs font-mono uppercase tracking-widest text-purple-400 mb-4 px-3 py-1 rounded-full border border-purple-500/20 bg-purple-500/5"
+              className="inline-block text-xs font-mono uppercase tracking-widest text-cyan-400 mb-4 px-3 py-1 rounded-full border border-cyan-500/20 bg-cyan-500/5"
             >
               How It Works
             </motion.div>
@@ -893,7 +893,7 @@ export default function Landing() {
           {/* Steps with connecting line — wrapped in GSAP stagger reveal */}
           <div className="relative space-y-6">
             <div className="hidden md:block absolute left-[calc(50%-0.5px)] top-10 bottom-10 w-px"
-              style={{ background: "linear-gradient(to bottom, transparent, rgba(124,58,237,0.5) 20%, rgba(124,58,237,0.5) 80%, transparent)" }}
+              style={{ background: "linear-gradient(to bottom, transparent, rgba(0,180,216,0.4) 20%, rgba(0,180,216,0.4) 80%, transparent)" }}
             />
 
             <GSAPScrollReveal stagger={0.18} y={56}>
@@ -907,14 +907,14 @@ export default function Landing() {
                   className={`flex items-center gap-6 ${i % 2 === 1 ? "md:flex-row-reverse" : ""}`}
                 >
                   <TiltCard className={`flex-1 p-6 ${i % 2 === 1 ? "md:text-right" : ""}`}>
-                    <span className="font-mono text-5xl font-bold" style={{ color: "rgba(124,58,237,0.22)" }}>{s.n}</span>
+                    <span className="font-mono text-5xl font-bold" style={{ color: "rgba(0,180,216,0.2)" }}>{s.n}</span>
                     <h3 className="text-xl font-bold mt-1 mb-2">{s.title}</h3>
                     <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{s.desc}</p>
                   </TiltCard>
 
                   <motion.div
                     className="hidden md:flex w-12 h-12 rounded-full items-center justify-center shrink-0 relative z-10 font-mono font-bold text-sm text-white"
-                    style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)", boxShadow: "0 0 28px rgba(124,58,237,0.5)" }}
+                    style={{ background: "linear-gradient(135deg, #0891b2, #0369a1)", boxShadow: "0 0 28px rgba(0,180,216,0.4)" }}
                     whileHover={{ scale: 1.2 }}
                     transition={{ type: "spring", stiffness: 400 }}
                   >
@@ -937,7 +937,7 @@ export default function Landing() {
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              className="inline-block text-xs font-mono uppercase tracking-widest text-purple-400 mb-4 px-3 py-1 rounded-full border border-purple-500/20 bg-purple-500/5"
+              className="inline-block text-xs font-mono uppercase tracking-widest text-cyan-400 mb-4 px-3 py-1 rounded-full border border-cyan-500/20 bg-cyan-500/5"
             >
               Spec Types
             </motion.div>
@@ -948,7 +948,7 @@ export default function Landing() {
 
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { emoji: "⚙️", label: "System Design",   desc: "Architecture, component interactions, data flow", color: "#7c3aed" },
+              { emoji: "⚙️", label: "System Design",   desc: "Architecture, component interactions, data flow", color: "#0891b2" },
               { emoji: "🔗", label: "API Design",       desc: "Endpoints, auth, request/response schemas",       color: "#2563eb" },
               { emoji: "🗄️", label: "Database Schema", desc: "Tables, relationships, indexes, constraints",    color: "#059669" },
               { emoji: "📋", label: "Feature Spec",     desc: "User stories, acceptance criteria, edge cases",  color: "#d97706" },
@@ -986,7 +986,7 @@ export default function Landing() {
           <motion.div
             className="absolute w-[700px] h-[700px] rounded-full"
             style={{
-              background: "radial-gradient(circle, hsl(270,100%,55%) 0%, transparent 70%)",
+              background: "radial-gradient(circle, hsl(191,100%,40%) 0%, transparent 70%)",
               left: "50%", top: "50%",
               x: "-50%", y: "-50%",
               opacity: 0.12,
@@ -1007,7 +1007,7 @@ export default function Landing() {
           <div
             className="absolute inset-0"
             style={{
-              backgroundImage: "linear-gradient(rgba(139,92,246,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.035) 1px, transparent 1px)",
+              backgroundImage: "linear-gradient(rgba(0,180,216,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,180,216,0.03) 1px, transparent 1px)",
               backgroundSize: "48px 48px",
             }}
           />
@@ -1051,7 +1051,7 @@ export default function Landing() {
               <MagneticButton>
                 <motion.div
                   className="relative inline-flex items-center gap-3 text-white font-mono text-lg px-10 py-5 rounded-2xl overflow-hidden"
-                  style={{ background: "linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)" }}
+                  style={{ background: "linear-gradient(135deg, #0891b2 0%, #0369a1 100%)" }}
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
                 >
@@ -1059,7 +1059,7 @@ export default function Landing() {
                   Generate Free Spec
                   <ArrowRight className="w-4 h-4" />
                   <div className="absolute -inset-1 rounded-2xl blur-xl -z-10 opacity-70"
-                    style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)" }}
+                    style={{ background: "linear-gradient(135deg, #0891b2, #0369a1)" }}
                   />
                 </motion.div>
               </MagneticButton>
@@ -1071,7 +1071,7 @@ export default function Landing() {
       {/* ── Footer ─────────────────────────────────────────── */}
       <footer className="px-6 py-8 border-t border-white/4 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2 font-mono text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
-          <div className="w-5 h-5 rounded bg-purple-600 flex items-center justify-center">
+          <div className="w-5 h-5 rounded bg-cyan-700 flex items-center justify-center">
             <Terminal className="w-2.5 h-2.5 text-white" />
           </div>
           SpecForge — AI technical documentation

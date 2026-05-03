@@ -49,7 +49,7 @@ interface TeamDetail {
 const ROLE_META: Record<string, { label: string; color: string; Icon: React.ComponentType<{ className?: string }> }> = {
   owner:   { label: "Owner",   color: "#F59E0B", Icon: Crown  },
   editor:  { label: "Editor",  color: "#06B6D4", Icon: Edit3  },
-  auditor: { label: "Auditor", color: "#A78BFA", Icon: Shield },
+  auditor: { label: "Auditor", color: "#22D3EE", Icon: Shield },
   viewer:  { label: "Viewer",  color: "#6B7280", Icon: Eye    },
 };
 
@@ -221,7 +221,7 @@ export default function TeamDetail() {
                 value={nameDraft}
                 onChange={e => setNameDraft(e.target.value)}
                 autoFocus
-                className="flex-1 max-w-xs rounded-lg px-3 py-1.5 text-lg font-bold bg-black/40 border border-purple-500/40 outline-none"
+                className="flex-1 max-w-xs rounded-lg px-3 py-1.5 text-lg font-bold bg-black/40 border border-cyan-500/40 outline-none"
               />
               <button onClick={handleSaveName} disabled={savingName} className="p-1.5 rounded text-green-400 hover:bg-green-500/10">
                 {savingName ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
@@ -261,9 +261,9 @@ export default function TeamDetail() {
               onClick={() => setActiveTab(tab.id)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all"
               style={active ? {
-                background: "rgba(124,58,237,0.25)",
-                border: "1px solid rgba(124,58,237,0.35)",
-                color: "hsl(263,90%,74%)",
+                background: "rgba(0,180,216,0.18)",
+                border: "1px solid rgba(0,180,216,0.3)",
+                color: "hsl(191,100%,65%)",
               } : {
                 background: "transparent",
                 border: "1px solid transparent",
@@ -274,7 +274,7 @@ export default function TeamDetail() {
               {tab.label}
               {tab.id === "knowledge" && (
                 <span className="ml-0.5 px-1 py-0.5 rounded text-[9px] font-bold"
-                  style={{ background: "rgba(139,92,246,0.2)", color: "hsl(263,90%,74%)" }}
+                  style={{ background: "rgba(0,180,216,0.15)", color: "hsl(191,100%,65%)" }}
                 >
                   RAG
                 </span>
@@ -298,7 +298,7 @@ export default function TeamDetail() {
                 <button
                   onClick={() => setShowInvite(v => !v)}
                   className="text-[10px] font-mono font-bold px-2 py-1 rounded flex items-center gap-1 transition-colors"
-                  style={{ color: "hsl(263,90%,74%)", background: "rgba(124,58,237,0.12)" }}
+                  style={{ color: "hsl(191,100%,65%)", background: "rgba(0,180,216,0.1)" }}
                 >
                   <Plus className="w-2.5 h-2.5" /> ADD
                 </button>
@@ -307,21 +307,21 @@ export default function TeamDetail() {
 
             {showInvite && (
               <form onSubmit={handleInvite} className="mb-4 space-y-2 p-3 rounded-lg"
-                style={{ background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.2)" }}
+                style={{ background: "rgba(0,180,216,0.05)", border: "1px solid rgba(0,180,216,0.18)" }}
               >
-                <p className="text-[10px] font-mono text-purple-300 font-bold">ADD BY REPLIT USER ID</p>
+                <p className="text-[10px] font-mono text-cyan-400 font-bold">ADD BY REPLIT USER ID</p>
                 <input
                   value={inviteId}
                   onChange={e => setInviteId(e.target.value)}
                   placeholder="Replit user ID *"
                   autoFocus
-                  className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-black/40 border border-border outline-none focus:border-purple-500/50"
+                  className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-black/40 border border-border outline-none focus:border-cyan-500/50"
                 />
                 <input
                   value={inviteUsername}
                   onChange={e => setInviteUsername(e.target.value)}
                   placeholder="Display name (optional)"
-                  className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-black/40 border border-border outline-none focus:border-purple-500/50"
+                  className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-black/40 border border-border outline-none focus:border-cyan-500/50"
                 />
                 <select
                   value={inviteRole}
@@ -336,7 +336,7 @@ export default function TeamDetail() {
                   <button type="button" onClick={() => setShowInvite(false)} className="text-[10px] font-mono text-muted-foreground hover:text-foreground px-2 py-1">Cancel</button>
                   <button type="submit" disabled={inviting || !inviteId.trim()}
                     className="text-[10px] font-mono font-bold px-3 py-1 rounded transition-colors disabled:opacity-50"
-                    style={{ background: "rgba(124,58,237,0.25)", color: "hsl(263,90%,74%)" }}
+                    style={{ background: "rgba(0,180,216,0.2)", color: "hsl(191,100%,65%)" }}
                   >
                     {inviting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Add"}
                   </button>
@@ -416,9 +416,9 @@ export default function TeamDetail() {
                       style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}
                     >
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.2)" }}
+                        style={{ background: "rgba(0,180,216,0.1)", border: "1px solid rgba(0,180,216,0.18)" }}
                       >
-                        <SpecIcon className="w-3.5 h-3.5" style={{ color: "hsl(263,90%,74%)" } as React.CSSProperties} />
+                        <SpecIcon className="w-3.5 h-3.5" style={{ color: "hsl(191,100%,65%)" } as React.CSSProperties} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold truncate">{spec.title}</p>

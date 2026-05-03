@@ -93,11 +93,11 @@ export default function SharePage() {
           {/* Logo */}
           <a href="/" className="flex items-center gap-2 shrink-0">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.3), rgba(6,182,212,0.2))", border: "1px solid rgba(139,92,246,0.3)" }}
+              style={{ background: "linear-gradient(135deg, rgba(0,180,216,0.25), rgba(56,189,248,0.15))", border: "1px solid rgba(0,180,216,0.25)" }}
             >
-              <Zap className="w-3.5 h-3.5" style={{ color: "hsl(263,90%,70%)" }} />
+              <Zap className="w-3.5 h-3.5" style={{ color: "hsl(191,100%,52%)" }} />
             </div>
-            <span className="text-sm font-mono font-bold" style={{ color: "hsl(263,90%,74%)" }}>SpecForge</span>
+            <span className="text-sm font-mono font-bold" style={{ color: "hsl(191,100%,65%)" }}>SpecForge</span>
           </a>
 
           <div className="h-4 w-px" style={{ background: "rgba(255,255,255,0.1)" }} />

@@ -357,7 +357,7 @@ export default function SpecDetail() {
             </>
           )}
 
-          <Button variant="outline" size="sm" onClick={handleShare} disabled={isSharing} className="font-mono text-xs border-purple-500/30 text-purple-400 hover:bg-purple-500/10">
+          <Button variant="outline" size="sm" onClick={handleShare} disabled={isSharing} className="font-mono text-xs border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
             {isSharing ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Share2 className="w-3 h-3 mr-2" />}
             SHARE
           </Button>
@@ -390,12 +390,12 @@ export default function SpecDetail() {
             onClick={() => setShowScaffold(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-bold"
             style={{
-              background: "linear-gradient(135deg, rgba(139,92,246,0.25), rgba(6,182,212,0.15))",
-              border: "1px solid rgba(139,92,246,0.4)",
-              color: "hsl(263,90%,74%)",
-              boxShadow: "0 0 14px rgba(139,92,246,0.2)",
+              background: "linear-gradient(135deg, rgba(0,180,216,0.2), rgba(56,189,248,0.12))",
+              border: "1px solid rgba(0,180,216,0.35)",
+              color: "hsl(191,100%,65%)",
+              boxShadow: "0 0 14px rgba(0,180,216,0.18)",
             }}
-            whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(139,92,246,0.4)" } as any}
+            whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(0,180,216,0.35)" } as any}
             whileTap={{ scale: 0.95 }}
           >
             <Code2 className="w-3 h-3" />
@@ -409,16 +409,16 @@ export default function SpecDetail() {
       <AnimatePresence>
         {shareData && (
           <motion.div
-            className="print-hide bg-purple-500/10 border-b border-purple-500/20 px-6 py-2 flex items-center gap-3 text-xs font-mono"
+            className="print-hide bg-cyan-500/10 border-b border-cyan-500/20 px-6 py-2 flex items-center gap-3 text-xs font-mono"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 35 }}
           >
-            <Share2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-            <span className="text-purple-300 shrink-0">Share link copied:</span>
+            <Share2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <span className="text-cyan-300 shrink-0">Share link copied:</span>
             <span className="text-muted-foreground truncate">{shareData.shareUrl}</span>
-            <button onClick={() => navigator.clipboard.writeText(shareData.shareUrl).then(() => toast({ title: "Copied!" }))} className="ml-auto text-purple-400 hover:text-purple-300 shrink-0">Copy again</button>
+            <button onClick={() => navigator.clipboard.writeText(shareData.shareUrl).then(() => toast({ title: "Copied!" }))} className="ml-auto text-cyan-400 hover:text-cyan-300 shrink-0">Copy again</button>
             <button onClick={() => setShareData(null)} className="text-muted-foreground hover:text-foreground shrink-0">✕</button>
           </motion.div>
         )}
@@ -605,11 +605,11 @@ export default function SpecDetail() {
               <div className="flex items-center gap-2 px-4 py-3"
                 style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
               >
-                <History className="w-3.5 h-3.5" style={{ color: "hsl(263,90%,70%)" }} />
+                <History className="w-3.5 h-3.5" style={{ color: "hsl(191,100%,52%)" }} />
                 <h3 className="text-xs font-mono font-bold text-foreground flex-1">Version History</h3>
                 {versions.length > 0 && (
                   <span className="text-[10px] font-mono px-1.5 py-0.5 rounded"
-                    style={{ background: "rgba(139,92,246,0.15)", color: "hsl(263,90%,70%)" }}
+                    style={{ background: "rgba(0,180,216,0.12)", color: "hsl(191,100%,65%)" }}
                   >
                     {versions.length}
                   </span>

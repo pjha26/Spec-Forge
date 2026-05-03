@@ -36,9 +36,9 @@ export const SPEC_TEMPLATES: SpecTemplate[] = [
     specType: "system_design",
     tags: ["Node.js", "PostgreSQL", "Stripe", "Redis", "JWT"],
     icon: Server,
-    color: "#8B5CF6",
-    gradient: "linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.1))",
-    border: "rgba(139,92,246,0.35)",
+    color: "#0891b2",
+    gradient: "linear-gradient(135deg, rgba(0,180,216,0.18), rgba(56,189,248,0.08))",
+    border: "rgba(0,180,216,0.35)",
   },
   {
     id: "mobile-app",
@@ -155,7 +155,7 @@ export const SPEC_TEMPLATES: SpecTemplate[] = [
     tags: ["Kubernetes", "Kafka", "gRPC", "Kong", "OpenTelemetry"],
     icon: Layers,
     color: "#6366F1",
-    gradient: "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.1))",
+    gradient: "linear-gradient(135deg, rgba(0,180,216,0.18), rgba(56,189,248,0.08))",
     border: "rgba(99,102,241,0.35)",
   },
   {
@@ -244,8 +244,8 @@ export function SpecTemplatesModal({ onClose, onSelect }: SpecTemplatesModalProp
         className="relative w-full max-w-5xl max-h-[88vh] rounded-2xl overflow-hidden flex flex-col"
         style={{
           background: "linear-gradient(180deg, #0d0d18 0%, #090910 100%)",
-          border: "1px solid rgba(139,92,246,0.25)",
-          boxShadow: "0 32px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(139,92,246,0.08)",
+          border: "1px solid rgba(0,180,216,0.2)",
+          boxShadow: "0 32px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(0,180,216,0.06)",
         }}
         initial={{ scale: 0.88, opacity: 0, y: 28 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -265,11 +265,11 @@ export function SpecTemplatesModal({ onClose, onSelect }: SpecTemplatesModalProp
           >
             <div className="w-9 h-9 rounded-xl flex items-center justify-center"
               style={{
-                background: "linear-gradient(135deg, rgba(139,92,246,0.3), rgba(6,182,212,0.15))",
-                border: "1px solid rgba(139,92,246,0.4)",
+                background: "linear-gradient(135deg, rgba(0,180,216,0.25), rgba(56,189,248,0.15))",
+                border: "1px solid rgba(0,180,216,0.35)",
               }}
             >
-              <Sparkles className="w-4 h-4" style={{ color: "hsl(263,90%,74%)" }} />
+              <Sparkles className="w-4 h-4" style={{ color: "hsl(191,100%,65%)" }} />
             </div>
             <div>
               <p className="text-sm font-bold text-white">Quick-start Templates</p>

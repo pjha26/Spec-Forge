@@ -120,21 +120,21 @@ function ConflictCard({
               )}
               {conflict.suggestion && (
                 <div className="p-2 rounded text-[11px]"
-                  style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.2)" }}
+                  style={{ background: "rgba(0,180,216,0.06)", border: "1px solid rgba(0,180,216,0.18)" }}
                 >
-                  <span className="font-mono text-[9px] text-violet-400 font-bold uppercase tracking-wider block mb-1">Suggestion</span>
+                  <span className="font-mono text-[9px] text-cyan-400 font-bold uppercase tracking-wider block mb-1">Suggestion</span>
                   <span className="text-muted-foreground">{conflict.suggestion}</span>
                 </div>
               )}
               <div className="flex items-center gap-2">
                 <a href={`/app/specs/${conflict.spec1Id}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground hover:text-violet-400 transition-colors"
+                  className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground hover:text-cyan-400 transition-colors"
                 >
                   <LinkIcon className="w-2.5 h-2.5" /> Spec #{conflict.spec1Id}
                 </a>
                 <span className="text-muted-foreground">·</span>
                 <a href={`/app/specs/${conflict.spec2Id}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground hover:text-violet-400 transition-colors"
+                  className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground hover:text-cyan-400 transition-colors"
                 >
                   <LinkIcon className="w-2.5 h-2.5" /> Spec #{conflict.spec2Id}
                 </a>
@@ -252,7 +252,7 @@ export function SpecConflictsPanel({ teamId }: { teamId: number }) {
           <button key={f} onClick={() => setFilter(f)}
             className="flex-1 py-1 text-[11px] font-mono rounded-md transition-all capitalize"
             style={filter === f ? {
-              background: "rgba(139,92,246,0.2)", color: "hsl(263,90%,74%)", border: "1px solid rgba(139,92,246,0.3)"
+              background: "rgba(0,180,216,0.15)", color: "hsl(191,100%,65%)", border: "1px solid rgba(0,180,216,0.28)"
             } : { color: "hsl(var(--muted-foreground))", border: "1px solid transparent" }}
           >{f}</button>
         ))}

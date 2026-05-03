@@ -45,7 +45,7 @@ function Scanlines() {
 }
 
 // ── Corner brackets on active nav item ────────────────────────────────────────
-function CornerBrackets({ color = "#7c3aed" }: { color?: string }) {
+function CornerBrackets({ color = "#0891b2" }: { color?: string }) {
   return (
     <>
       <span className="absolute top-0.5 left-0.5 w-2 h-2 pointer-events-none"
@@ -312,8 +312,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, [justOpened]);
 
   const navItems = [
-    { href: "/app",            label: "Generator",    icon: FileCode2, exact: true,  color: "#7c3aed" },
-    { href: "/app/specs",      label: "History",      icon: History,   exact: false, color: "#7c3aed" },
+    { href: "/app",            label: "Generator",    icon: FileCode2, exact: true,  color: "#0891b2" },
+    { href: "/app/specs",      label: "History",      icon: History,   exact: false, color: "#0891b2" },
     { href: "/app/search",     label: "Search",       icon: Search,    exact: false, color: "#06b6d4" },
     { href: "/app/graph",      label: "Dep Graph",    icon: Network,   exact: false, color: "#10b981" },
     { href: "/app/teams",      label: "Teams",        icon: Users,     exact: false, color: "#f59e0b" },
@@ -338,10 +338,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
           to   { transform: rotate(360deg); }
         }
         @keyframes rgbBorder {
-          0%   { border-color: #7c3aed; box-shadow: 0 0 8px #7c3aed40; }
+          0%   { border-color: #00b4d8; box-shadow: 0 0 8px #00b4d840; }
           33%  { border-color: #06b6d4; box-shadow: 0 0 8px #06b6d440; }
           66%  { border-color: #10b981; box-shadow: 0 0 8px #10b98140; }
-          100% { border-color: #7c3aed; box-shadow: 0 0 8px #7c3aed40; }
+          100% { border-color: #00b4d8; box-shadow: 0 0 8px #00b4d840; }
         }
         @keyframes sweepScan {
           0%   { left: -100%; }
@@ -394,8 +394,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       >
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono"
           style={{
-            background: "rgba(139,92,246,0.9)", backdropFilter: "blur(12px)",
-            boxShadow: "0 4px 24px rgba(139,92,246,0.4)", color: "white",
+            background: "rgba(0,180,216,0.9)", backdropFilter: "blur(12px)",
+            boxShadow: "0 4px 24px rgba(0,180,216,0.4)", color: "white",
           }}
         >
           <Sparkles className="w-3 h-3" />
@@ -409,8 +409,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         className="w-full md:w-64 flex flex-col relative overflow-hidden shrink-0"
         style={{
           background: "linear-gradient(180deg, hsl(240,20%,4%) 0%, hsl(240,18%,5%) 100%)",
-          borderRight: "1px solid rgba(124,58,237,0.18)",
-          boxShadow: "4px 0 40px rgba(124,58,237,0.08)",
+          borderRight: "1px solid rgba(0,180,216,0.15)",
+          boxShadow: "4px 0 40px rgba(0,180,216,0.06)",
         }}
       >
         <HexGrid />
@@ -420,7 +420,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* Top energy line */}
         <div className="absolute top-0 left-0 right-0 h-px z-10"
           style={{
-            background: "linear-gradient(90deg, transparent, #7c3aed, #06b6d4, #7c3aed, transparent)",
+            background: "linear-gradient(90deg, transparent, #00b4d8, #38bdf8, #00b4d8, transparent)",
             animation: "borderSweep 4s linear infinite",
             backgroundSize: "300% 100%",
           }}
@@ -430,7 +430,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Link href="/">
           <div
             className="p-5 flex items-center gap-3 relative cursor-pointer group"
-            style={{ borderBottom: "1px solid rgba(124,58,237,0.12)" }}
+            style={{ borderBottom: "1px solid rgba(0,180,216,0.1)" }}
             onClick={spark}
           >
             <div className="relative shrink-0">
@@ -438,8 +438,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center relative z-10 transition-all duration-200 group-hover:scale-110"
                 style={{
-                  background: "linear-gradient(135deg, hsl(263,90%,55%) 0%, hsl(213,90%,55%) 100%)",
-                  boxShadow: "0 0 20px rgba(124,58,237,0.6), 0 4px 12px rgba(0,0,0,0.4)",
+                  background: "linear-gradient(135deg, hsl(191,100%,35%) 0%, hsl(210,90%,45%) 100%)",
+                  boxShadow: "0 0 20px rgba(0,180,216,0.5), 0 4px 12px rgba(0,0,0,0.4)",
                   animation: "pulseGlow 2.5s ease-in-out infinite",
                 }}
               >
@@ -451,8 +451,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div
                 className="text-[9px] font-mono px-1.5 py-0.5 rounded-sm inline-block"
                 style={{
-                  background: "rgba(124,58,237,0.15)", color: "hsl(263,90%,74%)",
-                  border: "1px solid rgba(124,58,237,0.3)",
+                  background: "rgba(0,180,216,0.12)", color: "hsl(191,100%,65%)",
+                  border: "1px solid rgba(0,180,216,0.25)",
                   animation: "flickerIn 1.2s ease forwards",
                 }}
               >
@@ -574,9 +574,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="pt-5">
                 <div className="flex items-center justify-between px-3 mb-2">
                   <div className="flex items-center gap-2">
-                    <Activity className="w-2.5 h-2.5" style={{ color: "rgba(124,58,237,0.6)" }} />
+                    <Activity className="w-2.5 h-2.5" style={{ color: "rgba(0,180,216,0.6)" }} />
                     <span className="text-[9px] font-mono font-bold uppercase tracking-widest"
-                      style={{ color: "rgba(124,58,237,0.6)" }}>
+                      style={{ color: "rgba(0,180,216,0.6)" }}>
                       Recent
                     </span>
                   </div>
@@ -592,7 +592,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <div className="mx-3 mb-2 h-px relative overflow-hidden">
                   <div style={{
                     position: "absolute", inset: 0,
-                    background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.5), rgba(6,182,212,0.3), transparent)",
+                    background: "linear-gradient(90deg, transparent, rgba(0,180,216,0.4), rgba(56,189,248,0.25), transparent)",
                     animation: "borderSweep 3s linear infinite",
                     backgroundSize: "300% 100%",
                   }} />
@@ -648,14 +648,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="px-3 py-2 rounded-lg mx-0"
               style={{ border: "1px solid rgba(255,255,255,0.04)", background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center gap-1.5 mb-1.5">
-                <Shield className="w-2.5 h-2.5" style={{ color: "rgba(124,58,237,0.6)" }} />
-                <span className="text-[8px] font-mono uppercase tracking-widest" style={{ color: "rgba(124,58,237,0.6)" }}>
+                <Shield className="w-2.5 h-2.5" style={{ color: "rgba(0,180,216,0.6)" }} />
+                <span className="text-[8px] font-mono uppercase tracking-widest" style={{ color: "rgba(0,180,216,0.6)" }}>
                   System Status
                 </span>
               </div>
               {[
                 { label: "API", value: 98, color: "#22c55e" },
-                { label: "AI", value: 100, color: "#7c3aed" },
+                { label: "AI", value: 100, color: "#00b4d8" },
                 { label: "DB", value: 95, color: "#06b6d4" },
               ].map(({ label, value, color }) => (
                 <div key={label} className="flex items-center gap-2 mb-1">
@@ -671,18 +671,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* ── AI Assistant button ── */}
-        <div className="p-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(124,58,237,0.1)" }}>
+        <div className="p-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(0,180,216,0.08)" }}>
           <NotificationBell />
           <button
             onClick={() => { setAiOpen(true); }}
             className="flex-1 flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-mono text-xs relative overflow-hidden group transition-all duration-200"
             style={{
               background: aiOpen
-                ? "linear-gradient(135deg, rgba(124,58,237,0.3) 0%, rgba(6,182,212,0.2) 100%)"
-                : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(6,182,212,0.08) 100%)",
-              border: aiOpen ? "1px solid rgba(124,58,237,0.6)" : "1px solid rgba(124,58,237,0.25)",
-              color: "hsl(263,90%,74%)",
-              boxShadow: aiOpen ? "0 0 24px rgba(124,58,237,0.35), inset 0 0 20px rgba(124,58,237,0.05)" : "0 0 12px rgba(124,58,237,0.1)",
+                ? "linear-gradient(135deg, rgba(0,180,216,0.25) 0%, rgba(56,189,248,0.15) 100%)"
+                : "linear-gradient(135deg, rgba(0,180,216,0.1) 0%, rgba(56,189,248,0.06) 100%)",
+              border: aiOpen ? "1px solid rgba(0,180,216,0.6)" : "1px solid rgba(0,180,216,0.22)",
+              color: "hsl(191,100%,65%)",
+              boxShadow: aiOpen ? "0 0 24px rgba(0,180,216,0.3), inset 0 0 20px rgba(0,180,216,0.04)" : "0 0 12px rgba(0,180,216,0.08)",
               animation: "rgbBorder 4s linear infinite",
             }}
           >
@@ -807,7 +807,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0 line-grid-bg opacity-40" />
           <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full"
-            style={{ background: "radial-gradient(circle, rgba(124,58,237,0.04) 0%, transparent 70%)" }} />
+            style={{ background: "radial-gradient(circle, rgba(0,180,216,0.03) 0%, transparent 70%)" }} />
           <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full"
             style={{ background: "radial-gradient(circle, rgba(6,182,212,0.03) 0%, transparent 70%)" }} />
         </div>
