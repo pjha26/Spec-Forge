@@ -10,6 +10,7 @@ import {
   Terminal, ArrowRight, Github, Zap, Network, Bot,
   ChevronRight, Star, Shield, GitBranch, Layers,
 } from "lucide-react";
+import { SpecForgeLogo } from "@/components/spec-forge-logo";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import {
   ScrambleText, HorizontalScroll, MorphBlob,

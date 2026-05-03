@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  Zap, FileCode2, History, LogIn, LogOut, User, Sparkles,
+  FileCode2, History, LogIn, LogOut, User, Sparkles,
   Server, Code2, Database, BookOpen, ChevronRight, Users,
   Search, Network, PlugZap, Terminal, Activity, Shield,
 } from "lucide-react";
+import { SpecForgeLogo } from "@/components/spec-forge-logo";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -429,36 +430,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* ── Logo ── */}
         <Link href="/">
           <div
-            className="p-5 flex items-center gap-3 relative cursor-pointer group"
+            className="p-4 px-5 flex items-center gap-0 relative cursor-pointer group"
             style={{ borderBottom: "1px solid rgba(0,180,216,0.1)" }}
             onClick={spark}
           >
-            <div className="relative shrink-0">
-              <EnergyRing />
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center relative z-10 transition-all duration-200 group-hover:scale-110"
-                style={{
-                  background: "linear-gradient(135deg, hsl(191,100%,35%) 0%, hsl(210,90%,45%) 100%)",
-                  boxShadow: "0 0 20px rgba(0,180,216,0.5), 0 4px 12px rgba(0,0,0,0.4)",
-                  animation: "pulseGlow 2.5s ease-in-out infinite",
-                }}
-              >
-                <Zap className="w-4 h-4 text-white fill-white" style={{ animation: "hueRotate 6s linear infinite" }} />
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <GlitchLogo text="SpecForge" />
-              <div
-                className="text-[9px] font-mono px-1.5 py-0.5 rounded-sm inline-block"
-                style={{
-                  background: "rgba(0,180,216,0.12)", color: "hsl(191,100%,65%)",
-                  border: "1px solid rgba(0,180,216,0.25)",
-                  animation: "flickerIn 1.2s ease forwards",
-                }}
-              >
-                BETA
-              </div>
-            </div>
+            <SpecForgeLogo size={38} showBeta textSize="text-sm" />
             {/* System status line */}
             <div className="absolute bottom-0 left-5 right-5 flex items-center gap-1.5 pb-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               <StatusDot color="#22c55e" />

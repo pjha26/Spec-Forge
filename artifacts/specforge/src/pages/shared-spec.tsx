@@ -6,7 +6,6 @@ import remarkGfm from "remark-gfm";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
 import { ComplexityScoreCard } from "@/components/complexity-score-card";
 import {
-  Terminal,
   FileCode2,
   Network,
   ArrowLeft,
@@ -21,6 +20,7 @@ import {
   Database,
   BookOpen,
 } from "lucide-react";
+import { SpecForgeLogo } from "@/components/spec-forge-logo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
