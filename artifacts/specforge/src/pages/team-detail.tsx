@@ -193,12 +193,14 @@ export default function TeamDetail() {
   const isOwner = team.role === "owner";
   const canEdit = team.role !== "viewer";
 
-  const TABS: { id: ActiveTab; label: string; Icon: React.ComponentType<{ className?: string }>; badge?: string; ownerOnly?: boolean }[] = [
+  type TabDef = { id: ActiveTab; label: string; Icon: React.ComponentType<{ className?: string }>; badge?: string; ownerOnly?: boolean };
+  const ALL_TABS: TabDef[] = [
     { id: "overview",  label: "Members & Specs", Icon: Users       },
     { id: "knowledge", label: "Knowledge Base",  Icon: BookMarked, badge: "RAG" },
     { id: "audit",     label: "Audit Log",       Icon: ScrollText, ownerOnly: true },
     { id: "settings",  label: "Settings",        Icon: Settings,   ownerOnly: true },
-  ].filter(t => !t.ownerOnly || isOwner);
+  ];
+  const TABS = ALL_TABS.filter((t): t is TabDef => !t.ownerOnly || isOwner);
 
   return (
     <div className="flex-1 overflow-auto p-6 max-w-5xl mx-auto w-full space-y-6">

@@ -16,7 +16,7 @@ interface AuditLog {
   createdAt: string;
 }
 
-const ACTION_META: Record<string, { label: string; color: string; Icon: React.ComponentType<{ className?: string }> }> = {
+const ACTION_META: Record<string, { label: string; color: string; Icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }> = {
   "spec.created":           { label: "Spec Created",         color: "#7C3AED", Icon: FileText  },
   "spec.generated":         { label: "Spec Generated",       color: "#7C3AED", Icon: FileText  },
   "spec.deleted":           { label: "Spec Deleted",         color: "#EF4444", Icon: Trash2    },

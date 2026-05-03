@@ -2,6 +2,8 @@
 
 **AI-powered technical design document generator for developers, students, and hackathon builders.**
 
+🚀 **Live demo:** https://b5e088a1-2cb8-4fdf-9fc1-e01d147b6abc-00-2dfglx25tu9s.sisko.replit.dev/
+
 Drop in a GitHub URL or describe your project in plain text and SpecForge instantly produces a professional, structured technical specification — system design, API contracts, database schemas, or feature specs — powered by your choice of Claude, GPT, or Gemini.
 
 ---
