@@ -38,6 +38,7 @@ AI-powered technical design document generator. Drop in a GitHub URL, text descr
 19. **Team Workspaces** — `teams` + `team_members` tables; full CRUD; specs assignable to teams
 20. **Multi-model AI** — Claude Sonnet, GPT-5.4, GPT-5.1, Gemini 2.5 Pro/Flash
 21. **Notion Export** — `POST /api/specs/:id/export/notion` converts spec to Notion blocks via REST API using `NOTION_API_KEY` secret
+22. **Team RAG Knowledge Base** — Teams upload past specs, ADRs, and decision docs to a `team_knowledge` table; `retrieveTeamKnowledge()` scores docs by keyword overlap with the incoming spec query and injects the top results (up to 6k chars) into every generation prompt as `[Team Knowledge Base]` context; ADRs and decision docs get a relevance boost; accessible via "Knowledge Base" tab in team detail; file upload (.md/.txt) and paste supported; 5 doc types: ADR, Spec, Decision, Runbook, Other
 
 ## Routes
 
@@ -76,6 +77,9 @@ AI-powered technical design document generator. Drop in a GitHub URL, text descr
 - `GET /notifications/stream` — SSE notification stream
 - `PUT /notifications/read-all` — mark all read
 - `PUT /notifications/:id/read` — mark single read
+- `GET /teams/:id/knowledge` — list team knowledge docs (with excerpts)
+- `POST /teams/:id/knowledge` — upload a knowledge doc (title, content, docType: spec|adr|decision|runbook|doc)
+- `DELETE /teams/:id/knowledge/:docId` — delete a knowledge doc
 
 ## DB Schema
 
@@ -86,6 +90,7 @@ AI-powered technical design document generator. Drop in a GitHub URL, text descr
 - `notifications` — in-app notifications
 - `spec_versions` — version snapshots
 - `teams` + `team_members` — team workspaces
+- `team_knowledge` — teamId, title, content, docType (spec|adr|decision|runbook|doc), wordCount, uploadedBy, createdAt
 
 ## Key Files
 
@@ -99,6 +104,10 @@ AI-powered technical design document generator. Drop in a GitHub URL, text descr
 - `artifacts/specforge/src/components/multi-agent-progress.tsx` — per-agent live progress panel
 - `artifacts/specforge/src/pages/home.tsx` — Generator page with all new toggles
 - `artifacts/specforge/src/index.css` — `@media print` styles for PDF export
+- `lib/db/src/schema/team-knowledge.ts` — `team_knowledge` table schema
+- `artifacts/api-server/src/routes/team-knowledge.ts` — CRUD routes + `retrieveTeamKnowledge()` RAG helper
+- `artifacts/specforge/src/components/team-knowledge-panel.tsx` — upload/list/delete UI panel
+- `artifacts/specforge/src/pages/team-detail.tsx` — tabbed layout with new "Knowledge Base" tab
 
 ## Key Commands
 

@@ -6,3 +6,4 @@ export * from "./notifications";
 export * from "./spec-versions";
 export * from "./teams";
 export * from "./preferences";
+export * from "./team-knowledge";

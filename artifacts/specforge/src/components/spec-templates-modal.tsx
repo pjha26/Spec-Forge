@@ -10,7 +10,7 @@ export interface SpecTemplate {
   description: string;
   specType: SpecTypeValue;
   tags: string[];
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   color: string;
   gradient: string;
   border: string;

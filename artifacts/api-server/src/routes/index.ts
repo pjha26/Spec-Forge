@@ -14,6 +14,7 @@ import preferencesRouter from "./preferences";
 import mcpRouter from "./mcp";
 import shareRouter from "./share";
 import githubSyncRouter from "./github-sync";
+import teamKnowledgeRouter from "./team-knowledge";
 
 const router: IRouter = Router();
 
@@ -25,6 +26,7 @@ router.use("/specs", exportRouter);
 router.use("/specs", shareRouter);
 router.use("/specs", githubSyncRouter);
 router.use("/teams", teamsRouter);
+router.use("/teams", teamKnowledgeRouter);
 router.use("/anthropic", anthropicRouter);
 router.use(webhooksRouter);
 router.use(presenceRouter);

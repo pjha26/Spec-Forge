@@ -53,6 +53,8 @@ async function refreshIfExpired(
   }
 }
 
+export type AuthedRequest = Express.AuthedRequest;
+
 export async function authMiddleware(
   req: Request,
   res: Response,

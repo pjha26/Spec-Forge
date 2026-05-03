@@ -8,8 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Users, Plus, Trash2, Crown, Edit3, Eye,
   Loader2, Shield, FileText, Server, Database, BookOpen, Cpu,
-  Settings, Check, X,
+  Settings, Check, X, BookMarked,
 } from "lucide-react";
+import { TeamKnowledgePanel } from "@/components/team-knowledge-panel";
 
 interface Member {
   id: number;
@@ -46,12 +47,14 @@ const ROLE_META: Record<string, { label: string; color: string; Icon: React.Comp
   viewer: { label: "Viewer", color: "#6B7280", Icon: Eye    },
 };
 
-const SPEC_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
+const SPEC_ICON: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
   system_design:   Server,
   api_design:      Cpu,
   database_schema: Database,
   feature_spec:    BookOpen,
 };
+
+type ActiveTab = "overview" | "knowledge";
 
 export default function TeamDetail() {
   const { id } = useParams();
@@ -60,6 +63,7 @@ export default function TeamDetail() {
 
   const [team, setTeam] = useState<TeamDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
   const [showInvite, setShowInvite] = useState(false);
   const [inviteId, setInviteId] = useState("");
   const [inviteUsername, setInviteUsername] = useState("");
@@ -185,6 +189,11 @@ export default function TeamDetail() {
   const isOwner = team.role === "owner";
   const canEdit = team.role !== "viewer";
 
+  const TABS: { id: ActiveTab; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: "overview",   label: "Members & Specs", Icon: Users      },
+    { id: "knowledge",  label: "Knowledge Base",  Icon: BookMarked },
+  ];
+
   return (
     <div className="flex-1 overflow-auto p-6 max-w-5xl mx-auto w-full space-y-6">
       {/* Header */}
@@ -229,165 +238,210 @@ export default function TeamDetail() {
         </Badge>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        {/* Members — 2/5 */}
-        <Card className="lg:col-span-2 border-border bg-card p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-mono font-bold text-muted-foreground flex items-center gap-1.5">
-              <Users className="w-3 h-3" />
-              MEMBERS ({team.members.length})
-            </h2>
-            {canEdit && (
-              <button
-                onClick={() => setShowInvite(v => !v)}
-                className="text-[10px] font-mono font-bold px-2 py-1 rounded flex items-center gap-1 transition-colors"
-                style={{ color: "hsl(263,90%,74%)", background: "rgba(124,58,237,0.12)" }}
-              >
-                <Plus className="w-2.5 h-2.5" /> ADD
-              </button>
-            )}
-          </div>
-
-          {showInvite && (
-            <form onSubmit={handleInvite} className="mb-4 space-y-2 p-3 rounded-lg"
-              style={{ background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.2)" }}
+      {/* Tab bar */}
+      <div className="flex gap-1 p-1 rounded-xl w-fit"
+        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+      >
+        {TABS.map(tab => {
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all"
+              style={active ? {
+                background: "rgba(124,58,237,0.25)",
+                border: "1px solid rgba(124,58,237,0.35)",
+                color: "hsl(263,90%,74%)",
+              } : {
+                background: "transparent",
+                border: "1px solid transparent",
+                color: "hsl(var(--muted-foreground))",
+              }}
             >
-              <p className="text-[10px] font-mono text-purple-300 font-bold">ADD BY REPLIT USER ID</p>
-              <input
-                value={inviteId}
-                onChange={e => setInviteId(e.target.value)}
-                placeholder="Replit user ID *"
-                autoFocus
-                className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-black/40 border border-border outline-none focus:border-purple-500/50"
-              />
-              <input
-                value={inviteUsername}
-                onChange={e => setInviteUsername(e.target.value)}
-                placeholder="Display name (optional)"
-                className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-black/40 border border-border outline-none focus:border-purple-500/50"
-              />
-              <select
-                value={inviteRole}
-                onChange={e => setInviteRole(e.target.value as "editor" | "viewer")}
-                className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-black/40 border border-border outline-none"
-              >
-                <option value="editor">Editor — can generate & sync specs</option>
-                <option value="viewer">Viewer — read-only access</option>
-              </select>
-              <div className="flex gap-2 justify-end">
-                <button type="button" onClick={() => setShowInvite(false)} className="text-[10px] font-mono text-muted-foreground hover:text-foreground px-2 py-1">Cancel</button>
-                <button type="submit" disabled={inviting || !inviteId.trim()}
-                  className="text-[10px] font-mono font-bold px-3 py-1 rounded transition-colors disabled:opacity-50"
-                  style={{ background: "rgba(124,58,237,0.25)", color: "hsl(263,90%,74%)" }}
+              <tab.Icon className="w-3 h-3" />
+              {tab.label}
+              {tab.id === "knowledge" && (
+                <span className="ml-0.5 px-1 py-0.5 rounded text-[9px] font-bold"
+                  style={{ background: "rgba(139,92,246,0.2)", color: "hsl(263,90%,74%)" }}
                 >
-                  {inviting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Add"}
+                  RAG
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Overview tab ────────────────────────────────────────────── */}
+      {activeTab === "overview" && (
+        <div className="grid gap-6 lg:grid-cols-5">
+          {/* Members — 2/5 */}
+          <Card className="lg:col-span-2 border-border bg-card p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xs font-mono font-bold text-muted-foreground flex items-center gap-1.5">
+                <Users className="w-3 h-3" />
+                MEMBERS ({team.members.length})
+              </h2>
+              {canEdit && (
+                <button
+                  onClick={() => setShowInvite(v => !v)}
+                  className="text-[10px] font-mono font-bold px-2 py-1 rounded flex items-center gap-1 transition-colors"
+                  style={{ color: "hsl(263,90%,74%)", background: "rgba(124,58,237,0.12)" }}
+                >
+                  <Plus className="w-2.5 h-2.5" /> ADD
                 </button>
-              </div>
-            </form>
-          )}
-
-          <div className="space-y-1.5">
-            {team.members.map(member => {
-              const rm = ROLE_META[member.role] ?? ROLE_META.viewer;
-              const RoleIcon = rm.Icon;
-              return (
-                <div key={member.id} className="flex items-center gap-2.5 p-2 rounded-lg group"
-                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}
-                >
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-bold"
-                    style={{ background: `${rm.color}18`, color: rm.color }}
-                  >
-                    {member.username.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold truncate">{member.username}</p>
-                    <p className="text-[9px] text-muted-foreground font-mono opacity-60 truncate">{member.userId}</p>
-                  </div>
-                  {isOwner && member.role !== "owner" ? (
-                    <select
-                      value={member.role}
-                      onChange={e => handleRoleChange(member, e.target.value as "editor" | "viewer")}
-                      className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border bg-black/40 outline-none cursor-pointer"
-                      style={{ color: rm.color }}
-                    >
-                      <option value="editor">Editor</option>
-                      <option value="viewer">Viewer</option>
-                    </select>
-                  ) : (
-                    <span className="text-[9px] font-mono flex items-center gap-1 shrink-0" style={{ color: rm.color }}>
-                      <RoleIcon className="w-2.5 h-2.5" />{rm.label}
-                    </span>
-                  )}
-                  {canEdit && member.role !== "owner" && (
-                    <button onClick={() => handleRemoveMember(member)}
-                      className="opacity-0 group-hover:opacity-60 hover:!opacity-100 p-1 rounded text-muted-foreground hover:text-red-400 transition-opacity"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-
-        {/* Specs — 3/5 */}
-        <Card className="lg:col-span-3 border-border bg-card p-4">
-          <h2 className="text-xs font-mono font-bold text-muted-foreground flex items-center gap-1.5 mb-4">
-            <FileText className="w-3 h-3" />
-            TEAM SPECS ({team.specs.length})
-          </h2>
-
-          {team.specs.length === 0 ? (
-            <div className="py-8 text-center">
-              <Shield className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-20" />
-              <p className="text-xs text-muted-foreground font-mono opacity-60">
-                No specs shared with this team yet.
-              </p>
-              <p className="text-[10px] text-muted-foreground opacity-40 mt-1">
-                Open any spec and assign it to this team.
-              </p>
+              )}
             </div>
-          ) : (
+
+            {showInvite && (
+              <form onSubmit={handleInvite} className="mb-4 space-y-2 p-3 rounded-lg"
+                style={{ background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.2)" }}
+              >
+                <p className="text-[10px] font-mono text-purple-300 font-bold">ADD BY REPLIT USER ID</p>
+                <input
+                  value={inviteId}
+                  onChange={e => setInviteId(e.target.value)}
+                  placeholder="Replit user ID *"
+                  autoFocus
+                  className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-black/40 border border-border outline-none focus:border-purple-500/50"
+                />
+                <input
+                  value={inviteUsername}
+                  onChange={e => setInviteUsername(e.target.value)}
+                  placeholder="Display name (optional)"
+                  className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-black/40 border border-border outline-none focus:border-purple-500/50"
+                />
+                <select
+                  value={inviteRole}
+                  onChange={e => setInviteRole(e.target.value as "editor" | "viewer")}
+                  className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-black/40 border border-border outline-none"
+                >
+                  <option value="editor">Editor — can generate & sync specs</option>
+                  <option value="viewer">Viewer — read-only access</option>
+                </select>
+                <div className="flex gap-2 justify-end">
+                  <button type="button" onClick={() => setShowInvite(false)} className="text-[10px] font-mono text-muted-foreground hover:text-foreground px-2 py-1">Cancel</button>
+                  <button type="submit" disabled={inviting || !inviteId.trim()}
+                    className="text-[10px] font-mono font-bold px-3 py-1 rounded transition-colors disabled:opacity-50"
+                    style={{ background: "rgba(124,58,237,0.25)", color: "hsl(263,90%,74%)" }}
+                  >
+                    {inviting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Add"}
+                  </button>
+                </div>
+              </form>
+            )}
+
             <div className="space-y-1.5">
-              {team.specs.map(spec => {
-                const SpecIcon = SPEC_ICON[spec.specType] ?? FileText;
+              {team.members.map(member => {
+                const rm = ROLE_META[member.role] ?? ROLE_META.viewer;
+                const RoleIcon = rm.Icon;
                 return (
-                  <div key={spec.id} className="flex items-center gap-3 p-2.5 rounded-lg group"
+                  <div key={member.id} className="flex items-center gap-2.5 p-2 rounded-lg group"
                     style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}
                   >
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                      style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.2)" }}
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-bold"
+                      style={{ background: `${rm.color}18`, color: rm.color }}
                     >
-                      <SpecIcon className="w-3.5 h-3.5" style={{ color: "hsl(263,90%,74%)" } as React.CSSProperties} />
+                      {member.username.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold truncate">{spec.title}</p>
-                      <p className="text-[9px] text-muted-foreground font-mono opacity-60">
-                        {spec.specType.replace(/_/g, " ")}
-                        {spec.complexityScore !== null ? ` · score ${spec.complexityScore}` : ""}
-                      </p>
+                      <p className="text-xs font-semibold truncate">{member.username}</p>
+                      <p className="text-[9px] text-muted-foreground font-mono opacity-60 truncate">{member.userId}</p>
                     </div>
-                    <Link href={`/app/specs/${spec.id}`}>
-                      <button className="text-[10px] font-mono text-muted-foreground hover:text-foreground px-2 py-0.5 rounded border border-transparent hover:border-border transition-all">
-                        Open →
-                      </button>
-                    </Link>
-                    {canEdit && (
-                      <button onClick={() => handleRemoveSpec(spec)}
-                        className="opacity-0 group-hover:opacity-60 hover:!opacity-100 p-1 rounded text-muted-foreground hover:text-red-400 transition-opacity"
-                        title="Remove from team"
+                    {isOwner && member.role !== "owner" ? (
+                      <select
+                        value={member.role}
+                        onChange={e => handleRoleChange(member, e.target.value as "editor" | "viewer")}
+                        className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border bg-black/40 outline-none cursor-pointer"
+                        style={{ color: rm.color }}
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <option value="editor">Editor</option>
+                        <option value="viewer">Viewer</option>
+                      </select>
+                    ) : (
+                      <span className="text-[9px] font-mono flex items-center gap-1 shrink-0" style={{ color: rm.color }}>
+                        <RoleIcon className="w-2.5 h-2.5" />{rm.label}
+                      </span>
+                    )}
+                    {canEdit && member.role !== "owner" && (
+                      <button onClick={() => handleRemoveMember(member)}
+                        className="opacity-0 group-hover:opacity-60 hover:!opacity-100 p-1 rounded text-muted-foreground hover:text-red-400 transition-opacity"
+                      >
+                        <Trash2 className="w-3 h-3" />
                       </button>
                     )}
                   </div>
                 );
               })}
             </div>
-          )}
+          </Card>
+
+          {/* Specs — 3/5 */}
+          <Card className="lg:col-span-3 border-border bg-card p-4">
+            <h2 className="text-xs font-mono font-bold text-muted-foreground flex items-center gap-1.5 mb-4">
+              <FileText className="w-3 h-3" />
+              TEAM SPECS ({team.specs.length})
+            </h2>
+
+            {team.specs.length === 0 ? (
+              <div className="py-8 text-center">
+                <Shield className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-20" />
+                <p className="text-xs text-muted-foreground font-mono opacity-60">
+                  No specs shared with this team yet.
+                </p>
+                <p className="text-[10px] text-muted-foreground opacity-40 mt-1">
+                  Open any spec and assign it to this team.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {team.specs.map(spec => {
+                  const SpecIcon = SPEC_ICON[spec.specType] ?? FileText;
+                  return (
+                    <div key={spec.id} className="flex items-center gap-3 p-2.5 rounded-lg group"
+                      style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}
+                    >
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.2)" }}
+                      >
+                        <SpecIcon className="w-3.5 h-3.5" style={{ color: "hsl(263,90%,74%)" } as React.CSSProperties} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold truncate">{spec.title}</p>
+                        <p className="text-[9px] text-muted-foreground font-mono opacity-60">
+                          {spec.specType.replace(/_/g, " ")}
+                          {spec.complexityScore !== null ? ` · score ${spec.complexityScore}` : ""}
+                        </p>
+                      </div>
+                      <Link href={`/app/specs/${spec.id}`}>
+                        <button className="text-[10px] font-mono text-muted-foreground hover:text-foreground px-2 py-0.5 rounded border border-transparent hover:border-border transition-all">
+                          Open →
+                        </button>
+                      </Link>
+                      {canEdit && (
+                        <button onClick={() => handleRemoveSpec(spec)}
+                          className="opacity-0 group-hover:opacity-60 hover:!opacity-100 p-1 rounded text-muted-foreground hover:text-red-400 transition-opacity"
+                          title="Remove from team"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* ── Knowledge Base tab ───────────────────────────────────────── */}
+      {activeTab === "knowledge" && (
+        <Card className="border-border bg-card p-5">
+          <TeamKnowledgePanel teamId={team.id} canEdit={canEdit} />
         </Card>
-      </div>
+      )}
     </div>
   );
 }

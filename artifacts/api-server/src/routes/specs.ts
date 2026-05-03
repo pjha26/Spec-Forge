@@ -7,6 +7,7 @@ import { db as dbClient, conversations as conversationsTable } from "@workspace/
 import { randomBytes, createHmac, timingSafeEqual } from "crypto";
 import { createNotification } from "./notifications";
 import { saveSpecVersion } from "./versions";
+import { retrieveTeamKnowledge } from "./team-knowledge";
 import {
   CreateSpecBody,
   GetSpecParams,
@@ -419,11 +420,15 @@ router.post("/", async (req, res) => {
   }
 
   const { title, specType, inputType, inputValue, aiModel } = parsed.data;
-  const { multiAgent, extendedThinking, imageInput } = req.body as {
+  const rawBody = req.body as {
     multiAgent?: boolean;
     extendedThinking?: boolean;
     imageInput?: string;
+    inputType?: string;
+    imageDescription?: string;
   };
+  const { multiAgent, extendedThinking, imageInput } = rawBody;
+  const rawInputType: string = rawBody.inputType ?? inputType;
 
   // Load user preferences to enrich system prompts at generation time
   const userId = (req as any).session?.user?.id as string | undefined;
@@ -434,8 +439,8 @@ router.post("/", async (req, res) => {
       .values({
         title,
         specType,
-        inputType: (inputType === "image" ? "description" : inputType) as any,
-        inputValue: inputType === "image" ? (req.body.imageDescription ?? "Generated from uploaded image") : inputValue,
+        inputType: (rawInputType === "image" ? "description" : inputType) as any,
+        inputValue: rawInputType === "image" ? (rawBody.imageDescription ?? "Generated from uploaded image") : inputValue,
         imageInput: imageInput ?? null,
         content: "",
         status: "pending",
@@ -691,9 +696,18 @@ router.post("/:id/stream", async (req, res) => {
       } catch {}
     }
 
+    // Load team RAG knowledge context if spec is assigned to a team
+    let ragContext = "";
+    if (spec.teamId) {
+      ragContext = await retrieveTeamKnowledge(spec.teamId, spec.inputValue ?? "");
+      if (ragContext) {
+        res.write(`data: ${JSON.stringify({ phase: "rag", message: "Loading team knowledge base…" })}\n\n`);
+      }
+    }
+
     const baseUserMessage = spec.inputType === "github_url"
-      ? `Generate a ${spec.specType.replace(/_/g, " ")} for this GitHub repository: ${spec.inputValue}\n\nAnalyze the repository URL and create a detailed, professional document.${prefContext}`
-      : `Generate a ${spec.specType.replace(/_/g, " ")} for this project:\n\n${spec.inputValue}\n\nCreate a detailed, professional document.${prefContext}`;
+      ? `Generate a ${spec.specType.replace(/_/g, " ")} for this GitHub repository: ${spec.inputValue}\n\nAnalyze the repository URL and create a detailed, professional document.${prefContext}${ragContext}`
+      : `Generate a ${spec.specType.replace(/_/g, " ")} for this project:\n\n${spec.inputValue}\n\nCreate a detailed, professional document.${prefContext}${ragContext}`;
 
     const imageBase64 = spec.imageInput ?? undefined;
 
@@ -873,7 +887,7 @@ router.post("/:id/export/notion", async (req, res) => {
       return;
     }
 
-    const searchData = await searchRes.json();
+    const searchData = await searchRes.json() as any;
     const parentPageId = searchData.results?.[0]?.id;
 
     if (!parentPageId) {
@@ -900,7 +914,7 @@ router.post("/:id/export/notion", async (req, res) => {
       return;
     }
 
-    const page = await createRes.json();
+    const page = await createRes.json() as any;
     const pageId = page.id;
     const pageUrl = page.url;
 
