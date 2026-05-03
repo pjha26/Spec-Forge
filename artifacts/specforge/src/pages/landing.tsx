@@ -10,6 +10,12 @@ import {
   Terminal, ArrowRight, Github, Zap, Network, Bot,
   ChevronRight, Star, Shield, GitBranch, Layers,
 } from "lucide-react";
+import {
+  ScrambleText, HorizontalScroll, MorphBlob,
+  GSAPScrollReveal, GSAPCounter, CursorTrail,
+  type FeatureCard,
+} from "@/components/gsap-scene";
+import { AIRadarPulse, SuccessCheck, OrbitNodes } from "@/components/lottie-scene";
 
 // ── Typewriter ──────────────────────────────────────────────────────────────
 const SPEC_TYPES = ["System Design Docs", "API Blueprints", "Database Schemas", "Feature Specs"];
@@ -576,6 +582,16 @@ const features = [
   },
 ];
 
+// ── GSAP feature cards (maps existing feature data to FeatureCard interface) ─
+const GSAP_FEATURE_CARDS: FeatureCard[] = [
+  { icon: <Zap className="w-6 h-6" style={{ color: "#a78bfa" }} />,    color: "#7c3aed", title: "Complexity Analysis",   desc: "Instant 1–10 complexity score with tech-debt risks, severity prioritisation, and suggested mitigations.", tag: "AI Analysis" },
+  { icon: <Network className="w-6 h-6" style={{ color: "#60a5fa" }} />, color: "#2563eb", title: "Architecture Diagrams", desc: "Auto-generated Mermaid flowcharts, sequence diagrams, and ER diagrams — rendered in milliseconds.",         tag: "Visual" },
+  { icon: <Bot className="w-6 h-6" style={{ color: "#34d399" }} />,     color: "#059669", title: "Ask Your Doc",          desc: "Chat with Claude about your spec — trade-offs, edge cases, implementation details, anything.",            tag: "Chat" },
+  { icon: <Shield className="w-6 h-6" style={{ color: "#f59e0b" }} />,  color: "#d97706", title: "Team Collaboration",    desc: "Shared workspaces, annotation threads, AI audit runs, and role-based access control.",                    tag: "Teams" },
+  { icon: <GitBranch className="w-6 h-6" style={{ color: "#f472b6" }} />, color: "#db2777", title: "GitHub Auto-sync",    desc: "Webhooks keep your spec in sync when code changes — commit SPEC.md back to the repo automatically.",      tag: "Git" },
+  { icon: <Layers className="w-6 h-6" style={{ color: "#22d3ee" }} />,  color: "#0891b2", title: "Multi-format Export",  desc: "Export to Markdown, DOCX, Notion, or PDF. Version history snapshots every generation.",                  tag: "Export" },
+];
+
 // ── Main Landing ────────────────────────────────────────────────────────────
 export default function Landing() {
   const typed = useTypewriter(SPEC_TYPES);
@@ -586,6 +602,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen text-foreground overflow-x-hidden" style={{ background: "#05050d" }}>
+      <CursorTrail />
       <GrainOverlay />
       <PageBeam />
       <ScrollProgress />
@@ -654,6 +671,11 @@ export default function Landing() {
       <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-20 px-6 overflow-hidden" style={{ position: "relative" }}>
         <FloatingOrbs />
         <NeuralCanvas />
+        {/* GSAP morphing blobs in background */}
+        <MorphBlob size={600} color="rgba(124,58,237,0.12)" className="absolute -top-20 -left-32 pointer-events-none" />
+        <MorphBlob size={420} color="rgba(37,99,235,0.10)" className="absolute bottom-0 right-0 pointer-events-none" />
+        {/* Lottie AI radar — floats top-right of hero */}
+        <AIRadarPulse size={160} className="absolute top-28 right-8 md:right-16 opacity-60 pointer-events-none hidden md:block" />
 
         {/* Grid overlay */}
         <div className="absolute inset-0 pointer-events-none"
@@ -687,7 +709,7 @@ export default function Landing() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
-              Generate
+              <ScrambleText text="Generate" delay={0.6} className="text-white" />
             </motion.div>
             <div>
               <span className="shimmer-text">{typed || "\u00a0"}</span>
@@ -811,82 +833,20 @@ export default function Landing() {
             { val: 30,  suffix: "s",      label: "Avg generation" },
             { val: 100, suffix: "%",      label: "AI-generated" },
           ].map((s, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="space-y-1"
-            >
+            <div key={i} className="space-y-1">
               <div className="text-4xl md:text-5xl font-bold font-mono shimmer-text">
-                <CountUp to={s.val} />
-                {s.suffix}
+                <GSAPCounter to={s.val} suffix={s.suffix} duration={1.8} />
               </div>
               <div className="text-xs font-mono uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>
                 {s.label}
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* ── Features ───────────────────────────────────────── */}
-      <section className="py-28 px-6">
-        <div className="max-w-6xl mx-auto">
-          <ParallaxSection speed={0.2} className="text-center mb-20">
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="inline-block text-xs font-mono uppercase tracking-widest text-purple-400 mb-4 px-3 py-1 rounded-full border border-purple-500/20 bg-purple-500/5"
-            >
-              Features
-            </motion.div>
-            <h2 className="text-4xl md:text-5xl font-bold mt-0 mb-4">
-              <WordReveal text="Everything in one document" />
-            </h2>
-            <p className="max-w-xl mx-auto leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
-              More than markdown — SpecForge gives you diagrams, analysis, and an AI that knows your codebase.
-            </p>
-          </ParallaxSection>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((f, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 32 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ delay: i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <TiltCard className="p-6 h-full">
-                  <div className="flex flex-col h-full gap-4">
-                    <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center border border-white/6"
-                      style={{ background: `${f.color}18` }}
-                    >
-                      {f.icon}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2.5">
-                        <h3 className="font-bold text-base">{f.title}</h3>
-                        <span
-                          className="text-[9px] font-mono px-2 py-0.5 rounded border"
-                          style={{ color: f.color, background: `${f.color}12`, borderColor: `${f.color}25` }}
-                        >
-                          {f.tag}
-                        </span>
-                      </div>
-                      <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{f.desc}</p>
-                    </div>
-                  </div>
-                </TiltCard>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ── Features — GSAP horizontal scroll ──────────────── */}
+      <HorizontalScroll cards={GSAP_FEATURE_CARDS} />
 
       {/* ── How it works ────────────────────────────────────── */}
       <section className="py-28 px-6 relative">
@@ -909,43 +869,46 @@ export default function Landing() {
             </h2>
           </div>
 
-          {/* Steps with connecting line */}
+          {/* Lottie orbit nodes — decorative, floats beside the steps */}
+          <div className="flex justify-center mb-8">
+            <OrbitNodes size={180} />
+          </div>
+
+          {/* Steps with connecting line — wrapped in GSAP stagger reveal */}
           <div className="relative space-y-6">
             <div className="hidden md:block absolute left-[calc(50%-0.5px)] top-10 bottom-10 w-px"
               style={{ background: "linear-gradient(to bottom, transparent, rgba(124,58,237,0.5) 20%, rgba(124,58,237,0.5) 80%, transparent)" }}
             />
 
-            {[
-              { n: "01", title: "Input your project",  desc: "Paste a GitHub URL or describe your project in plain English." },
-              { n: "02", title: "Pick a spec type",    desc: "System design, API design, database schema, or feature spec." },
-              { n: "03", title: "Get your docs",       desc: "Receive a full technical document, diagram, and complexity report in seconds." },
-            ].map((s, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: i % 2 === 0 ? -40 : 40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.7, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-                className={`flex items-center gap-6 ${i % 2 === 1 ? "md:flex-row-reverse" : ""}`}
-              >
-                <TiltCard className={`flex-1 p-6 ${i % 2 === 1 ? "md:text-right" : ""}`}>
-                  <span className="font-mono text-5xl font-bold" style={{ color: "rgba(124,58,237,0.22)" }}>{s.n}</span>
-                  <h3 className="text-xl font-bold mt-1 mb-2">{s.title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{s.desc}</p>
-                </TiltCard>
-
-                <motion.div
-                  className="hidden md:flex w-12 h-12 rounded-full items-center justify-center shrink-0 relative z-10 font-mono font-bold text-sm text-white"
-                  style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)", boxShadow: "0 0 28px rgba(124,58,237,0.5)" }}
-                  whileHover={{ scale: 1.2 }}
-                  transition={{ type: "spring", stiffness: 400 }}
+            <GSAPScrollReveal stagger={0.18} y={56}>
+              {[
+                { n: "01", title: "Input your project",  desc: "Paste a GitHub URL or describe your project in plain English." },
+                { n: "02", title: "Pick a spec type",    desc: "System design, API design, database schema, or feature spec." },
+                { n: "03", title: "Get your docs",       desc: "Receive a full technical document, diagram, and complexity report in seconds." },
+              ].map((s, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-6 ${i % 2 === 1 ? "md:flex-row-reverse" : ""}`}
                 >
-                  {i + 1}
-                </motion.div>
+                  <TiltCard className={`flex-1 p-6 ${i % 2 === 1 ? "md:text-right" : ""}`}>
+                    <span className="font-mono text-5xl font-bold" style={{ color: "rgba(124,58,237,0.22)" }}>{s.n}</span>
+                    <h3 className="text-xl font-bold mt-1 mb-2">{s.title}</h3>
+                    <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{s.desc}</p>
+                  </TiltCard>
 
-                <div className="hidden md:block flex-1" />
-              </motion.div>
-            ))}
+                  <motion.div
+                    className="hidden md:flex w-12 h-12 rounded-full items-center justify-center shrink-0 relative z-10 font-mono font-bold text-sm text-white"
+                    style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)", boxShadow: "0 0 28px rgba(124,58,237,0.5)" }}
+                    whileHover={{ scale: 1.2 }}
+                    transition={{ type: "spring", stiffness: 400 }}
+                  >
+                    {i + 1}
+                  </motion.div>
+
+                  <div className="hidden md:block flex-1" />
+                </div>
+              ))}
+            </GSAPScrollReveal>
           </div>
         </div>
       </section>
@@ -1032,6 +995,10 @@ export default function Landing() {
         </div>
 
         <div className="relative z-10 max-w-2xl mx-auto text-center">
+          {/* Lottie checkmark — plays once on scroll into view */}
+          <div className="flex justify-center mb-4">
+            <SuccessCheck size={80} />
+          </div>
           <motion.h2
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
