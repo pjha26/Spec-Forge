@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { db, specsTable } from "@workspace/db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, or } from "drizzle-orm";
+import type { AuthedRequest } from "../middlewares/authMiddleware.js";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 import { streamCompletion, generateCompletion, generateCompletionWithThinking, generateMultiAgent, isValidModel, type SupportedModel } from "../lib/model-router.js";
 import { db as dbClient, conversations as conversationsTable } from "@workspace/db";
@@ -345,29 +346,33 @@ ${specContent.slice(0, 5000)}`,
 }
 
 router.get("/recent", async (req, res) => {
-  try {
-    const specs = await db
-      .select()
-      .from(specsTable)
-      .orderBy(desc(specsTable.createdAt))
-      .limit(10);
+  const userId = (req as AuthedRequest).user?.id ?? null;
+  const ownerFilter = userId
+    ? or(eq(specsTable.userId, userId), sql`${specsTable.userId} IS NULL`)
+    : undefined;
 
-    const countRows = await db
-      .select({
+  try {
+    const [specs, countRows, totalCount] = await Promise.all([
+      db.select().from(specsTable)
+        .where(ownerFilter)
+        .orderBy(desc(specsTable.createdAt))
+        .limit(10),
+
+      db.select({
         specType: specsTable.specType,
         count: sql<number>`cast(count(*) as int)`,
       })
-      .from(specsTable)
-      .groupBy(specsTable.specType);
+        .from(specsTable)
+        .where(ownerFilter)
+        .groupBy(specsTable.specType),
 
-    const totalCount = await db
-      .select({ count: sql<number>`cast(count(*) as int)` })
-      .from(specsTable);
+      db.select({ count: sql<number>`cast(count(*) as int)` })
+        .from(specsTable)
+        .where(ownerFilter),
+    ]);
 
     const byType: Record<string, number> = {};
-    for (const row of countRows) {
-      byType[row.specType] = row.count;
-    }
+    for (const row of countRows) byType[row.specType] = row.count;
 
     res.json({
       specs: specs.map(serializeSpec),
@@ -410,10 +415,16 @@ router.get("/share/:token", async (req, res) => {
 });
 
 router.get("/", async (req, res) => {
+  const userId = (req as AuthedRequest).user?.id ?? null;
+  const ownerFilter = userId
+    ? or(eq(specsTable.userId, userId), sql`${specsTable.userId} IS NULL`)
+    : undefined;
+
   try {
     const specs = await db
       .select()
       .from(specsTable)
+      .where(ownerFilter)
       .orderBy(desc(specsTable.createdAt));
 
     res.json(specs.map(serializeSpec));
@@ -441,13 +452,13 @@ router.post("/", async (req, res) => {
   const { multiAgent, extendedThinking, imageInput } = rawBody;
   const rawInputType: string = rawBody.inputType ?? inputType;
 
-  // Load user preferences to enrich system prompts at generation time
-  const userId = (req as any).session?.user?.id as string | undefined;
+  const userId = (req as AuthedRequest).user?.id ?? undefined;
 
   try {
     const [spec] = await db
       .insert(specsTable)
       .values({
+        userId: userId ?? null,
         title,
         specType,
         inputType: (rawInputType === "image" ? "description" : inputType) as any,
@@ -460,6 +471,24 @@ router.post("/", async (req, res) => {
         extendedThinking: extendedThinking ?? false,
       })
       .returning();
+
+    // Fire notification + audit log on creation
+    if (userId) {
+      createNotification(userId, {
+        type: "sync_complete",
+        title: "Spec created",
+        message: `"${title}" was added to your library.`,
+        specId: spec.id,
+      }).catch(() => {});
+      createAuditLog({
+        userId,
+        action: "spec.created",
+        resourceType: "spec",
+        resourceId: spec.id,
+        metadata: { title, specType, inputType: rawInputType, aiModel: aiModel ?? "claude-sonnet-4-6" },
+        req,
+      }).catch(() => {});
+    }
 
     res.status(201).json(serializeSpec(spec));
   } catch (err) {

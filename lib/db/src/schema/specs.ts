@@ -8,6 +8,7 @@ export const statusEnum = ["pending", "generating", "completed", "failed"] as co
 
 export const specsTable = pgTable("specs", {
   id: serial("id").primaryKey(),
+  userId: text("user_id"),
   title: text("title").notNull(),
   specType: text("spec_type", { enum: specTypeEnum }).notNull(),
   inputType: text("input_type", { enum: inputTypeEnum }).notNull(),

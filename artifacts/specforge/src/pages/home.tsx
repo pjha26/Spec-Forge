@@ -41,6 +41,7 @@ import { SpecTemplatesModal, type SpecTemplate } from "@/components/spec-templat
 import { PreferencesModal } from "@/components/preferences-modal";
 import { MultiAgentProgress } from "@/components/multi-agent-progress";
 import { OnboardingOverlay, useOnboarding } from "@/components/onboarding-overlay";
+import { DbStatsWidget } from "@/components/db-stats-widget";
 
 const SPEC_TYPES = [
   {
@@ -368,6 +369,9 @@ export default function Home() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-4">
+            <div className="animate-slide-up" style={{ animationDelay: "0.02s" }}>
+              <DbStatsWidget />
+            </div>
             <div className="rounded-xl p-5 space-y-5 glass-card animate-slide-up" style={{ animationDelay: "0.05s" }}>
 
               <div className="space-y-2.5">

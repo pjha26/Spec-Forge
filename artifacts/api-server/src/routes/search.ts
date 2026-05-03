@@ -1,11 +1,12 @@
 /**
- * Semantic search — full-text + AI keyword expansion
+ * Full-text search using PostgreSQL tsvector + ts_rank
  * GET /api/search?q=<query>&type=<specType>
  */
 
 import { Router } from "express";
 import { db, specsTable } from "@workspace/db";
-import { sql, or, ilike, eq, and } from "drizzle-orm";
+import { sql, eq, and, or } from "drizzle-orm";
+import type { AuthedRequest } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
@@ -18,31 +19,22 @@ router.get("/search", async (req, res) => {
   }
 
   const query = q.trim();
-  const likePattern = `%${query.replace(/%/g, "\\%").replace(/_/g, "\\_")}%`;
+  const userId = (req as AuthedRequest).user?.id ?? null;
 
   try {
-    // Split into individual words for broader matching
-    const words = query.split(/\s+/).filter(w => w.length > 2);
-    const wordLikeConditions = words.map(w =>
-      or(
-        ilike(specsTable.title, `%${w}%`),
-        ilike(specsTable.content, `%${w}%`),
-      )
-    );
-
-    const baseCondition = or(
-      ilike(specsTable.title, likePattern),
-      ilike(specsTable.content, likePattern),
-      ...wordLikeConditions,
-    );
-
-    const typeCondition = type && type !== "all"
-      ? eq(specsTable.specType, type as any)
+    const ownerFilter = userId
+      ? or(eq(specsTable.userId, userId), sql`${specsTable.userId} IS NULL`)
       : undefined;
 
-    const whereClause = typeCondition
-      ? and(baseCondition, typeCondition)
-      : baseCondition;
+    const typeFilter = type && type !== "all"
+      ? eq(specsTable.specType, type as "system_design" | "api_design" | "database_schema" | "feature_spec")
+      : undefined;
+
+    const conditions = [
+      sql`search_vector @@ websearch_to_tsquery('english', ${query})`,
+      ...(ownerFilter ? [ownerFilter] : []),
+      ...(typeFilter ? [typeFilter] : []),
+    ];
 
     const rows = await db
       .select({
@@ -54,45 +46,51 @@ router.get("/search", async (req, res) => {
         complexityScore: specsTable.complexityScore,
         createdAt: specsTable.createdAt,
         updatedAt: specsTable.updatedAt,
-        // Relevance: title match scores higher
-        relevance: sql<number>`
-          CASE
-            WHEN lower(${specsTable.title}) = lower(${query}) THEN 100
-            WHEN lower(${specsTable.title}) LIKE lower(${likePattern}) THEN 80
-            WHEN lower(${specsTable.content}) LIKE lower(${likePattern}) THEN 50
-            ELSE 20
-          END
-        `,
-        // Snippet around first match in content
-        snippet: sql<string>`
-          CASE
-            WHEN lower(${specsTable.content}) LIKE lower(${likePattern})
-            THEN substring(
-              ${specsTable.content}
-              FROM greatest(1, position(lower(${query}) in lower(${specsTable.content})) - 80)
-              FOR 240
-            )
-            ELSE left(${specsTable.content}, 240)
-          END
-        `,
+        rank: sql<number>`ts_rank(search_vector, websearch_to_tsquery('english', ${query}))`,
+        headline: sql<string>`ts_headline(
+          'english',
+          coalesce(left(content, 50000), ''),
+          websearch_to_tsquery('english', ${query}),
+          'MaxWords=20, MinWords=8, StartSel=<<, StopSel=>>, HighlightAll=false'
+        )`,
       })
       .from(specsTable)
-      .where(whereClause!)
-      .orderBy(sql`
-        CASE
-          WHEN lower(${specsTable.title}) = lower(${query}) THEN 100
-          WHEN lower(${specsTable.title}) LIKE lower(${likePattern}) THEN 80
-          WHEN lower(${specsTable.content}) LIKE lower(${likePattern}) THEN 50
-          ELSE 20
-        END DESC,
-        ${specsTable.updatedAt} DESC
-      `)
+      .where(and(...conditions))
+      .orderBy(
+        sql`ts_rank(search_vector, websearch_to_tsquery('english', ${query})) DESC`,
+        sql`${specsTable.updatedAt} DESC`,
+      )
       .limit(25);
 
     res.json({ results: rows, total: rows.length, query });
   } catch (err) {
-    req.log.error({ err }, "Search failed");
-    res.status(500).json({ error: "Search failed" });
+    req.log.error({ err }, "Full-text search failed, falling back to ILIKE");
+    try {
+      const like = `%${query.replace(/%/g, "\\%").replace(/_/g, "\\_")}%`;
+      const rows = await db
+        .select({
+          id: specsTable.id,
+          title: specsTable.title,
+          specType: specsTable.specType,
+          inputType: specsTable.inputType,
+          status: specsTable.status,
+          complexityScore: specsTable.complexityScore,
+          createdAt: specsTable.createdAt,
+          updatedAt: specsTable.updatedAt,
+          rank: sql<number>`0.5`,
+          headline: sql<string>`left(${specsTable.content}, 240)`,
+        })
+        .from(specsTable)
+        .where(or(
+          sql`lower(${specsTable.title}) LIKE lower(${like})`,
+          sql`lower(${specsTable.content}) LIKE lower(${like})`,
+        ))
+        .orderBy(sql`${specsTable.updatedAt} DESC`)
+        .limit(25);
+      res.json({ results: rows, total: rows.length, query });
+    } catch {
+      res.status(500).json({ error: "Search failed" });
+    }
   }
 });
 

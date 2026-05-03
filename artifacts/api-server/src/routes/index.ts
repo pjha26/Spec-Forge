@@ -26,6 +26,7 @@ import linearSyncRouter from "./linear-sync";
 import outboundWebhooksRouter from "./outbound-webhooks";
 import integrationsRouter from "./integrations";
 import specAnnotationsRouter from "./spec-annotations";
+import statsRouter from "./stats";
 
 const router: IRouter = Router();
 
@@ -56,5 +57,6 @@ router.use("/specs", linearSyncRouter);
 router.use("/integrations", outboundWebhooksRouter);
 router.use(integrationsRouter);
 router.use("/specs", specAnnotationsRouter);
+router.use(statsRouter);
 
 export default router;
