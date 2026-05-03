@@ -97,3 +97,4 @@ pnpm --filter @workspace/db run push       # push DB schema changes
 - Presence tracking is in-memory (Map per specId), not persisted — resets on server restart
 - `createNotification(userId, { type, title, message, specId? })` + `broadcastNotification(userId, notification)` exported from `routes/notifications.ts`
 - Notification SSE connections tracked in-memory Map keyed by userId
+- **Notion export**: NOT using Replit integration (user dismissed OAuth). Use `NOTION_API_KEY` secret (Internal Integration token from https://www.notion.so/my-integrations) + call Notion REST API directly. Add route `POST /api/specs/:id/export/notion`.
