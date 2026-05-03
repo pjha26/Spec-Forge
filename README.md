@@ -2,7 +2,7 @@
 
 **AI-powered technical design document generator for developers, students, and hackathon builders.**
 
-Drop in a GitHub URL or describe your project in plain text and SpecForge instantly produces a professional, structured technical specification — system design, API contracts, database schemas, or feature specs — powered by Claude AI.
+Drop in a GitHub URL or describe your project in plain text and SpecForge instantly produces a professional, structured technical specification — system design, API contracts, database schemas, or feature specs — powered by your choice of Claude, GPT, or Gemini.
 
 ---
 
@@ -16,34 +16,45 @@ Most engineers skip writing specs because it takes too long. SpecForge eliminate
 
 ### Core Generation
 - **4 document types** — System Design, API Design, Database Schema, Feature Spec
-- **2 input modes** — GitHub repository URL (auto-analyzes repo name and structure) or plain-text description
-- **Streaming output** — content appears token-by-token as Claude writes it, just like ChatGPT
-- **Mermaid architecture diagrams** — automatically generated alongside the document (architecture diagrams, ER diagrams, sequence diagrams depending on spec type)
+- **2 input modes** — GitHub repository URL or plain-text description
+- **Streaming output** — content appears token-by-token in real time as the AI writes it
+- **Mermaid architecture diagrams** — auto-generated alongside the document (architecture, ER, sequence diagrams depending on spec type)
 - **Complexity score** — AI-scored 1–10 rating with tech debt risk breakdown and a written summary
+- **8 starter templates** — SaaS API, Mobile App, Real-time Chat, Data Pipeline, E-commerce Platform, Microservices, ML API, Multi-tenant Database; selecting one pre-fills the spec type and description
+
+### Multi-Model AI
+- **Claude Sonnet** (Anthropic) — default, best for long-form structured documents
+- **GPT-5** (OpenAI) — alternative with strong reasoning
+- **Gemini 2.5 Pro / Flash** (Google) — fastest option; Flash is optimized for speed
+- Model selector on the generator page; choice is stored per spec and used for all AI operations on that spec
 
 ### Export & Sharing
-- **PDF export** — clean print layout (sidebar, tabs, and UI chrome are hidden) via browser print dialog
-- **Markdown download** — download the raw `.md` file for use in any editor or repository
+- **Notion export** — push the full spec as a structured Notion page (headings, bullets, code blocks, quotes) directly into your workspace; a banner appears with a link to the new page
+- **Word / DOCX export** — full Markdown-to-DOCX conversion via the `docx` package; downloads a formatted `.docx` file
+- **PDF export** — clean browser-print layout (sidebar, nav, and UI chrome hidden) via `@media print` CSS
+- **Markdown download** — raw `.md` file for use in any editor or repository
 - **Copy to clipboard** — one-click copy of the full document
 - **Public share links** — generate a shareable URL (`/share/:token`) that anyone can read without logging in; tracks view count
+- **Code scaffold** — generate 8–15 real starter files (README, package.json, source files, config) from any spec and download as a ZIP
 
 ### GitHub Integration
 - **Manual sync** — re-generate the spec from the latest source with one click
-- **GitHub webhook** — connect your repo so SpecForge auto-regenerates on every `git push` (HMAC-SHA256 verified)
+- **GitHub webhook** — auto-regenerates on every `git push`; HMAC-SHA256 verified; fires in-app notification on completion or failure
 
 ### AI-Powered Extras
 - **Ask Your Doc** — Claude-powered chat scoped to each spec; ask questions, request clarifications, get implementation advice
-- **Intelligent Insights** — on-demand spec health analysis: completeness percentage, overall health rating (Excellent/Good/Fair/Poor), strengths, missing areas, improvement suggestions, and estimated implementation timeline
+- **Intelligent Insights** — on-demand spec health analysis: completeness %, overall health rating, strengths, missing areas, improvement suggestions, and estimated implementation timeline
 
 ### Collaboration & Realtime
-- **Real-time presence** — when multiple people view the same spec simultaneously, a live avatar bar appears showing who else is reading
-- **Version history** — every generation is snapshotted; a timeline panel in the sidebar lets you browse past versions and open any historical document in a full preview modal
-- **In-app notifications** — real-time bell icon with unread badge; get notified when a sync completes or fails, with a direct link back to the spec
+- **Real-time presence** — when multiple people view the same spec simultaneously, a live avatar bar appears
+- **Version history** — every generation is snapshotted; timeline panel in the sidebar lets you browse all past versions, preview any historical document in a full modal, and see a color-coded diff (`+`/`−`) on a Changes tab
+- **In-app notifications** — real-time bell icon with unread badge; notified when sync completes/fails with a direct link back to the spec; mark single or all read
+- **Team workspaces** — create teams, invite members with owner/editor/viewer roles, assign specs to teams, and manage a shared spec library
 
 ### Platform
-- **User authentication** — sign in with your Replit account; sessions persist across browser sessions
-- **Spec history** — searchable, filterable list of all your generated documents
-- **Keyboard shortcut** — `⌘K` / `Ctrl+K` opens the AI Assistant from anywhere in the app
+- **User authentication** — sign in with your Replit account via OIDC + PKCE; sessions persist across browser sessions
+- **Spec history** — full list of all your generated documents
+- **Framer Motion animations** — spring physics throughout: spec-type selector, AI model picker, generate button states, share/sync/webhook banners, version history modals, scaffold slide-over panel
 
 ---
 
@@ -51,14 +62,15 @@ Most engineers skip writing specs because it takes too long. SpecForge eliminate
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 19, Vite, Tailwind CSS, shadcn/ui |
+| Frontend | React 19, Vite 7, Tailwind CSS 4, shadcn/ui, Framer Motion |
 | Backend | Node.js 24, Express 5 |
 | Database | PostgreSQL + Drizzle ORM |
-| AI | Anthropic Claude Sonnet (claude-sonnet-4-6) |
-| Auth | Replit Auth (OpenID Connect + PKCE) |
-| Realtime | Server-Sent Events (SSE) |
+| AI | Claude Sonnet (Anthropic), GPT-5 (OpenAI), Gemini 2.5 Pro/Flash (Google) |
+| Auth | Replit Auth — OpenID Connect + PKCE, sessions in PostgreSQL |
+| Realtime | Server-Sent Events (SSE) — presence, notifications, generation stream |
 | API contracts | OpenAPI 3.1 → Orval codegen → React Query hooks + Zod schemas |
 | Monorepo | pnpm workspaces |
+| Export | `docx` (Word), `jszip` (scaffold ZIP), Notion REST API, `window.print()` (PDF) |
 
 ---
 
@@ -67,26 +79,30 @@ Most engineers skip writing specs because it takes too long. SpecForge eliminate
 ```
 specforge/
 ├── artifacts/
-│   ├── api-server/          # Express REST API (port 8080)
+│   ├── api-server/              # Express REST API (port 8080)
 │   │   └── src/
-│   │       ├── routes/      # specs, versions, presence, insights,
-│   │       │                #   notifications, auth, webhooks
-│   │       ├── lib/         # auth helpers, OIDC config
-│   │       └── middlewares/ # auth middleware
-│   └── specforge/           # React + Vite frontend
+│   │       ├── routes/          # specs, versions, presence, insights,
+│   │       │                    #   notifications, auth, webhooks
+│   │       ├── lib/             # model-router (Claude/GPT/Gemini), auth helpers
+│   │       └── middlewares/     # auth middleware (runs on every request)
+│   └── specforge/               # React + Vite frontend
 │       └── src/
-│           ├── pages/       # home, spec generator, spec detail,
-│           │                #   spec history, public share
-│           └── components/  # layout, notification bell, presence bar,
-│                            #   spec insights, version history, ...
+│           ├── pages/           # landing, home (generator), spec-detail,
+│           │                    #   specs (history), share, teams, team-detail
+│           └── components/      # layout, notification-bell, presence-bar,
+│                                #   spec-chat, spec-insights, spec-version-history,
+│                                #   spec-scaffold, spec-templates-modal, mermaid-diagram,
+│                                #   complexity-score-card, ai-chat
 ├── lib/
-│   ├── db/                  # Drizzle ORM schema + migrations
-│   ├── api-spec/            # OpenAPI YAML + Orval codegen config
-│   ├── api-client-react/    # Generated React Query hooks
-│   ├── api-zod/             # Generated Zod validation schemas
-│   ├── integrations-anthropic-ai/  # Anthropic SDK wrapper
-│   └── replit-auth-web/     # Auth React hook + PKCE helpers
-└── scripts/                 # Shared utility scripts
+│   ├── db/                      # Drizzle ORM schema + push migrations
+│   ├── api-spec/                # OpenAPI YAML + Orval codegen config
+│   ├── api-client-react/        # Generated React Query hooks
+│   ├── api-zod/                 # Generated Zod validation schemas
+│   ├── integrations-anthropic-ai/       # Anthropic SDK wrapper
+│   ├── integrations-openai-ai-server/   # OpenAI SDK wrapper
+│   ├── integrations-gemini-ai/          # Google Gemini SDK wrapper
+│   └── replit-auth-web/         # Auth React hook + PKCE helpers
+└── scripts/                     # Shared utility scripts
 ```
 
 ---
@@ -119,12 +135,19 @@ pnpm --filter @workspace/db run push
 
 | Variable | Description |
 |---|---|
-| `DATABASE_URL` | PostgreSQL connection string (auto-provisioned) |
+| `DATABASE_URL` | PostgreSQL connection string (auto-provisioned by Replit) |
 | `SESSION_SECRET` | Secret for signing session cookies |
 | `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` | Anthropic proxy base URL |
 | `AI_INTEGRATIONS_ANTHROPIC_API_KEY` | Anthropic API key |
+| `AI_INTEGRATIONS_OPENAI_BASE_URL` | OpenAI proxy base URL |
+| `AI_INTEGRATIONS_OPENAI_API_KEY` | OpenAI API key |
+| `AI_INTEGRATIONS_GEMINI_BASE_URL` | Gemini proxy base URL |
+| `AI_INTEGRATIONS_GEMINI_API_KEY` | Gemini API key |
+| `NOTION_API_KEY` | Notion Internal Integration token (from notion.so/my-integrations) |
 | `REPL_ID` | Replit app ID (auto-set) |
 | `ISSUER_URL` | OIDC issuer (default: `https://replit.com/oidc`) |
+
+> **Notion setup:** Create an Internal Integration at [notion.so/my-integrations](https://www.notion.so/my-integrations), copy the secret, and share at least one Notion page with the integration. SpecForge will create exported specs as child pages of the first accessible page.
 
 ---
 
@@ -132,12 +155,14 @@ pnpm --filter @workspace/db run push
 
 | Table | Purpose |
 |---|---|
-| `specs` | Core spec records — content, status, type, scores, tokens |
-| `spec_versions` | Version snapshots of each generation |
+| `specs` | Core spec records — content, status, type, scores, aiModel, shareToken, webhookSecret, teamId |
+| `spec_versions` | Version snapshots of every generation with triggeredBy and complexityScore |
 | `conversations` | AI chat sessions linked to specs |
 | `messages` | Individual chat messages |
-| `notifications` | In-app notifications per user |
-| `users` | Authenticated user profiles |
+| `notifications` | In-app notifications per user (type, title, message, specId, read) |
+| `teams` | Team workspaces with name and owner |
+| `team_members` | User↔team membership with role (owner/editor/viewer) |
+| `users` | Authenticated user profiles (Replit Auth) |
 | `sessions` | Auth session store |
 
 ---
@@ -158,51 +183,30 @@ All endpoints are prefixed `/api`.
 | `GET` | `/specs/:id/versions/:vid` | Get a specific version |
 | `GET` | `/specs/:id/presence` | SSE — live viewer presence |
 | `POST` | `/specs/:id/insights` | AI health analysis |
-| `POST` | `/specs/:id/share` | Generate public share link |
-| `GET` | `/specs/:id/webhook` | Get GitHub webhook config |
+| `POST` | `/specs/:id/share` | Generate or retrieve public share link |
+| `GET` | `/specs/share/:token` | Public share lookup (no auth) |
+| `GET` | `/specs/:id/webhook` | Get or create GitHub webhook config |
 | `POST` | `/specs/:id/chat` | Get or create AI chat session |
+| `POST` | `/specs/:id/scaffold` | Generate code scaffold (returns JSON with files array) |
+| `POST` | `/specs/:id/export/notion` | Push spec to Notion as a structured page |
+| `GET` | `/specs/:id/export/docx` | Download spec as a Word document |
 | `GET` | `/specs/recent` | Recent specs + stats |
-| `GET` | `/notifications` | List notifications |
+| `GET` | `/teams` | List user's teams |
+| `POST` | `/teams` | Create a team |
+| `GET` | `/teams/:id` | Get team details + members |
+| `POST` | `/teams/:id/members` | Add a member |
+| `DELETE` | `/teams/:id/members/:userId` | Remove a member |
+| `POST` | `/teams/:id/specs/:specId` | Assign spec to team |
+| `DELETE` | `/teams/:id/specs/:specId` | Remove spec from team |
+| `GET` | `/notifications` | List notifications with unread count |
 | `GET` | `/notifications/stream` | SSE — real-time notification feed |
-| `PUT` | `/notifications/read-all` | Mark all read |
-| `PUT` | `/notifications/:id/read` | Mark one read |
-| `POST` | `/webhooks/github` | GitHub push webhook receiver |
-| `GET` | `/auth/user` | Current user session |
+| `PUT` | `/notifications/read-all` | Mark all notifications read |
+| `PUT` | `/notifications/:id/read` | Mark one notification read |
+| `POST` | `/webhooks/github` | GitHub push webhook receiver (HMAC-SHA256 verified) |
+| `GET` | `/auth/user` | Current session user |
 | `GET` | `/login` | OIDC login redirect |
 | `GET` | `/callback` | OIDC callback |
-| `GET` | `/logout` | End session |
-
----
-
-## Roadmap — Advanced Features
-
-### High Impact
-- **DOCX / Word export** — convert Markdown to `.docx` so specs open directly in Microsoft Word or Google Docs
-- **Diff viewer** — side-by-side comparison between any two versions in the history timeline
-- **Team workspaces** — invite collaborators, assign roles (owner / editor / viewer), shared spec libraries
-- **Spec templates** — community-contributed or custom templates pre-loaded for specific stacks (Next.js API, gRPC service, Kafka consumer, etc.)
-- **Bulk generation** — paste a list of GitHub repos or feature descriptions and generate multiple specs in parallel
-
-### AI Enhancements
-- **Interactive spec editing** — inline AI suggestions as you edit sections, similar to Cursor for documents
-- **Spec-to-code scaffold** — generate a project skeleton (file tree, boilerplate files) directly from a spec
-- **Competitor analysis mode** — given a product description, generate a spec that benchmarks against known competitors
-- **Spec Q&A with citations** — ask questions about the spec and get answers with line-level citations back to the source document
-- **Multi-model support** — let users choose between Claude, GPT-4o, and Gemini for generation
-
-### Collaboration
-- **Live co-editing** — multiple users edit spec sections simultaneously with conflict resolution (like Google Docs)
-- **Comments and annotations** — leave inline comments on specific sections, tag teammates
-- **Approval workflow** — request sign-off from stakeholders; track who approved what and when
-- **Slack / Teams integration** — post spec summaries or sync notifications to a channel
-- **Export to Confluence / Notion** — push the generated document directly into your team's wiki
-
-### Platform
-- **CLI tool** — `npx specforge generate ./src` runs generation from the terminal and writes the spec to a file
-- **VS Code extension** — generate or update specs from inside the editor, linked to the current file/project
-- **GitHub Action** — automatically generate or refresh a `SPEC.md` in the repo on every PR
-- **Spec quality score over time** — dashboard showing how completeness and complexity scores trend across versions
-- **Usage analytics** — per-user and per-team metrics on generation volume, most-used spec types, average quality scores
+| `GET` | `/logout` | End session + OIDC end-session |
 
 ---
 
