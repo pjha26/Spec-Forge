@@ -10,10 +10,11 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
 import {
-  Zap, FileCode2, Network, Eye, Loader2, AlertCircle, Calendar,
-  Server, Cpu, Database, BookOpen,
+  FileCode2, Network, Eye, Loader2, AlertCircle, Calendar,
+  Server, Cpu, Database, BookOpen, Zap,
 } from "lucide-react";
 import { format } from "date-fns";
+import { SpecForgeLogo } from "@/components/spec-forge-logo";
 
 const SPEC_ICONS: Record<string, any> = {
   system_design: Server,
@@ -23,7 +24,7 @@ const SPEC_ICONS: Record<string, any> = {
 };
 
 const SPEC_COLORS: Record<string, string> = {
-  system_design: "#7C3AED",
+  system_design: "#22D3EE",
   api_design: "#06B6D4",
   database_schema: "#10B981",
   feature_spec: "#F59E0B",
@@ -91,13 +92,8 @@ export default function SharePage() {
       >
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, rgba(0,180,216,0.25), rgba(56,189,248,0.15))", border: "1px solid rgba(0,180,216,0.25)" }}
-            >
-              <Zap className="w-3.5 h-3.5" style={{ color: "hsl(191,100%,52%)" }} />
-            </div>
-            <span className="text-sm font-mono font-bold" style={{ color: "hsl(191,100%,65%)" }}>SpecForge</span>
+          <a href="/" className="flex items-center shrink-0">
+            <SpecForgeLogo size={28} textSize="text-sm" />
           </a>
 
           <div className="h-4 w-px" style={{ background: "rgba(255,255,255,0.1)" }} />

@@ -646,18 +646,7 @@ export default function Landing() {
         className="fixed top-2 inset-x-4 md:inset-x-8 z-50 flex items-center justify-between px-5 py-3 rounded-2xl border border-white/8 bg-black/50 backdrop-blur-xl"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04) inset" }}
       >
-        <div className="flex items-center gap-2.5">
-          <motion.div
-            className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #0891b2, #0284c7)" }}
-            whileHover={{ rotate: [0, -8, 8, 0], scale: 1.1 }}
-            transition={{ duration: 0.4 }}
-          >
-            <Terminal className="w-3.5 h-3.5 text-white" />
-          </motion.div>
-          <span className="font-mono font-bold text-sm tracking-tight">SpecForge</span>
-          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">BETA</span>
-        </div>
+        <SpecForgeLogo size={30} showBeta textSize="text-sm" />
         <div className="flex items-center gap-3">
           <Link href="/app/specs">
             <motion.span

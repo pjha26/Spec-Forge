@@ -125,7 +125,7 @@ export function SpecForgeLogo({
 
           {/* ── Circuit spurs from hex to inner diamond ── */}
           <line x1="20"   y1="2.5"   x2="20"   y2="9"  stroke="#00b4d8" strokeWidth="0.6" opacity="0.4" />
-          <line x1="34.5" cy1="10.75" x2="30"   y2="14" stroke="#00b4d8" strokeWidth="0.6" opacity="0.4" />
+          <line x1="34.5" y1="10.75" x2="30"   y2="14" stroke="#00b4d8" strokeWidth="0.6" opacity="0.4" />
           <line x1="34.5" y1="27.25"  x2="30"   y2="25" stroke="#00b4d8" strokeWidth="0.6" opacity="0.4" />
           <line x1="20"   y1="35.5"  x2="20"   y2="31" stroke="#00b4d8" strokeWidth="0.6" opacity="0.4" />
           <line x1="5.5"  y1="27.25"  x2="10"   y2="25" stroke="#00b4d8" strokeWidth="0.6" opacity="0.4" />

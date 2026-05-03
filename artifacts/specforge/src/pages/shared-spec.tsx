@@ -19,6 +19,7 @@ import {
   Cpu,
   Database,
   BookOpen,
+  Terminal,
 } from "lucide-react";
 import { SpecForgeLogo } from "@/components/spec-forge-logo";
 import { Button } from "@/components/ui/button";
@@ -156,11 +157,8 @@ export default function SharedSpec() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/">
             <div className="flex items-center gap-2 cursor-pointer">
-              <div className="w-7 h-7 rounded bg-primary flex items-center justify-center">
-                <Terminal className="w-3.5 h-3.5 text-primary-foreground" />
-              </div>
-              <span className="font-mono font-bold text-base">SpecForge</span>
-              <span className="text-xs font-mono text-muted-foreground ml-2 border border-border px-2 py-0.5 rounded">Shared</span>
+              <SpecForgeLogo size={28} textSize="text-sm" />
+              <span className="text-xs font-mono text-muted-foreground ml-1 border border-border px-2 py-0.5 rounded">Shared</span>
             </div>
           </Link>
           <div className="flex items-center gap-2">
