@@ -8,6 +8,12 @@ export const userPreferencesTable = pgTable("user_preferences", {
   preferredModel: text("preferred_model"),
   defaultSpecType: text("default_spec_type"),
   extraContext: text("extra_context"),
+  linearApiKey: text("linear_api_key"),
+  linearTeamId: text("linear_team_id"),
+  jiraApiKey: text("jira_api_key"),
+  jiraBaseUrl: text("jira_base_url"),
+  jiraProjectKey: text("jira_project_key"),
+  slackWebhookUrl: text("slack_webhook_url"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 

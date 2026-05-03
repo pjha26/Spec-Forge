@@ -7,6 +7,7 @@ import { db as dbClient, conversations as conversationsTable } from "@workspace/
 import { randomBytes, createHmac, timingSafeEqual } from "crypto";
 import { createNotification } from "./notifications";
 import { saveSpecVersion } from "./versions";
+import { fireUserWebhooks, notifySlackOnSpecGenerated } from "../lib/fire-webhook.js";
 import { retrieveTeamKnowledge } from "./team-knowledge";
 import { createAuditLog } from "./audit-logs";
 import {
@@ -85,12 +86,21 @@ async function runSpecGeneration(specId: number, userId?: string): Promise<void>
     });
 
     if (userId) {
-      await createNotification(userId, {
-        type: "sync_complete",
-        title: "Sync complete",
-        message: `"${spec.title}" was successfully re-generated from source.`,
-        specId,
-      });
+      await Promise.allSettled([
+        createNotification(userId, {
+          type: "sync_complete",
+          title: "Sync complete",
+          message: `"${spec.title}" was successfully re-generated from source.`,
+          specId,
+        }),
+        fireUserWebhooks(userId, "spec.generated", {
+          id: specId,
+          title: spec.title,
+          specType: spec.specType,
+          inputType: spec.inputType,
+        }),
+        notifySlackOnSpecGenerated(userId, spec.title, spec.specType),
+      ]);
     }
   } catch {
     await db.update(specsTable).set({ status: "failed", updatedAt: new Date() }).where(eq(specsTable.id, specId));

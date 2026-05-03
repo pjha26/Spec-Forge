@@ -14,6 +14,7 @@ import TeamsPage from "@/pages/teams";
 import TeamDetail from "@/pages/team-detail";
 import SearchPage from "@/pages/search";
 import GraphPage from "@/pages/graph";
+import IntegrationsPage from "@/pages/integrations";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +76,13 @@ function Router() {
         {() => (
           <Layout>
             <GraphPage />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/app/integrations">
+        {() => (
+          <Layout>
+            <IntegrationsPage />
           </Layout>
         )}
       </Route>

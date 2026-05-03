@@ -25,6 +25,7 @@ import { SpecVersionHistory } from "@/components/spec-version-history";
 import { SpecScaffold } from "@/components/spec-scaffold";
 import { PrAgentPanel } from "@/components/pr-agent-panel";
 import { SpecHealthCard } from "@/components/spec-health-card";
+import { LinearSyncPanel } from "@/components/linear-sync-panel";
 
 export default function SpecDetail() {
   const { id } = useParams();
@@ -567,6 +568,10 @@ export default function SpecDetail() {
           </div>
 
           <div className="lg:col-span-1 space-y-6 print-hide">
+            {spec.status === "completed" && spec.content && (
+              <LinearSyncPanel specId={spec.id} specContent={spec.content} />
+            )}
+
             <ComplexityScoreCard
               score={spec.complexityScore ?? null}
               label={null}

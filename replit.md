@@ -44,6 +44,9 @@ AI-powered technical design document generator. Drop in a GitHub URL, text descr
 25. **AI Spec Conflict Detector** — `POST /api/teams/:id/conflicts/analyze` triggers fire-and-forget pairwise Claude analysis of all team specs; finds data model, API contract, naming, auth, and responsibility conflicts; results stored in `spec_conflicts` table; SpecConflictsPanel in a "Conflicts" tab on team detail with resolve/dismiss workflow
 26. **Spec Health Monitoring** — `spec_health_reports` table; `runHealthAnalysis()` fetches live GitHub file tree + recent commits and passes them to Claude to measure drift from the spec; alignment score 0–100 + categorised drift items; manual trigger via `POST /api/specs/:id/health/analyze`; nightly cron via `node-cron` (2 AM) for all GitHub-backed completed specs; SpecHealthCard in the spec detail sidebar
 27. **Weekly/Daily Digest Emails** — `notifyEmail` + `digestFrequency` columns on `teams`; `sendTeamDigest()` builds a dark-themed HTML email with per-spec alignment scores, drift counts, and open conflict summary; teams can set Off/Weekly/Daily + recipient email in Team Settings → "Spec Health Digest"; cron fires weekly Sundays at 8 AM and daily at 8 AM; SMTP via Nodemailer (requires `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` env vars); silently skipped if SMTP not configured
+28. **Linear / Jira Issue Sync** — AI (Claude) extracts actionable tasks from any completed spec and creates issues in Linear (GraphQL API) or Jira (REST API v3); API keys + team/project config stored in `user_preferences` (new columns: `linearApiKey`, `linearTeamId`, `jiraApiKey`, `jiraBaseUrl`, `jiraProjectKey`); synced issues stored in `spec_issues` table; `LinearSyncPanel` collapsible widget in spec detail sidebar lets users choose Linear or Jira and trigger sync; issues displayed with section grouping and external links; `GET /api/specs/:id/issues`, `POST /api/specs/:id/sync-issues`, `GET /api/specs/linear-teams`
+29. **Slack Notifications** — Incoming Webhook URL stored per user in `user_preferences.slackWebhookUrl`; Block Kit message with header, spec title, and "Open Spec →" CTA button sent via `notifySlackOnSpecGenerated()` after every successful spec generation; test endpoint `POST /api/integrations/slack/test`; configured in Integrations → Slack tab
+30. **Zapier / Make.com Outbound Webhooks** — `outbound_webhooks` table (per-user, event-scoped, with optional HMAC-SHA256 secret); 4 event types: `spec.generated`, `spec.shared`, `spec.health_declined`, `team.member_joined`; CRUD at `GET|POST /api/integrations/webhooks`, `PUT|DELETE /api/integrations/webhooks/:id`, `POST /api/integrations/webhooks/:id/test`; webhooks fire in `Promise.allSettled` after every spec generation; last HTTP status tracked per hook; Integrations → Zapier / Webhooks tab shows all hooks, last status badge, enable/pause toggle, and delete button
 
 ## Routes
 
@@ -51,6 +54,7 @@ AI-powered technical design document generator. Drop in a GitHub URL, text descr
 - `/app` — Generator
 - `/app/specs` — History
 - `/app/specs/:id` — Spec detail (Document | Diagram | Chat | Insights tabs)
+- `/app/integrations` — Integration hub (Linear/Jira, Slack, Zapier/Webhooks)
 - `/share/:token` — Public read-only share page (no auth)
 
 ## API Endpoints (all prefixed `/api`)
@@ -75,6 +79,17 @@ AI-powered technical design document generator. Drop in a GitHub URL, text descr
 - `GET /mcp` — MCP server manifest
 - `POST /mcp` — MCP JSON-RPC 2.0 handler (tools: generate_spec, list_specs, get_spec, analyze_spec)
 - `GET /auth/user` — current session user
+- `GET /integrations/settings` — masked integration settings (Linear, Jira, Slack)
+- `PUT /integrations/settings` — save integration API keys and config
+- `POST /integrations/slack/test` — send test Slack message
+- `GET /integrations/webhooks` — list user's outbound webhooks
+- `POST /integrations/webhooks` — register new outbound webhook
+- `PUT /integrations/webhooks/:id` — update webhook (name, url, enabled)
+- `DELETE /integrations/webhooks/:id` — delete webhook
+- `POST /integrations/webhooks/:id/test` — fire test payload
+- `GET /specs/:id/issues` — list Linear/Jira issues synced from spec
+- `POST /specs/:id/sync-issues` — AI-extract tasks + create issues (body: `{platform: "linear"|"jira"}`)
+- `GET /specs/linear-teams` — list teams from Linear using saved API key
 - `GET /login` — OIDC login redirect
 - `GET /callback` — OIDC callback
 - `GET /logout` — clear session + OIDC end-session

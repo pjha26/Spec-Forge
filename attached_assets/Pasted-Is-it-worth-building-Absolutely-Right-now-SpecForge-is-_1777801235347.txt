@@ -1,0 +1,25 @@
+Is it worth building?
+Absolutely. Right now SpecForge is a solo tool that happens to have team workspaces. What you're describing — multiple GitHub contributors all working on the documentation of the same project together — is a fundamentally different and more powerful product. It's the difference between Notion (personal notes) and Confluence (team knowledge base). Every open-source project, every startup engineering team, and every bootcamp group project has this exact problem.
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.25s;
+    animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  }
+VvisualizeVvisualize show_widgetYes — this is absolutely worth building. It's actually the most important missing piece for making SpecForge a real team product. Here's the complete breakdown:
+
+Why it's a great feature
+Right now SpecForge has team workspaces and roles, but "collaboration" means everyone is working independently on their own specs. What you're describing is different — multiple GitHub contributors jointly owning, generating, auditing, and approving the documentation for a single shared project. That's the difference between Google Docs (anyone can edit the same document) and Dropbox (everyone has their own copy). The first is infinitely more valuable.
+Every open-source project with more than one contributor has this problem. The README exists. The code exists. But the design doc is either missing, stale, or known only to the original author. SpecForge becomes the tool that keeps the whole contributor community aligned on how the project actually works.
+
+The four roles you need
+Owner can generate new specs, approve final versions, and push them back to GitHub. Editor can generate and regenerate specs and leave inline comments but cannot approve. Auditor is the most interesting new role — they cannot edit the spec at all, but their job is specifically to review it against the actual codebase and flag discrepancies. Viewer can only read and download. You already have owner/editor/viewer — adding auditor as a distinct role is the key new piece.
+
+How the audit workflow works specifically
+When someone with the auditor role opens a spec, they see the spec on the left and a diff panel on the right showing what has changed in the GitHub repo since the spec was last generated. They can highlight any section of the spec and mark it as "Verified", "Outdated", or "Missing from spec". These annotations are visible to all collaborators. An AI-assisted audit button runs Claude against the current codebase and the spec simultaneously, automatically flagging discrepancies. The owner sees a summary: "3 sections verified, 2 marked outdated, 1 missing — ready to regenerate?"
+
+The GitHub connection that makes it real
+The webhook you already built is the foundation. Extend it so that when a push happens, it doesn't just regenerate — it notifies all collaborators with a "this spec may be outdated" banner and queues an AI audit. When the owner approves a final spec, SpecForge commits SPEC.md back to the repo automatically via GitHub API. Every contributor who clones the repo gets the spec. This closes the loop completely — the spec lives in the codebase alongside the code.
+
+What to build in order
+Start by adding the auditor role to your existing team_members table — that's a one-line schema change. Then build the annotation system (highlight a spec section, attach a status tag and comment). Then add the AI-assisted audit endpoint that compares the current repo state to the spec. Finally add the GitHub commit-back flow so approved specs automatically land in the repo as SPEC.md. The whole thing builds on infrastructure you already have — webhooks, team roles, version history, and the GitHub API connection.

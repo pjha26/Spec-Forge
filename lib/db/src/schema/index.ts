@@ -12,3 +12,5 @@ export * from "./sso-config";
 export * from "./spec-conflicts";
 export * from "./spec-health";
 export * from "./spec-dependencies";
+export * from "./spec-issues";
+export * from "./outbound-webhooks";

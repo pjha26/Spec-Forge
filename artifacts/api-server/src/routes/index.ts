@@ -22,6 +22,9 @@ import ssoRouter from "./sso";
 import prAgentRouter from "./pr-agent";
 import specConflictsRouter from "./spec-conflicts";
 import specHealthRouter from "./spec-health";
+import linearSyncRouter from "./linear-sync";
+import outboundWebhooksRouter from "./outbound-webhooks";
+import integrationsRouter from "./integrations";
 
 const router: IRouter = Router();
 
@@ -48,5 +51,8 @@ router.use(insightsRouter);
 router.use(notificationsRouter);
 router.use(preferencesRouter);
 router.use("/mcp", mcpRouter);
+router.use("/specs", linearSyncRouter);
+router.use("/integrations", outboundWebhooksRouter);
+router.use(integrationsRouter);
 
 export default router;
