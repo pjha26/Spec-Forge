@@ -16,6 +16,10 @@ import {
   type FeatureCard,
 } from "@/components/gsap-scene";
 import { AIRadarPulse, SuccessCheck, OrbitNodes } from "@/components/lottie-scene";
+import {
+  MatrixRain, DevHUD, AchievementSystem, GlitchOverlay,
+  CommandsSection, FloatingCode, XPBar,
+} from "@/components/gaming-scene";
 
 // ── Typewriter ──────────────────────────────────────────────────────────────
 const SPEC_TYPES = ["System Design Docs", "API Blueprints", "Database Schemas", "Feature Specs"];
@@ -606,6 +610,10 @@ export default function Landing() {
       <GrainOverlay />
       <PageBeam />
       <ScrollProgress />
+      {/* ── Gaming HUD overlays (fixed, always visible) ─── */}
+      <DevHUD />
+      <AchievementSystem />
+      <XPBar />
 
       <style>{`
         @keyframes shimmer { from { background-position: -200% center; } to { background-position: 200% center; } }
@@ -671,6 +679,10 @@ export default function Landing() {
       <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-20 px-6 overflow-hidden" style={{ position: "relative" }}>
         <FloatingOrbs />
         <NeuralCanvas />
+        {/* Gaming: matrix rain (subtle, purple/cyan themed) */}
+        <MatrixRain opacity={0.13} />
+        {/* Gaming: floating code fragments drifting in background */}
+        <FloatingCode />
         {/* GSAP morphing blobs in background */}
         <MorphBlob size={600} color="rgba(124,58,237,0.12)" className="absolute -top-20 -left-32 pointer-events-none" />
         <MorphBlob size={420} color="rgba(37,99,235,0.10)" className="absolute bottom-0 right-0 pointer-events-none" />
@@ -709,7 +721,9 @@ export default function Landing() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
-              <ScrambleText text="Generate" delay={0.6} className="text-white" />
+              <GlitchOverlay>
+                <ScrambleText text="Generate" delay={0.6} className="text-white" />
+              </GlitchOverlay>
             </motion.div>
             <div>
               <span className="shimmer-text">{typed || "\u00a0"}</span>
@@ -960,6 +974,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* ── Commands (gaming terminal section) ──────────── */}
+      <CommandsSection />
 
       {/* ── CTA ──────────────────────────────────────────── */}
       <section className="py-32 px-6 relative overflow-hidden">
