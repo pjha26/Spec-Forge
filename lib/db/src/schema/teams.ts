@@ -9,6 +9,8 @@ export const teamsTable = pgTable("teams", {
   name: text("name").notNull(),
   description: text("description").notNull().default(""),
   ownerId: text("owner_id").notNull(),
+  customSystemPrompt: text("custom_system_prompt"),
+  ssoEnabled: text("sso_enabled").default("false"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

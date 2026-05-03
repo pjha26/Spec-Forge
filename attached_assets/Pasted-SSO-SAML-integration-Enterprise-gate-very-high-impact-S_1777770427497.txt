@@ -1,0 +1,43 @@
+SSO / SAML integration
+Enterprise gate
+very high impact
+SAML 2.0 SSO so enterprise teams can log in with their company identity provider (Okta, Azure AD, Google Workspace). Without SSO, no enterprise IT department will approve SpecForge for company-wide use.
+
+why it matters
+SSO is the single feature that unlocks enterprise contracts. Every $50K+/year deal requires it. It is also a signal — companies that ask for SSO are serious buyers.
+
+how to build it
+node-saml library. Add an sso_config table per team with entityId, ssoUrl, certificate. SSO login route that redirects to IDP. Callback that creates/updates user from SAML assertion.
+Get the full code ↗
+Audit log
+Compliance
+high impact
+A tamper-proof log of every action in a team workspace: who generated a spec, who edited it, who exported it, who shared it publicly, who changed team permissions. Filterable by user, action type, and date range. Exportable as CSV.
+
+why it matters
+Regulated industries (fintech, healthcare, legal) require audit logs for compliance. Without one, SpecForge cannot be used for anything sensitive. With one, you can charge 3x more.
+
+how to build it
+audit_logs table: team_id, user_id, action, resource_type, resource_id, metadata JSON, created_at. Insert an audit record in every route handler. Admin UI page to view and export.
+Get the full code ↗
+Custom AI system prompts per team
+Enterprise customisation
+high impact
+Team admins can write a custom system prompt prepended to every spec generation for their team: "Always use our internal API naming conventions. Always include a rollback plan section. Never recommend third-party auth providers — we use our own." Makes SpecForge feel bespoke.
+
+why it matters
+Enterprise teams have strong conventions. A tool that enforces their conventions automatically is not a tool anymore — it is infrastructure. Infrastructure does not get cancelled.
+
+how to build it
+team_settings table with custom_system_prompt text field. Prepend to every generation call for team-owned specs. Admin-only UI in team settings page.
+Get the full code ↗
+Data residency + private deployment
+Enterprise security
+medium impact
+Option to run SpecForge on the customer's own infrastructure (Docker image + Helm chart). AI calls go to their own Claude/OpenAI API keys. No data leaves their VPC. Required for banks, hospitals, and government contracts.
+
+why it matters
+Data residency concerns block SpecForge from entire industries. A private deployment option removes the objection entirely. You already have a clean monorepo structure — packaging it as a Docker image is straightforward.
+
+how to build it
+Dockerfile + docker-compose.yml. Environment-variable-driven config (no hardcoded Replit assumptions). Helm chart for Kubernetes. License key validation on startup for self-hosted instances.

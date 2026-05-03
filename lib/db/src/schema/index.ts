@@ -7,3 +7,5 @@ export * from "./spec-versions";
 export * from "./teams";
 export * from "./preferences";
 export * from "./team-knowledge";
+export * from "./audit-logs";
+export * from "./sso-config";
