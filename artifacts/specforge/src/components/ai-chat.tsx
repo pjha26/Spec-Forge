@@ -170,7 +170,7 @@ export function AIChat() {
   const hasMessages = messages.length > 0 || streamedContent;
 
   return (
-    <div className="flex flex-col h-full" style={{ background: "rgba(8,8,14,0.95)" }}>
+    <div className="flex flex-col h-full overflow-hidden" style={{ background: "rgba(8,8,14,0.95)" }}>
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 shrink-0"
@@ -215,10 +215,10 @@ export function AIChat() {
         </div>
       </div>
 
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Conversation sidebar */}
         {showSidebar && (
-          <div className="w-44 shrink-0 flex flex-col"
+          <div className="w-40 shrink-0 flex flex-col overflow-hidden"
             style={{ borderRight: "1px solid rgba(255,255,255,0.06)" }}
           >
             <div className="px-2.5 py-2">
@@ -282,13 +282,13 @@ export function AIChat() {
                     style={{ background: "radial-gradient(circle, rgba(139,92,246,0.6), transparent)" }}
                   />
                 </div>
-                <div className="space-y-1.5 max-w-[220px]">
+                <div className="space-y-1.5 w-full max-w-[200px]">
                   <p className="font-bold text-sm text-white">Ask me anything</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     I can help with your specs, architecture decisions, code questions, and more.
                   </p>
                 </div>
-                <div className="space-y-1.5 w-full max-w-[240px]">
+                <div className="space-y-1.5 w-full max-w-[200px]">
                   {[
                     "Explain microservices vs monolith",
                     "Best practices for REST APIs",
@@ -406,7 +406,7 @@ export function AIChat() {
           </ScrollArea>
 
           {/* Input */}
-          <div className="p-3 shrink-0"
+          <div className="p-3 pb-10 shrink-0"
             style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
           >
             <div className="flex items-end gap-2">
