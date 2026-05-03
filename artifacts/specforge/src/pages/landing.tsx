@@ -194,7 +194,7 @@ function FloatingOrbs() {
 }
 
 // ── Magnetic Button ────────────────────────────────────────────────────────
-function MagneticButton({ children, className }: { children: React.ReactNode; className?: string }) {
+function MagneticButton({ children, className, style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   const ref = useRef<HTMLDivElement>(null);
   const x = useSpring(0, { stiffness: 180, damping: 14 });
   const y = useSpring(0, { stiffness: 180, damping: 14 });
@@ -210,7 +210,7 @@ function MagneticButton({ children, className }: { children: React.ReactNode; cl
 
   return (
     <motion.div ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} style={{ x, y }}>
-      <div className={className}>{children}</div>
+      <div className={className} style={style}>{children}</div>
     </motion.div>
   );
 }

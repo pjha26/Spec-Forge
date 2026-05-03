@@ -10,7 +10,7 @@
  *  - CursorTrail         — 12-dot GPU-composited cursor trail
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ElementType } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { TextPlugin } from "gsap/TextPlugin";
@@ -37,7 +37,7 @@ export function ScrambleText({
   text: string;
   delay?: number;
   className?: string;
-  tag?: keyof JSX.IntrinsicElements;
+  tag?: ElementType;
 }) {
   const containerRef = useRef<HTMLSpanElement>(null);
 
