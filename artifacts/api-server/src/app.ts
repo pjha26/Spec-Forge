@@ -36,6 +36,16 @@ app.use(authMiddleware);
 
 app.use("/api", router);
 
+const staticDir = process.env.STATIC_DIR;
+if (staticDir) {
+  import("path").then((path) => {
+    app.use(express.static(path.join(staticDir, "public")));
+    app.get(/.*/, (req, res) => {
+      res.sendFile(path.join(staticDir, "public", "index.html"));
+    });
+  });
+}
+
 // Ensure the dev user row exists before the first request arrives
 initDevUser().catch(() => {});
 

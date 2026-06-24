@@ -1,5 +1,6 @@
 FROM node:24-alpine AS base
 WORKDIR /app
+ENV CI=true
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # ── Install dependencies ────────────────────────────────────────────────────
@@ -20,11 +21,14 @@ RUN pnpm install --frozen-lockfile
 # ── Build frontend ──────────────────────────────────────────────────────────
 FROM deps AS frontend-build
 COPY . .
+ENV PORT=8080
+ENV BASE_PATH=/
 RUN pnpm --filter @workspace/specforge run build
 
 # ── Build API server ────────────────────────────────────────────────────────
 FROM deps AS api-build
 COPY . .
+ENV PORT=8080
 RUN pnpm --filter @workspace/api-server run build
 
 # ── Production image ────────────────────────────────────────────────────────
@@ -55,4 +59,4 @@ ENV NODE_ENV=production
 ENV PORT=8080
 ENV STATIC_DIR=/app/artifacts/specforge/dist
 
-CMD ["node", "artifacts/api-server/dist/index.js"]
+CMD ["node", "artifacts/api-server/dist/index.mjs"]

@@ -11,7 +11,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U specforge"]
       interval: 5s
@@ -42,6 +42,12 @@ services:
       # Local dev auth bypass (leave unset / false in production)
       LOCAL_DEV: ${LOCAL_DEV:-false}
       LOCAL_DEV_USER_ID: ${LOCAL_DEV_USER_ID:-local-dev-user}
+      AI_INTEGRATIONS_ANTHROPIC_BASE_URL: ${AI_INTEGRATIONS_ANTHROPIC_BASE_URL:-https://api.anthropic.com}
+      AI_INTEGRATIONS_ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-dummy_anthropic_key}
+      AI_INTEGRATIONS_OPENAI_BASE_URL: ${AI_INTEGRATIONS_OPENAI_BASE_URL:-https://api.openai.com/v1}
+      AI_INTEGRATIONS_OPENAI_API_KEY: ${OPENAI_API_KEY:-dummy_openai_key}
+      AI_INTEGRATIONS_GEMINI_BASE_URL: ${AI_INTEGRATIONS_GEMINI_BASE_URL:-https://generativelanguage.googleapis.com}
+      AI_INTEGRATIONS_GEMINI_API_KEY: ${GOOGLE_AI_API_KEY:-dummy_gemini_key}
 
 volumes:
   pgdata:
