@@ -7,8 +7,6 @@ out-tsc
 *.tsbuildinfo
 .expo
 .expo-shared
-.env
-.env.example
 # dependencies
 node_modules
 
@@ -51,3 +49,5 @@ Thumbs.db
 
 # Environment Variables
 .env
+.env.local
+.env.*.local

@@ -119,6 +119,81 @@ specforge/
 
 ---
 
+## System Architecture
+
+```mermaid
+graph TD
+    %% Core Users
+    User["👥 User (Browser)"]
+
+    %% Frontend App
+    subgraph Frontend ["Frontend (React 18+, Vite)"]
+        UI["React UI (shadcn/ui, Tailwind)"]
+        Stream["Real-time Client (SSE)"]
+        AuthG["Auth Gate"]
+    end
+
+    %% External Auth Provider
+    ReplitAuth{"Replit Auth (OIDC)"}
+
+    %% Backend API
+    subgraph Backend ["API Server (Node.js, Express)"]
+        Router["API Router (/api/*)"]
+        GenServ["Spec Generation Service"]
+        SSE["SSE Stream Manager"]
+        Sync["GitHub Sync / Webhooks"]
+    end
+
+    %% AI Providers
+    subgraph AI ["AI Model Providers"]
+        OpenAI["OpenAI (GPT)"]
+        Gemini["Google Gemini"]
+    end
+
+    %% Database
+    subgraph DatabaseLayer ["Database Layer"]
+        DB[(PostgreSQL)]
+        ORM["Drizzle ORM"]
+        ORM <--> DB
+    end
+
+    %% External Integrations
+    GitHub["GitHub API"]
+    Notion["Notion API"]
+
+    %% Connections
+    User <-->|Interacts| Frontend
+    AuthG <-->|OAuth Flow| ReplitAuth
+    
+    Frontend <-->|REST API| Router
+    Frontend <-->|Real-time stream| SSE
+    
+    Router <-->|Queries| ORM
+    
+    Router --> GenServ
+    GenServ -->|Prompts| AI
+    AI -->|Tokens| GenServ
+    GenServ -->|Pushes updates| SSE
+    
+    Sync <-->|Fetches Code / Receives Webhooks| GitHub
+    Router -->|Exports Document| Notion
+
+    %% Styling
+    classDef client fill:#3b82f6,stroke:#2563eb,color:#fff;
+    classDef backend fill:#10b981,stroke:#059669,color:#fff;
+    classDef db fill:#f59e0b,stroke:#d97706,color:#fff;
+    classDef ext fill:#8b5cf6,stroke:#7c3aed,color:#fff;
+    classDef ai fill:#ec4899,stroke:#db2777,color:#fff;
+    
+    class User,Frontend,UI,Theme,Stream,AuthG client;
+    class Backend,Router,AuthM,GenServ,SSE,Sync backend;
+    class DatabaseLayer,DB,ORM db;
+    class ReplitAuth,GitHub,Notion ext;
+    class AI,OpenAI,Gemini ai;
+```
+
+---
+
 ## Getting Started
 
 ### Prerequisites
