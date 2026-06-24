@@ -52,7 +52,7 @@ SPEC 2 — "${spec2.title}" (${spec2.specType.replace(/_/g, " ")}):
 ${spec2.content.slice(0, 4000)}`;
 
   const raw = await generateCompletion({
-    model: "claude-sonnet-4-6",
+    model: "gpt-4o-mini",
     system: "You are a senior architect. Find specification conflicts. Return only a JSON array.",
     userMessage: prompt,
     maxTokens: 3000,

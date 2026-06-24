@@ -9,18 +9,12 @@ import { openai } from "@workspace/integrations-openai-ai-server";
 import { ai as gemini } from "@workspace/integrations-gemini-ai";
 
 export type SupportedModel =
-  | "claude-sonnet-4-6"
-  | "gpt-5.4"
-  | "gpt-5.1"
-  | "gemini-2.5-pro"
-  | "gemini-2.5-flash";
+  | "gpt-4o-mini"
+  | "gemini-1.5-flash";
 
 export const MODEL_META: Record<SupportedModel, { label: string; provider: "anthropic" | "openai" | "gemini"; badge: string }> = {
-  "claude-sonnet-4-6": { label: "Claude Sonnet",    provider: "anthropic", badge: "Anthropic" },
-  "gpt-5.4":           { label: "GPT-5.4",          provider: "openai",    badge: "OpenAI"    },
-  "gpt-5.1":           { label: "GPT-5.1",          provider: "openai",    badge: "OpenAI"    },
-  "gemini-2.5-pro":    { label: "Gemini 2.5 Pro",   provider: "gemini",    badge: "Google"    },
-  "gemini-2.5-flash":  { label: "Gemini 2.5 Flash", provider: "gemini",    badge: "Google"    },
+  "gpt-4o-mini":       { label: "GPT-4o Mini",      provider: "openai",    badge: "OpenAI"    },
+  "gemini-1.5-flash":  { label: "Gemini 1.5 Flash", provider: "gemini",    badge: "Google"    },
 };
 
 export function isValidModel(model: unknown): model is SupportedModel {

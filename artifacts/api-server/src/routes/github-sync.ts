@@ -80,7 +80,7 @@ router.get("/:id/github-sync/status", async (req, res) => {
 async function regenerateFromGitHub(spec: typeof specsTable.$inferSelect) {
   await db.update(specsTable).set({ status: "generating", updatedAt: new Date() }).where(eq(specsTable.id, spec.id));
 
-  const model = isValidModel(spec.aiModel) ? spec.aiModel : "claude-sonnet-4-6";
+  const model = isValidModel(spec.aiModel) ? spec.aiModel : "gpt-4o-mini";
   const system = SPEC_PROMPTS[spec.specType] ?? SPEC_PROMPTS.feature_spec;
   const userMessage = `Re-analyze and regenerate a ${spec.specType.replace(/_/g, " ")} for this GitHub repository: ${spec.inputValue}\n\nCreate a detailed, up-to-date professional document reflecting the latest codebase state.`;
 

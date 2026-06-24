@@ -210,7 +210,7 @@ Return ONLY the JSON object, no markdown fences.`;
       const userMsg = `TECHNICAL SPEC:\n${spec.content.slice(0, 8000)}${context}`;
 
       let fullResponse = "";
-      for await (const chunk of streamCompletion({ model: "claude-sonnet-4-6", system: systemPrompt, userMessage: userMsg, maxTokens: 2000 })) {
+      for await (const chunk of streamCompletion({ model: "gpt-4o-mini", system: systemPrompt, userMessage: userMsg, maxTokens: 2000 })) {
         fullResponse += chunk;
       }
 

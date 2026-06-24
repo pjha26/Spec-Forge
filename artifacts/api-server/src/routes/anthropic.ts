@@ -203,7 +203,7 @@ router.post("/conversations/:id/messages", async (req, res) => {
     let fullResponse = "";
 
     const stream = anthropic.messages.stream({
-      model: "claude-sonnet-4-6",
+      model: "gpt-4o-mini",
       max_tokens: 8192,
       system: `You are the SpecForge AI Assistant — a helpful, expert technical advisor embedded in SpecForge, an AI-powered tool that generates professional technical design documents for developers and teams.
 

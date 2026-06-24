@@ -26,7 +26,7 @@ export const specsTable = pgTable("specs", {
   webhookSecret: text("webhook_secret"),
   lastSyncedAt: timestamp("last_synced_at"),
   teamId: integer("team_id"),
-  aiModel: text("ai_model").notNull().default("claude-sonnet-4-6"),
+  aiModel: text("ai_model").notNull().default("gpt-4o-mini"),
   multiAgent: boolean("multi_agent").notNull().default(false),
   extendedThinking: boolean("extended_thinking").notNull().default(false),
   thinkingContent: text("thinking_content"),

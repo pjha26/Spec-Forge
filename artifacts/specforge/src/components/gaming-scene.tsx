@@ -536,7 +536,7 @@ function CommandBlock({ command, index, globalActive }: {
         </span>
         <div className="ml-auto flex items-center gap-1.5">
           <Cpu className="w-2.5 h-2.5" style={{ color: "rgba(124,58,237,0.5)" }} />
-          <span className="text-[9px] font-mono" style={{ color: "rgba(124,58,237,0.5)" }}>claude-sonnet-4-6</span>
+          <span className="text-[9px] font-mono" style={{ color: "rgba(124,58,237,0.5)" }}>gpt-4o-mini</span>
         </div>
       </div>
 

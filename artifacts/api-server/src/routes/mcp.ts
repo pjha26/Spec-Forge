@@ -39,8 +39,8 @@ const TOOLS = [
         },
         model: {
           type: "string",
-          enum: ["claude-sonnet-4-6", "gpt-5.4", "gemini-2.5-pro", "gemini-2.5-flash"],
-          description: "AI model to use (default: claude-sonnet-4-6)",
+          enum: ["gpt-4o-mini", "gpt-5.4", "gemini-2.5-pro", "gemini-2.5-flash"],
+          description: "AI model to use (default: gpt-4o-mini)",
         },
       },
       required: ["title", "specType", "inputType", "inputValue"],
@@ -174,7 +174,7 @@ async function handleTool(name: string, args: Record<string, any>, req: any): Pr
     if (!spec.content) throw new Error("Spec has no content to analyze");
 
     const analysis = await generateCompletion({
-      model: "claude-sonnet-4-6",
+      model: "gpt-4o-mini",
       system: `You are a senior technical architect reviewing specification documents. Provide a concise, actionable analysis.`,
       userMessage: `Analyze this ${spec.specType.replace(/_/g, " ")} specification for completeness, quality, and gaps:\n\n${spec.content.slice(0, 6000)}\n\nProvide:\n1. Completeness score (0-100%)\n2. Overall health (Excellent/Good/Fair/Poor)\n3. Top 3 strengths\n4. Top 3 gaps or missing sections\n5. 3 specific improvement suggestions`,
       maxTokens: 2048,
@@ -183,7 +183,7 @@ async function handleTool(name: string, args: Record<string, any>, req: any): Pr
   }
 
   if (name === "generate_spec") {
-    const { title, specType, inputType, inputValue, model = "claude-sonnet-4-6" } = args;
+    const { title, specType, inputType, inputValue, model = "gpt-4o-mini" } = args;
     if (!title || !specType || !inputType || !inputValue) throw new Error("title, specType, inputType, inputValue are required");
 
     const PROMPTS: Record<string, string> = {
@@ -198,7 +198,7 @@ async function handleTool(name: string, args: Record<string, any>, req: any): Pr
       ? `Generate a ${specType.replace(/_/g, " ")} for this GitHub repository: ${inputValue}. Analyze the URL and create a detailed, professional document.`
       : `Generate a ${specType.replace(/_/g, " ")} for: ${inputValue}\n\nCreate a detailed, professional document.`;
 
-    const modelToUse = isValidModel(model) ? model : "claude-sonnet-4-6";
+    const modelToUse = isValidModel(model) ? model : "gpt-4o-mini";
 
     // Generate in background and save
     const [spec] = await db.insert(specsTable).values({

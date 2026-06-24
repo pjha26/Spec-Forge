@@ -53,7 +53,7 @@ async function runSpecGeneration(specId: number, userId?: string): Promise<void>
       ? `Generate a ${spec.specType.replace(/_/g, " ")} for this GitHub repository: ${spec.inputValue}\n\nAnalyze the repository URL and make reasonable assumptions about the project based on the URL structure and naming. Create a detailed, professional document.`
       : `Generate a ${spec.specType.replace(/_/g, " ")} for this project:\n\n${spec.inputValue}\n\nCreate a detailed, professional document based on this description.`;
 
-    const modelToUse = isValidModel(spec.aiModel) ? spec.aiModel : "claude-sonnet-4-6";
+    const modelToUse = isValidModel(spec.aiModel) ? spec.aiModel : "gpt-4o-mini";
     const fullContent = await generateCompletion({
       model: modelToUse,
       system: systemPrompt,
@@ -272,7 +272,7 @@ const MERMAID_PROMPTS: Record<string, string> = {
 
 async function generateComplexityAnalysis(specContent: string, specType: string) {
   const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
+    model: "gpt-4o-mini",
     max_tokens: 8192,
     system: `You are a senior software architect analyzing technical design documents. 
 Return ONLY valid JSON with no markdown formatting, no code blocks, no explanation.
@@ -319,7 +319,7 @@ async function generateMermaidDiagram(specContent: string, specType: string) {
   const prompt = MERMAID_PROMPTS[specType] || MERMAID_PROMPTS.system_design;
 
   const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
+    model: "gpt-4o-mini",
     max_tokens: 8192,
     system: `You generate Mermaid.js diagrams based on technical specifications.
 Return ONLY the raw Mermaid diagram syntax. No markdown code fences, no explanation, no \`\`\`mermaid prefix.
@@ -466,7 +466,7 @@ router.post("/", async (req, res) => {
         imageInput: imageInput ?? null,
         content: "",
         status: "pending",
-        aiModel: aiModel ?? "claude-sonnet-4-6",
+        aiModel: aiModel ?? "gpt-4o-mini",
         multiAgent: multiAgent ?? false,
         extendedThinking: extendedThinking ?? false,
       })
@@ -485,7 +485,7 @@ router.post("/", async (req, res) => {
         action: "spec.created",
         resourceType: "spec",
         resourceId: spec.id,
-        metadata: { title, specType, inputType: rawInputType, aiModel: aiModel ?? "claude-sonnet-4-6" },
+        metadata: { title, specType, inputType: rawInputType, aiModel: aiModel ?? "gpt-4o-mini" },
         req,
       }).catch(() => {});
     }
@@ -715,7 +715,7 @@ router.post("/:id/stream", async (req, res) => {
   try {
     await db.update(specsTable).set({ status: "generating", updatedAt: new Date() }).where(eq(specsTable.id, spec.id));
 
-    const modelToUse = isValidModel(spec.aiModel) ? spec.aiModel : "claude-sonnet-4-6";
+    const modelToUse = isValidModel(spec.aiModel) ? spec.aiModel : "gpt-4o-mini";
     let systemPrompt = SPEC_PROMPTS[spec.specType] || SPEC_PROMPTS.feature_spec;
 
     // Inject team custom system prompt (prepended — team conventions override defaults)
@@ -1040,7 +1040,7 @@ Rules:
 
     const userMessage = `Generate a project scaffold for this specification:\n\n${spec.content.slice(0, 8000)}`;
 
-    const modelToUse = isValidModel(spec.aiModel) ? spec.aiModel : "claude-sonnet-4-6";
+    const modelToUse = isValidModel(spec.aiModel) ? spec.aiModel : "gpt-4o-mini";
     const raw = await generateCompletion({ model: modelToUse, system: systemPrompt, userMessage, maxTokens: 8192 });
 
     let scaffold;

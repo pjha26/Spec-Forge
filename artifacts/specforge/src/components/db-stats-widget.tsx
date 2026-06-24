@@ -31,7 +31,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const MODEL_COLORS: Record<string, string> = {
-  "claude-sonnet-4-6": "#A78BFA",
+  "gpt-4o-mini": "#A78BFA",
   "gpt-5.4":           "#34D399",
   "gpt-5.1":           "#60A5FA",
 };
@@ -77,7 +77,7 @@ export function DbStatsWidget() {
 
   const topType = stats.byType[0];
   const topModel = stats.byModel[0]?.aiModel ?? "—";
-  const modelLabel = topModel.replace("claude-sonnet-4-6", "Claude Sonnet").replace("gpt-5.4", "GPT-5.4");
+  const modelLabel = topModel.replace("gpt-4o-mini", "Claude Sonnet").replace("gpt-5.4", "GPT-5.4");
 
   return (
     <Card className="border-border bg-card overflow-hidden">
@@ -175,7 +175,7 @@ export function DbStatsWidget() {
               <div className="flex flex-wrap gap-1.5">
                 {stats.byModel.map(m => {
                   const color = MODEL_COLORS[m.aiModel] ?? "#6B7280";
-                  const label = m.aiModel.replace("claude-sonnet-4-6", "Claude").replace("gpt-5.4", "GPT-5.4").replace("gpt-5.1", "GPT-5.1");
+                  const label = m.aiModel.replace("gpt-4o-mini", "Claude").replace("gpt-5.4", "GPT-5.4").replace("gpt-5.1", "GPT-5.1");
                   return (
                     <div key={m.aiModel} className="flex items-center gap-1.5 rounded px-2 py-1"
                       style={{ background: `${color}14`, border: `1px solid ${color}30` }}>

@@ -78,7 +78,7 @@ ${spec.content.slice(0, 5000)}
 ${repoContext}`;
 
   const raw = await generateCompletion({
-    model: "claude-sonnet-4-6",
+    model: "gpt-4o-mini",
     system: "You audit spec vs codebase alignment. Return only valid JSON.",
     userMessage: prompt,
     maxTokens: 3000,

@@ -101,7 +101,7 @@ export type CreateSpecBodyAiModel =
   (typeof CreateSpecBodyAiModel)[keyof typeof CreateSpecBodyAiModel];
 
 export const CreateSpecBodyAiModel = {
-  "claude-sonnet-4-6": "claude-sonnet-4-6",
+  "gpt-4o-mini": "gpt-4o-mini",
   "gpt-54": "gpt-5.4",
   "gpt-51": "gpt-5.1",
   "gemini-25-pro": "gemini-2.5-pro",

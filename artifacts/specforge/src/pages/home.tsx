@@ -93,7 +93,7 @@ export default function Home() {
   const [inputType, setInputType] = useState<"github_url" | "description" | "image">("github_url");
   const [inputValue, setInputValue] = useState("");
   const [specType, setSpecType] = useState<"system_design" | "api_design" | "database_schema" | "feature_spec">("system_design");
-  const [aiModel, setAiModel] = useState<"claude-sonnet-4-6" | "gpt-5.4" | "gpt-5.1" | "gemini-2.5-pro" | "gemini-2.5-flash">("claude-sonnet-4-6");
+  const [aiModel, setAiModel] = useState<"gpt-4o-mini" | "gemini-1.5-flash">("gpt-4o-mini");
 
   // New feature state
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -247,6 +247,8 @@ export default function Home() {
       let buffer = "";
       const agentCharCounts: Record<string, number> = {};
 
+      let hasError = false;
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -284,6 +286,7 @@ export default function Home() {
               } else if (data.done) {
                 setGenerationPhase("idle");
               } else if (data.error) {
+                hasError = true;
                 toast({ title: "Generation Error", description: data.error, variant: "destructive" });
               }
             } catch {}
@@ -291,7 +294,9 @@ export default function Home() {
         }
       }
 
-      toast({ title: "Spec generated!", description: multiAgent ? "4 specialist agents merged." : extendedThinking ? "Extended reasoning complete." : "Your technical document is ready." });
+      if (!hasError) {
+        toast({ title: "Spec generated!", description: multiAgent ? "4 specialist agents merged." : extendedThinking ? "Extended reasoning complete." : "Your technical document is ready." });
+      }
     } catch {
       toast({ title: "Error", description: "Failed to generate spec.", variant: "destructive" });
     } finally {
@@ -572,11 +577,8 @@ export default function Home() {
                 <label className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest">AI Model</label>
                 <div className="grid grid-cols-1 gap-1.5">
                   {([
-                    { value: "claude-sonnet-4-6" as const, label: "Claude Sonnet", badge: "Anthropic", color: "#C084FC", dot: "rgba(192,132,252,0.8)" },
-                    { value: "gpt-5.4" as const, label: "GPT-5.4",          badge: "OpenAI",    color: "#34D399", dot: "rgba(52,211,153,0.8)"  },
-                    { value: "gpt-5.1" as const, label: "GPT-5.1",          badge: "OpenAI",    color: "#34D399", dot: "rgba(52,211,153,0.8)"  },
-                    { value: "gemini-2.5-pro" as const, label: "Gemini 2.5 Pro",  badge: "Google",    color: "#60A5FA", dot: "rgba(96,165,250,0.8)"  },
-                    { value: "gemini-2.5-flash" as const, label: "Gemini 2.5 Flash", badge: "Google", color: "#60A5FA", dot: "rgba(96,165,250,0.8)"  },
+                    { value: "gpt-4o-mini" as const, label: "GPT-4o Mini",          badge: "OpenAI",    color: "#34D399", dot: "rgba(52,211,153,0.8)"  },
+                    { value: "gemini-1.5-flash" as const, label: "Gemini 1.5 Flash", badge: "Google", color: "#60A5FA", dot: "rgba(96,165,250,0.8)"  },
                   ] as const).map(({ value, label, badge, color, dot }, idx) => {
                     const active = aiModel === value;
                     return (

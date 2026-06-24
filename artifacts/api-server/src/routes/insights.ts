@@ -16,7 +16,7 @@ router.post("/specs/:id/insights", async (req, res) => {
   try {
     const contentPreview = spec.content.slice(0, 5000);
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "gpt-4o-mini",
       max_tokens: 1024,
       messages: [{
         role: "user",

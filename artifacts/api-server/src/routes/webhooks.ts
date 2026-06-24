@@ -39,7 +39,7 @@ async function regenerateSpec(specId: number): Promise<void> {
       : `Generate a ${spec.specType.replace(/_/g, " ")} for:\n\n${spec.inputValue}\n\nCreate a detailed, professional document.`;
 
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "gpt-4o-mini",
       max_tokens: 8192,
       system: systemPrompt,
       messages: [{ role: "user", content: userMessage }],

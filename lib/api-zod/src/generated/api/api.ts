@@ -112,7 +112,7 @@ export const CreateSpecBody = zod.object({
   title: zod.string(),
   aiModel: zod
     .enum([
-      "claude-sonnet-4-6",
+      "gpt-4o-mini",
       "gpt-5.4",
       "gpt-5.1",
       "gemini-2.5-pro",

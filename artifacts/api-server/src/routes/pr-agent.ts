@@ -103,7 +103,7 @@ PR DIFF:
 ${diff}`;
 
     const raw = await generateCompletion({
-      model: "claude-sonnet-4-6",
+      model: "gpt-4o-mini",
       system: "You analyze GitHub PRs against technical specs. Return only valid JSON.",
       userMessage: prompt,
       maxTokens: 4096,
