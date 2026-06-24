@@ -17,9 +17,7 @@ Drop in a GitHub URL or describe your project in plain text and SpecForge instan
 - **8 starter templates** — SaaS API, Mobile App, Real-time Chat, Data Pipeline, E-commerce Platform, Microservices, ML API, Multi-tenant Database
 
 ### Multi-Model AI
-- **Claude Sonnet** (Anthropic) — default, best for long-form structured documents
-- **Claude Haiku** (Anthropic) — faster and lighter
-- **GPT-5** (OpenAI) — alternative with strong reasoning
+- **GPT-5** (OpenAI) — default, alternative with strong reasoning
 - **Gemini 2.5 Pro / Flash** (Google) — Flash optimised for speed
 - Model selector on the generator page; choice is stored per spec
 
@@ -37,7 +35,7 @@ Drop in a GitHub URL or describe your project in plain text and SpecForge instan
 - **GitHub Webhook** — auto-regenerates on every `git push`; HMAC-SHA256 verified; fires in-app notification on completion or failure
 
 ### AI-Powered Extras
-- **Ask Your Doc** — Claude-powered chat scoped to each spec; ask questions, request clarifications, get implementation advice
+- **Ask Your Doc** — AI-powered chat scoped to each spec; ask questions, request clarifications, get implementation advice
 - **Intelligent Insights** — on-demand spec health analysis: completeness %, overall health rating, strengths, missing areas, improvement suggestions, and estimated implementation timeline
 
 ### Collaboration & Realtime
@@ -79,7 +77,7 @@ Drop in a GitHub URL or describe your project in plain text and SpecForge instan
 | Animation | Framer Motion, GSAP |
 | Backend | Node.js, Express, TypeScript |
 | Database | PostgreSQL (Replit-managed), Drizzle ORM |
-| AI | Anthropic Claude, OpenAI GPT, Google Gemini |
+| AI | OpenAI GPT, Google Gemini |
 | Auth | Replit Auth — OpenID Connect + PKCE, sessions in PostgreSQL |
 | Realtime | Server-Sent Events (SSE) — presence, notifications, generation stream |
 | API Contract | OpenAPI 3.1 → Orval codegen → React Query hooks + Zod schemas |
@@ -128,7 +126,7 @@ specforge/
 - Node.js 20+
 - pnpm 9+
 - A Replit account (for Auth and PostgreSQL)
-- An Anthropic API key (set as environment secret)
+- An OpenAI or Gemini API key (set as environment secret)
 
 ### Local Development
 
@@ -165,7 +163,7 @@ pnpm --filter @workspace/db run push
 |---|---|---|
 | `DATABASE_URL` | Yes | PostgreSQL connection string (auto-provisioned by Replit) |
 | `SESSION_SECRET` | Yes | Secret for signing session cookies |
-| `ANTHROPIC_API_KEY` | Yes | Claude API key for spec generation |
+| `OPENAI_API_KEY` / `GOOGLE_AI_API_KEY` | Yes | API key for spec generation |
 | `NOTION_API_KEY` | Optional | Notion Internal Integration token for Notion export |
 | `LOCAL_DEV` | Dev only | Set `true` to bypass Replit Auth |
 | `VITE_LOCAL_DEV` | Dev only | Shows the LOCAL DEV MODE banner in the UI |
