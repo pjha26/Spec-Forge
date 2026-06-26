@@ -102,10 +102,7 @@ export type CreateSpecBodyAiModel =
 
 export const CreateSpecBodyAiModel = {
   "gpt-4o-mini": "gpt-4o-mini",
-  "gpt-54": "gpt-5.4",
-  "gpt-51": "gpt-5.1",
-  "gemini-25-pro": "gemini-2.5-pro",
-  "gemini-25-flash": "gemini-2.5-flash",
+  "gemini-15-flash": "gemini-1.5-flash",
 } as const;
 
 export interface CreateSpecBody {

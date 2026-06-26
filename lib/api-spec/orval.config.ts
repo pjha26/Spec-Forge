@@ -50,7 +50,7 @@ export default defineConfig({
     output: {
       workspace: path.resolve(apiZodSrc, "generated"),
       client: "zod",
-      target: "api",
+      target: "api.ts",
       mode: "single",
       clean: true,
       prettier: true,

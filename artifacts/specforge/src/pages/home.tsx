@@ -93,7 +93,7 @@ export default function Home() {
   const [inputType, setInputType] = useState<"github_url" | "description" | "image">("github_url");
   const [inputValue, setInputValue] = useState("");
   const [specType, setSpecType] = useState<"system_design" | "api_design" | "database_schema" | "feature_spec">("system_design");
-  const [aiModel, setAiModel] = useState<"gpt-4o-mini" | "gemini-1.5-flash">("gpt-4o-mini");
+  const [aiModel, setAiModel] = useState<"gpt-4o-mini" | "gemini-1.5-flash">("gemini-1.5-flash");
 
   // New feature state
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -204,23 +204,6 @@ export default function Home() {
           ? "Image Spec"
           : "Generated Spec";
 
-      const createPayload: any = {
-        data: {
-          inputType: inputType === "image" ? "description" : inputType,
-          inputValue: inputType === "image" ? "Generated from uploaded image" : inputValue,
-          specType, title, aiModel,
-        },
-      };
-
-      const spec = await createSpec.mutateAsync(createPayload);
-
-      // Patch extra fields not in the generated hook schema
-      await fetch(`/api/specs/${spec.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ multiAgent, extendedThinking, imageInput: imageBase64 }),
-      }).catch(() => {});
-
       // Send directly via fetch to include extra fields
       const createRes = await fetch("/api/specs", {
         method: "POST",
@@ -248,6 +231,7 @@ export default function Home() {
       const agentCharCounts: Record<string, number> = {};
 
       let hasError = false;
+      let completed = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -256,7 +240,16 @@ export default function Home() {
         const lines = buffer.split("\n\n");
         buffer = lines.pop() || "";
         for (const line of lines) {
-          if (line.startsWith("data: ")) {
+          if (line.startsWith("event: error")) {
+            const dataLine = line.split('\n').find(l => l.startsWith('data: '));
+            if (dataLine) {
+              try {
+                const data = JSON.parse(dataLine.slice(6));
+                hasError = true;
+                toast({ title: "Generation Error", description: data.message, variant: "destructive" });
+              } catch {}
+            }
+          } else if (line.startsWith("data: ")) {
             try {
               const data = JSON.parse(line.slice(6));
               if (data.content) {
@@ -284,6 +277,7 @@ export default function Home() {
               } else if (data.diagram) {
                 setDiagramData(data.diagram);
               } else if (data.done) {
+                completed = true;
                 setGenerationPhase("idle");
               } else if (data.error) {
                 hasError = true;
@@ -294,7 +288,7 @@ export default function Home() {
         }
       }
 
-      if (!hasError) {
+      if (completed && !hasError) {
         toast({ title: "Spec generated!", description: multiAgent ? "4 specialist agents merged." : extendedThinking ? "Extended reasoning complete." : "Your technical document is ready." });
       }
     } catch {

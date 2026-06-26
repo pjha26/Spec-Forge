@@ -875,7 +875,7 @@ router.post("/:id/stream", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to stream spec");
     await db.update(specsTable).set({ status: "failed", updatedAt: new Date() }).where(eq(specsTable.id, spec.id));
-    res.write(`data: ${JSON.stringify({ error: "Generation failed" })}\n\n`);
+    res.write(`event: error\ndata: ${JSON.stringify({ message: err instanceof Error ? err.message : "Generation failed" })}\n\n`);
     res.end();
   }
 });

@@ -760,7 +760,7 @@ components:
           type: string
         aiModel:
           type: string
-          enum: [claude-sonnet-4-6, gpt-5.4, gpt-5.1, gemini-2.5-pro, gemini-2.5-flash]
+          enum: [gpt-4o-mini, gemini-1.5-flash]
       required:
         - specType
         - inputType
