@@ -54,6 +54,7 @@ export const SpecStatus = {
 } as const;
 
 export interface Spec {
+  userId?: string | null;
   id: number;
   title: string;
   specType: SpecSpecType;
@@ -66,11 +67,43 @@ export interface Spec {
   complexitySummary?: string | null;
   mermaidDiagram?: string | null;
   conversationId?: number | null;
-  shareToken?: string | null;
   viewCount: number;
   lastSyncedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export type SharedSpecSpecType =
+  (typeof SharedSpecSpecType)[keyof typeof SharedSpecSpecType];
+
+export const SharedSpecSpecType = {
+  system_design: "system_design",
+  api_design: "api_design",
+  database_schema: "database_schema",
+  feature_spec: "feature_spec",
+} as const;
+
+export type SharedSpecInputType =
+  (typeof SharedSpecInputType)[keyof typeof SharedSpecInputType];
+
+export const SharedSpecInputType = {
+  github_url: "github_url",
+  description: "description",
+  image: "image",
+} as const;
+
+export interface SharedSpec {
+  id: number;
+  title: string;
+  specType: SharedSpecSpecType;
+  inputType: SharedSpecInputType;
+  content: string;
+  createdAt: string;
+  viewCount: number;
+  mermaidDiagram?: string | null;
+  complexityScore?: number | null;
+  techDebtRisks?: TechDebtRisk[] | null;
+  complexitySummary?: string | null;
 }
 
 export interface ShareSpecResponse {
@@ -298,4 +331,14 @@ export type GithubWebhook200 = {
 
 export type ListSpecVersions200 = {
   versions: SpecVersionMeta[];
+};
+
+export type UpdateSpecContentBody = {
+  /**
+   * @minLength 1
+   * @maxLength 200000
+   */
+  content: string;
+  /** @maxLength 200000 */
+  previousContent: string;
 };

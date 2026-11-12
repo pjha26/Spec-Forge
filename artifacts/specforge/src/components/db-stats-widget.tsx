@@ -77,7 +77,7 @@ export function DbStatsWidget() {
 
   const topType = stats.byType[0];
   const topModel = stats.byModel[0]?.aiModel ?? "—";
-  const modelLabel = topModel.replace("gpt-4o-mini", "Claude Sonnet").replace("gpt-5.4", "GPT-5.4");
+  const modelLabel = topModel.replace("gpt-4o-mini", "GPT-4o Mini").replace("local-ollama", "Local AI").replace("template", "Template").replace("gpt-5.4", "GPT-5.4");
 
   return (
     <Card className="border-border bg-card overflow-hidden">
@@ -175,7 +175,7 @@ export function DbStatsWidget() {
               <div className="flex flex-wrap gap-1.5">
                 {stats.byModel.map(m => {
                   const color = MODEL_COLORS[m.aiModel] ?? "#6B7280";
-                  const label = m.aiModel.replace("gpt-4o-mini", "Claude").replace("gpt-5.4", "GPT-5.4").replace("gpt-5.1", "GPT-5.1");
+                  const label = m.aiModel.replace("gpt-4o-mini", "GPT-4o Mini").replace("local-ollama", "Local AI").replace("template", "Template").replace("gpt-5.4", "GPT-5.4").replace("gpt-5.1", "GPT-5.1");
                   return (
                     <div key={m.aiModel} className="flex items-center gap-1.5 rounded px-2 py-1"
                       style={{ background: `${color}14`, border: `1px solid ${color}30` }}>

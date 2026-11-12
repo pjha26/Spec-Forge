@@ -1,7 +1,3 @@
-import { db, userPreferencesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
-import { logger } from "./logger.js";
-
 export async function fireSlackNotification(
   webhookUrl: string,
   title: string,
@@ -51,33 +47,4 @@ export async function fireSlackNotification(
     signal: AbortSignal.timeout(8_000),
   });
   if (!response.ok) throw new Error("Slack rejected the webhook");
-}
-
-export async function notifySlackOnSpecGenerated(
-  userId: string,
-  specTitle: string,
-  specType: string,
-): Promise<void> {
-  try {
-    const [prefs] = await db
-      .select({ slackWebhookUrl: userPreferencesTable.slackWebhookUrl })
-      .from(userPreferencesTable)
-      .where(eq(userPreferencesTable.userId, userId));
-
-    if (!prefs?.slackWebhookUrl) return;
-
-    const typeLabel =
-      specType === "system_design" ? "System Design"
-      : specType === "api_design" ? "API Design"
-      : specType === "database_schema" ? "Database Schema"
-      : "Feature Spec";
-
-    await fireSlackNotification(
-      prefs.slackWebhookUrl,
-      `New ${typeLabel} spec generated`,
-      `_${specTitle}_ is ready to view.`,
-    );
-  } catch (err) {
-    logger.error({ err }, "notifySlackOnSpecGenerated failed");
-  }
 }

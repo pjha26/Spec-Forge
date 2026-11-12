@@ -188,7 +188,7 @@ export function AIChat() {
           </div>
           <div>
             <p className="text-sm font-bold text-white">AI Assistant</p>
-            <p className="text-[10px] text-muted-foreground font-mono">Powered by Claude</p>
+            <p className="text-[10px] text-muted-foreground font-mono">Powered by local AI</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">

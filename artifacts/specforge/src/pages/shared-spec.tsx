@@ -32,17 +32,13 @@ type Spec = {
   title: string;
   specType: string;
   inputType: string;
-  inputValue: string;
   content: string;
-  status: string;
   complexityScore: number | null;
   techDebtRisks: any[] | null;
   complexitySummary: string | null;
   mermaidDiagram: string | null;
-  shareToken: string | null;
   viewCount: number;
   createdAt: string;
-  updatedAt: string;
 };
 
 function getSpecTypeLabel(type: string) {

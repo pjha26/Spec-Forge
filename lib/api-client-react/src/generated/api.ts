@@ -36,11 +36,13 @@ import type {
   RecentSpecsResponse,
   SendAnthropicMessageBody,
   ShareSpecResponse,
+  SharedSpec,
   Spec,
   SpecInsightsResponse,
   SpecVersion,
   SuccessResponse,
   SyncSpecResponse,
+  UpdateSpecContentBody,
   WebhookConfigResponse,
 } from "./api.schemas";
 
@@ -598,6 +600,81 @@ export function useHealthCheck<
 }
 
 /**
+ * @summary Check PostgreSQL readiness
+ */
+export const getReadinessCheckUrl = () => {
+  return `/api/readyz`;
+};
+
+export const readinessCheck = async (
+  options?: RequestInit,
+): Promise<HealthStatus> => {
+  return customFetch<HealthStatus>(getReadinessCheckUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getReadinessCheckQueryKey = () => {
+  return [`/api/readyz`] as const;
+};
+
+export const getReadinessCheckQueryOptions = <
+  TData = Awaited<ReturnType<typeof readinessCheck>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof readinessCheck>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getReadinessCheckQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof readinessCheck>>> = ({
+    signal,
+  }) => readinessCheck({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof readinessCheck>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ReadinessCheckQueryResult = NonNullable<
+  Awaited<ReturnType<typeof readinessCheck>>
+>;
+export type ReadinessCheckQueryError = ErrorType<void>;
+
+/**
+ * @summary Check PostgreSQL readiness
+ */
+
+export function useReadinessCheck<
+  TData = Awaited<ReturnType<typeof readinessCheck>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof readinessCheck>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getReadinessCheckQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
  * @summary List all generated specs
  */
 export const getListSpecsUrl = () => {
@@ -1087,8 +1164,8 @@ export const getGetSpecByShareTokenUrl = (token: string) => {
 export const getSpecByShareToken = async (
   token: string,
   options?: RequestInit,
-): Promise<Spec> => {
-  return customFetch<Spec>(getGetSpecByShareTokenUrl(token), {
+): Promise<SharedSpec> => {
+  return customFetch<SharedSpec>(getGetSpecByShareTokenUrl(token), {
     ...options,
     method: "GET",
   });
@@ -2082,6 +2159,93 @@ export const useMarkNotificationRead = <
 };
 
 /**
+ * @summary Edit Markdown and save a version as the spec owner
+ */
+export const getUpdateSpecContentUrl = (id: number) => {
+  return `/api/specs/${id}/content`;
+};
+
+export const updateSpecContent = async (
+  id: number,
+  updateSpecContentBody: UpdateSpecContentBody,
+  options?: RequestInit,
+): Promise<Spec> => {
+  return customFetch<Spec>(getUpdateSpecContentUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateSpecContentBody),
+  });
+};
+
+export const getUpdateSpecContentMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSpecContent>>,
+    TError,
+    { id: number; data: BodyType<UpdateSpecContentBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateSpecContent>>,
+  TError,
+  { id: number; data: BodyType<UpdateSpecContentBody> },
+  TContext
+> => {
+  const mutationKey = ["updateSpecContent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateSpecContent>>,
+    { id: number; data: BodyType<UpdateSpecContentBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateSpecContent(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateSpecContentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateSpecContent>>
+>;
+export type UpdateSpecContentMutationBody = BodyType<UpdateSpecContentBody>;
+export type UpdateSpecContentMutationError = ErrorType<void>;
+
+/**
+ * @summary Edit Markdown and save a version as the spec owner
+ */
+export const useUpdateSpecContent = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSpecContent>>,
+    TError,
+    { id: number; data: BodyType<UpdateSpecContentBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateSpecContent>>,
+  TError,
+  { id: number; data: BodyType<UpdateSpecContentBody> },
+  TContext
+> => {
+  return useMutation(getUpdateSpecContentMutationOptions(options));
+};
+
+/**
  * @summary Generate or retrieve a public share link for a spec
  */
 export const getShareSpecUrl = (id: number) => {
@@ -2163,6 +2327,90 @@ export const useShareSpec = <
   TContext
 > => {
   return useMutation(getShareSpecMutationOptions(options));
+};
+
+/**
+ * @summary Revoke the public link as the spec owner
+ */
+export const getRevokeSpecShareUrl = (id: number) => {
+  return `/api/specs/${id}/share`;
+};
+
+export const revokeSpecShare = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getRevokeSpecShareUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRevokeSpecShareMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof revokeSpecShare>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof revokeSpecShare>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["revokeSpecShare"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof revokeSpecShare>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return revokeSpecShare(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RevokeSpecShareMutationResult = NonNullable<
+  Awaited<ReturnType<typeof revokeSpecShare>>
+>;
+
+export type RevokeSpecShareMutationError = ErrorType<void>;
+
+/**
+ * @summary Revoke the public link as the spec owner
+ */
+export const useRevokeSpecShare = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof revokeSpecShare>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof revokeSpecShare>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getRevokeSpecShareMutationOptions(options));
 };
 
 /**

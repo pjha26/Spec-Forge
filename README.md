@@ -1,8 +1,8 @@
 # SpecForge
 
-**AI-powered technical spec generator for developers, students, and hackathon builders.**
+**Technical spec generator for developers, students, and hackathon builders.**
 
-Drop in a GitHub URL or describe your project in plain text and SpecForge produces a professional, structured technical specification — system designs, API contracts, database schemas, or feature specs — powered by OpenAI.
+Drop in a GitHub URL or describe your project in plain text and SpecForge produces a professional, structured technical specification — system designs, API contracts, database schemas, or feature specs — with built-in templates or an optional local model.
 
 ---
 
@@ -10,15 +10,15 @@ Drop in a GitHub URL or describe your project in plain text and SpecForge produc
 
 ### Core Generation
 - **4 spec types** — System Design, API Design, Database Schema, Feature Spec
-- **3 input modes** — public GitHub repository URL, plain-text description, or a JPEG/PNG up to 2 MB
+- **3 input modes** — public GitHub repository URL or plain-text description. Image analysis is available with a configured local vision model
 - **Streaming output** — content appears token-by-token in real time as the AI writes
-- **Mermaid architecture diagrams** — auto-generated alongside the document (architecture, ER, sequence diagrams depending on spec type)
-- **Complexity score** — AI-scored 1–10 rating with tech debt risk breakdown and written summary
+- **Mermaid diagrams** — built-in example diagrams tailored to the spec type
+- **Spec insights** — optional analysis using a configured local model
 - **8 starter templates** — SaaS API, Mobile App, Real-time Chat, Data Pipeline, E-commerce Platform, Microservices, ML API, Multi-tenant Database
 
-### AI provider
-- GPT-4o Mini powers generation, diagrams, scoring, and chat.
-- Multi-agent mode generates four specialist sections and merges them into a single spec.
+### Generation modes
+- Template mode creates structured drafts and example diagrams from descriptions or public GitHub README metadata without an AI key.
+- An optional same-machine Ollama model can generate prose and enable AI tools.
 
 ### Export & Sharing
 - **Public share links** — generate a token-based URL (`/share/:token`) anyone can read without logging in; view count tracked
@@ -31,15 +31,15 @@ Drop in a GitHub URL or describe your project in plain text and SpecForge produc
 
 ### GitHub Integration
 - **GitHub Auto-sync** — for specs generated from a GitHub repo, a manual sync button refreshes the repository metadata and README and regenerates the spec
-- **GitHub Webhook** — regenerates on a signed push to the default branch; HMAC-SHA256 verified; fires in-app notification on completion or failure
+- **GitHub Webhook** — opt-in regeneration on a signed push to the default branch; HMAC-SHA256 verified; fires in-app notification on completion or failure
 
 ### AI-Powered Extras
-- **Ask Your Doc** — AI-powered chat scoped to each spec; ask questions, request clarifications, get implementation advice
-- **Intelligent Insights** — on-demand spec health analysis: completeness %, overall health rating, strengths, missing areas, improvement suggestions, and estimated implementation timeline
+- **Ask Your Doc** — optional local-model chat scoped to each spec; ask questions, request clarifications, get implementation advice
+- **Intelligent Insights** — optional local-model analysis: completeness %, overall health rating, strengths, missing areas, improvement suggestions, and estimated implementation timeline
 
 ### Collaboration & Realtime
 - **Real-time presence** — when multiple people view the same spec simultaneously, a live avatar bar appears
-- **Version history** — every generation is snapshotted; timeline panel lets you browse all past versions, preview any historical document in a full modal, and see a color-coded diff
+- **Editable drafts and version history** — owners can edit Markdown, and both edits and generation create snapshots; timeline panel lets you browse all past versions, preview any historical document in a full modal, and see a color-coded diff
 - **In-app notifications** — real-time bell icon with unread badge; notified when sync completes or fails; mark single or all read
 - **Team workspaces** — create teams, invite members with owner/editor/viewer roles, assign specs to teams
 
@@ -76,7 +76,7 @@ Drop in a GitHub URL or describe your project in plain text and SpecForge produc
 | Animation | Framer Motion, GSAP |
 | Backend | Node.js, Express, TypeScript |
 | Database | PostgreSQL (Replit-managed), Drizzle ORM |
-| AI | OpenAI GPT-4o Mini |
+| AI | Built-in templates, optional local Ollama |
 | Auth | Replit Auth — OpenID Connect + PKCE, sessions in PostgreSQL |
 | Realtime | Server-Sent Events (SSE) — presence, notifications, generation stream |
 | API Contract | OpenAPI 3.1 → Orval codegen → React Query hooks + Zod schemas |
@@ -145,8 +145,8 @@ graph TD
 
     %% AI Providers
     subgraph AI ["AI Model Providers"]
-        OpenAI["OpenAI (GPT)"]
-        Gemini["Google Gemini"]
+        Templates["Built-in templates"]
+        Ollama["Optional local Ollama"]
     end
 
     %% Database
@@ -188,7 +188,7 @@ graph TD
     class Backend,Router,AuthM,GenServ,SSE,Sync backend;
     class DatabaseLayer,DB,ORM db;
     class ReplitAuth,GitHub,Notion ext;
-    class AI,OpenAI,Gemini ai;
+    class AI,Templates,Ollama ai;
 ```
 
 ---
@@ -200,7 +200,6 @@ graph TD
 - Node.js 24
 - pnpm 11.9.0
 - A Replit account (for Auth and PostgreSQL)
-- An OpenAI or Gemini API key (set as environment secret)
 
 ### Local Development
 
@@ -236,7 +235,9 @@ pnpm --filter @workspace/db run push
 | Variable | Required | Description |
 |---|---|---|
 | `DATABASE_URL` | Yes | PostgreSQL connection string (auto-provisioned by Replit) |
-| `OPENAI_API_KEY` | Yes, unless using the Replit OpenAI integration | Server-side provider credentials |
+| `OLLAMA_MODEL` | Optional, local development | Installed model on the same host. Leave unset on Replit. |
+| `OLLAMA_VISION` | Optional | Set to `true` only with a local vision model. |
+| `ENABLE_GITHUB_AUTO_SYNC` | Optional | Defaults to off. Manual sync remains available. |
 | `PUBLIC_URL` | Production | Public HTTPS origin for sign-in and webhook URLs |
 | `NOTION_API_KEY` | Optional | Notion Internal Integration token for Notion export |
 | `LOCAL_DEV` | Dev only | Set `true` to bypass Replit Auth |
@@ -333,7 +334,13 @@ All endpoints are prefixed `/api` and require authentication unless noted.
 
 ## Deployment
 
-Use one Replit Reserved VM with a separate production PostgreSQL database. Configure Replit Auth and the OpenAI integration or provide a server-side `OPENAI_API_KEY`. Set `PUBLIC_URL` to the final HTTPS origin and `LOCAL_DEV=false`. Leave `VITE_LOCAL_DEV` unset when building.
+For a free demo, use Replit Starter's included published app if your account has an available slot and enough database allowance. The published link expires after 30 days and can be republished. Use the included publishing option and check the estimate in Replit before confirming. [Replit Starter](https://docs.replit.com/billing/plans/starter-plan) · [Publishing costs](https://docs.replit.com/billing/deployment-pricing)
+
+1. Configure Replit Auth and a separate PostgreSQL database. Set `PUBLIC_URL` to the published HTTPS origin and `LOCAL_DEV=false`. Leave `VITE_LOCAL_DEV` unset at build time.
+2. Leave `OLLAMA_MODEL` unset for the hosted app. Template generation uses zero model calls. Keep `ENABLE_GITHUB_AUTO_SYNC=false` and leave optional external integration credentials unset for the demo.
+3. Apply the database migration and publish using the build and start commands below. Verify login, template generation, history, export, and share-link revocation on the hosted app.
+
+For local AI, run [Ollama](https://docs.ollama.com/api/openai-compatibility) on the same machine as the native Node API and set `OLLAMA_MODEL` to a model you downloaded. Disable cloud features on the Ollama server with `OLLAMA_NO_CLOUD=1`. The API connects to loopback only. Docker and Replit use template mode unless the model runs in the same environment.
 
 From the repo root, install dependencies and run the typecheck before building.
 
@@ -344,7 +351,7 @@ NODE_ENV=production PORT=8080 BASE_PATH=/ pnpm --filter @workspace/specforge run
 pnpm --filter @workspace/api-server run build
 ```
 
-For a fresh database, set `DATABASE_URL` and run `pnpm --filter @workspace/db run migrate`. For an existing database created with schema push, back it up and apply [the upgrade SQL](scripts/upgrade-existing-db.sql) using `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/upgrade-existing-db.sql`. This adds chat ownership and backfills chats whose spec ownership can be determined. Unowned legacy specs and chats remain in the database and need an explicit ownership assignment before appearing in the app.
+For a fresh database, set `DATABASE_URL` and run `pnpm --filter @workspace/db run migrate`. For an existing database created with schema push, back it up and apply [the upgrade SQL](scripts/upgrade-existing-db.sql) using `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/upgrade-existing-db.sql`. This adds chat ownership, backfills chats whose spec ownership can be determined, and creates the webhook delivery table and lookup index. Unowned legacy specs and chats remain in the database and need an explicit ownership assignment before appearing in the app.
 
 Start the built server after the database is ready.
 
@@ -353,7 +360,20 @@ NODE_ENV=production PORT=8080 STATIC_DIR="$PWD/artifacts/specforge/dist" \
   node --enable-source-maps artifacts/api-server/dist/index.mjs
 ```
 
-Before opening the beta, verify `/api/healthz`, Replit sign-in, streaming generation, export, and account isolation using two test users. Set a budget on the OpenAI project. SAML, MCP, GitHub writeback, and arbitrary outbound webhooks are outside this release. Leave the shared Notion token unset for a public beta. GitHub generation uses public metadata and README content.
+Before opening the beta, verify `/api/healthz` for process health, `/api/readyz` for database readiness, Replit sign-in, streaming draft generation, export, and account isolation using two test users. SAML, MCP, GitHub writeback, and arbitrary outbound webhooks are outside this release. Leave the shared Notion token unset for a public beta. GitHub generation uses public metadata and README content. When GitHub metadata is unavailable in template mode, the draft keeps the repository URL and flags the missing context.
+
+### API integration tests
+
+On staging, apply the migration, then sign in with two test accounts. Generate two text specs concurrently through the hosted URL and verify that both streams finish. Check that each account can reopen its own spec and that the other account cannot open it. Restore a backup into a disposable database and verify that the restored specs can be read before inviting users.
+
+The GitHub Actions workflow provisions PostgreSQL and runs migrations on a fresh database. The release test boots production settings with paid credentials unset and verifies the frontend, draft generation, edits, exports, authorization, and sharing. For a local run, point `DATABASE_URL` at a disposable database whose name ends in `_test` and run:
+
+```bash
+pnpm --filter @workspace/db run migrate
+pnpm --filter @workspace/api-server run build
+NODE_ENV=production PORT=8080 BASE_PATH=/ pnpm --filter @workspace/specforge run build
+node --test scripts/api-authorization.test.mjs
+```
 
 ## License
 

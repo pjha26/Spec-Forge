@@ -208,9 +208,9 @@ export function DevHUD() {
         <span style={{ color: "#22c55e" }}>✓ OK</span>
       </div>
 
-      {/* Claude API */}
+      {/* local AI API */}
       <div className="flex justify-between items-center">
-        <span style={{ color: "rgba(255,255,255,0.4)" }}>CLAUDE</span>
+        <span style={{ color: "rgba(255,255,255,0.4)" }}>LOCAL AI</span>
         <span style={{ color: "#22c55e" }}>ONLINE</span>
       </div>
 
@@ -449,7 +449,7 @@ const COMMANDS: Command[] = [
     output: [
       "✓ Cloning repository metadata...",
       "✓ Analysing 1,247 files across 38 modules",
-      "✓ Running Claude Sonnet 4.6 (extended thinking)...",
+      "✓ Running local spec generation...",
       "✓ System design spec generated → ./SPEC.md",
       "  Complexity: 7.4/10  ·  Est. read time: 8 min",
     ],
@@ -696,7 +696,7 @@ const CODE_SNIPPETS = [
   { code: 'POST /api/specs',           color: "#7c3aed" },
   { code: 'type: "system_design"',     color: "#06b6d4" },
   { code: 'complexity: 7.4',           color: "#22c55e" },
-  { code: 'model: claude-sonnet',      color: "#f59e0b" },
+  { code: 'model: local-ollama',      color: "#f59e0b" },
   { code: '→ SPEC.md generated',       color: "#a78bfa" },
   { code: 'git push origin main',      color: "#fb923c" },
   { code: 'status: 200 OK',            color: "#22c55e" },

@@ -63,7 +63,7 @@ export function SpecInsights({ specId }: SpecInsightsProps) {
         <div className="text-center space-y-1.5 max-w-xs">
           <p className="font-bold text-sm text-white">AI Spec Health Analysis</p>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Get a detailed breakdown of completeness, missing areas, and actionable improvement suggestions powered by Claude.
+            Get a detailed breakdown of completeness, missing areas, and actionable improvement suggestions powered by local AI.
           </p>
         </div>
         {error && (
@@ -89,7 +89,7 @@ export function SpecInsights({ specId }: SpecInsightsProps) {
             style={{ background: "rgba(var(--primary-rgb),0.5)" }}
           />
         </div>
-        <p className="text-sm font-mono text-muted-foreground">Analyzing spec with Claude…</p>
+        <p className="text-sm font-mono text-muted-foreground">Analyzing spec with local AI…</p>
         <p className="text-xs text-muted-foreground opacity-60">This takes about 10–20 seconds</p>
       </div>
     );

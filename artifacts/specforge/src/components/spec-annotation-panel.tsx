@@ -1,3 +1,4 @@
+import { useCapabilities } from "@/hooks/use-capabilities";
 import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -53,6 +54,7 @@ const STATUS_META = {
 const SEV_COLOR = { high: "#EF4444", medium: "#F59E0B", low: "#6B7280" };
 
 export function SpecAnnotationPanel({ specId, specStatus, isGitHub, teamRole, currentUserId }: Props) {
+  const { localAI } = useCapabilities();
   const { toast } = useToast();
 
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
@@ -140,7 +142,7 @@ export function SpecAnnotationPanel({ specId, specStatus, isGitHub, teamRole, cu
     if (r.ok) {
       setAudit({ id: 0, status: "running", summary: null, discrepancies: null, createdAt: new Date().toISOString(), completedAt: null });
       setAuditExpanded(true);
-      toast({ title: "Audit started", description: "Claude is reviewing your spec…" });
+      toast({ title: "Audit started", description: "local AI is reviewing your spec…" });
     } else {
       setAuditing(false);
       toast({ title: "Failed to start audit", variant: "destructive" });
@@ -208,7 +210,7 @@ export function SpecAnnotationPanel({ specId, specStatus, isGitHub, teamRole, cu
                 )}
                 <button
                   onClick={e => { e.stopPropagation(); handleRunAudit(); }}
-                  disabled={auditing || audit?.status === "running"}
+                  disabled={!localAI || auditing || audit?.status === "running"}
                   className="ml-2 text-[9px] font-mono font-bold px-2 py-0.5 rounded disabled:opacity-50 transition-colors"
                   style={{ background: "rgba(var(--primary-rgb),0.15)", color: "hsl(var(--primary))" }}
                 >
@@ -220,7 +222,7 @@ export function SpecAnnotationPanel({ specId, specStatus, isGitHub, teamRole, cu
               {auditExpanded && audit && (
                 <div className="px-3 pb-3 pt-2 space-y-2">
                   {audit.status === "running" && (
-                    <p className="text-[10px] text-muted-foreground font-mono animate-pulse">Claude is reviewing the spec against your codebase…</p>
+                    <p className="text-[10px] text-muted-foreground font-mono animate-pulse">local AI is reviewing the spec against your codebase…</p>
                   )}
                   {audit.status === "failed" && (
                     <p className="text-[10px] text-red-400 font-mono">Audit failed. Try again.</p>

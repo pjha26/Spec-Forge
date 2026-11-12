@@ -422,11 +422,11 @@ function CountUp({ to, duration = 1600 }: { to: number; duration?: number }) {
 // ── Floating Tech Badges ───────────────────────────────────────────────────
 function FloatingBadges() {
   const badges = [
-    { label: "Claude Sonnet 4", x: "-15%", y: "25%",  delay: 0   },
+    { label: "Template drafts", x: "-15%", y: "25%",  delay: 0   },
     { label: "Mermaid.js",      x: "108%", y: "18%",  delay: 0.6 },
     { label: "PostgreSQL",      x: "-12%", y: "68%",  delay: 1.2 },
     { label: "TypeScript",      x: "105%", y: "72%",  delay: 0.3 },
-    { label: "GPT-5.4",         x: "40%",  y: "-8%",  delay: 0.9 },
+    { label: "Local AI",         x: "40%",  y: "-8%",  delay: 0.9 },
   ];
 
   return (
@@ -559,7 +559,7 @@ const features = [
     icon: <Bot className="w-5 h-5" style={{ color: "#34d399" }} />,
     color: "#059669",
     title: "Ask Your Doc",
-    desc: "Chat with Claude about your spec — trade-offs, edge cases, implementation details, anything.",
+    desc: "Chat with a local model about your spec — trade-offs, edge cases, implementation details, anything.",
     tag: "Chat",
     glow: "rgba(5,150,105,0.18)",
   },
@@ -593,7 +593,7 @@ const features = [
 const GSAP_FEATURE_CARDS: FeatureCard[] = [
   { icon: <Zap className="w-6 h-6" style={{ color: "hsl(var(--primary))" }} />,    color: "hsl(var(--primary))", title: "Complexity Analysis",   desc: "Instant 1–10 complexity score with tech-debt risks, severity prioritisation, and suggested mitigations.", tag: "AI Analysis" },
   { icon: <Network className="w-6 h-6" style={{ color: "#60a5fa" }} />, color: "#2563eb", title: "Architecture Diagrams", desc: "Auto-generated Mermaid flowcharts, sequence diagrams, and ER diagrams — rendered in milliseconds.",         tag: "Visual" },
-  { icon: <Bot className="w-6 h-6" style={{ color: "#34d399" }} />,     color: "#059669", title: "Ask Your Doc",          desc: "Chat with Claude about your spec — trade-offs, edge cases, implementation details, anything.",            tag: "Chat" },
+  { icon: <Bot className="w-6 h-6" style={{ color: "#34d399" }} />,     color: "#059669", title: "Ask Your Doc",          desc: "Chat with a local model about your spec — trade-offs, edge cases, implementation details, anything.",            tag: "Chat" },
   { icon: <Shield className="w-6 h-6" style={{ color: "#f59e0b" }} />,  color: "#d97706", title: "Team Collaboration",    desc: "Shared workspaces, annotation threads, AI audit runs, and role-based access control.",                    tag: "Teams" },
   { icon: <GitBranch className="w-6 h-6" style={{ color: "#f472b6" }} />, color: "#db2777", title: "GitHub Auto-sync",    desc: "Webhooks keep your spec in sync when code changes — commit SPEC.md back to the repo automatically.",      tag: "Git" },
   { icon: <Layers className="w-6 h-6" style={{ color: "hsl(var(--primary))" }} />,  color: "hsl(var(--primary))", title: "Multi-format Export",  desc: "Export to Markdown, DOCX, Notion, or PDF. Version history snapshots every generation.",                  tag: "Export" },
@@ -744,7 +744,7 @@ export default function Landing() {
             className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
             style={{ color: "rgba(255,255,255,0.5)" }}
           >
-            Drop in a GitHub URL or describe your project. SpecForge uses Claude AI to produce
+            Drop in a GitHub URL or describe your project. SpecForge turns your input into
             professional technical specs, architecture diagrams, and complexity reports — instantly.
           </motion.p>
 
@@ -795,7 +795,7 @@ export default function Landing() {
             className="flex items-center justify-center gap-6 mt-8 text-xs font-mono"
             style={{ color: "rgba(255,255,255,0.35)" }}
           >
-            {["No signup required", "Powered by Claude AI", "Free to use"].map((t, i) => (
+            {["Replit sign-in", "Template drafts", "Optional local AI"].map((t, i) => (
               <motion.span
                 key={i}
                 className="flex items-center gap-1.5"
@@ -1068,7 +1068,7 @@ export default function Landing() {
           SpecForge — AI technical documentation
         </div>
         <div className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.2)" }}>
-          Powered by Claude AI · Built on Replit
+          Template drafts · Optional local AI
         </div>
       </footer>
     </div>

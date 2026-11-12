@@ -1,10 +1,13 @@
-import { pgTable, serial, text, timestamp, integer, jsonb, uniqueIndex, boolean } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { index, pgTable, serial, text, timestamp, integer, jsonb, uniqueIndex, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export const specTypeEnum = ["system_design", "api_design", "database_schema", "feature_spec"] as const;
 export const inputTypeEnum = ["github_url", "description", "image"] as const;
 export const statusEnum = ["pending", "generating", "completed", "failed"] as const;
+
+export const githubRepoKey = sql`regexp_replace(lower(btrim("input_value")), '([.]git)?/?$', '')`;
 
 export const specsTable = pgTable("specs", {
   id: serial("id").primaryKey(),
@@ -34,6 +37,8 @@ export const specsTable = pgTable("specs", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => [
   uniqueIndex("specs_share_token_unique").on(table.shareToken),
+  index("specs_github_webhook_repo_idx").on(githubRepoKey)
+    .where(sql`"input_type" = 'github_url' AND "webhook_secret" IS NOT NULL`),
 ]);
 
 export interface TechDebtRisk {

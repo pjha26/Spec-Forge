@@ -1,3 +1,4 @@
+import { useCapabilities } from "@/hooks/use-capabilities";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
@@ -99,6 +100,7 @@ function layoutNodes(specs: Spec[], deps: Dep[]): Node[] {
 }
 
 export function DependencyGraph() {
+  const { localAI } = useCapabilities();
   const [specs, setSpecs] = useState<Spec[]>([]);
   const [deps, setDeps]   = useState<Dep[]>([]);
   const [nodes, setNodes] = useState<Node[]>([]);
@@ -180,7 +182,7 @@ export function DependencyGraph() {
           <button onClick={() => setScale(s => Math.min(s + 0.15, 2))} className="p-1.5 rounded border border-border hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"><ZoomIn className="w-3.5 h-3.5" /></button>
           <button onClick={() => setScale(s => Math.max(s - 0.15, 0.4))} className="p-1.5 rounded border border-border hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"><ZoomOut className="w-3.5 h-3.5" /></button>
           <button onClick={() => { setScale(1); setPan({ x: 0, y: 0 }); }} className="p-1.5 rounded border border-border hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"><Maximize2 className="w-3.5 h-3.5" /></button>
-          <Button size="sm" variant="outline" onClick={handleAnalyze} disabled={analyzing} className="font-mono text-xs ml-1">
+          <Button size="sm" variant="outline" onClick={handleAnalyze} disabled={analyzing || !localAI} className="font-mono text-xs ml-1">
             {analyzing ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-2" />}
             {analyzing ? "Analyzing…" : deps.length === 0 ? "Analyze Dependencies" : "Re-analyze"}
           </Button>
@@ -193,7 +195,7 @@ export function DependencyGraph() {
           {deps.length === 0 && specs.length > 0 && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground">Click "Analyze Dependencies" to map relationships</p>
+                <p className="text-sm text-muted-foreground">{localAI ? 'Click "Analyze Dependencies" to map relationships' : "Dependency analysis requires a local model."}</p>
                 <p className="text-xs text-muted-foreground/50">AI will compare your specs and extract links</p>
               </div>
             </div>

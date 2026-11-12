@@ -1,3 +1,4 @@
+import { requireLocalAI } from "../lib/model-router";
 /**
  * AI Spec Conflict Detector
  * POST /api/teams/:id/conflicts/analyze
@@ -52,7 +53,7 @@ SPEC 2 — "${spec2.title}" (${spec2.specType.replace(/_/g, " ")}):
 ${spec2.content.slice(0, 4000)}`;
 
   const raw = await generateCompletion({
-    model: "gpt-4o-mini",
+
     system: "You are a senior architect. Find specification conflicts. Return only a JSON array.",
     userMessage: prompt,
     maxTokens: 3000,
@@ -72,7 +73,7 @@ ${spec2.content.slice(0, 4000)}`;
   }
 }
 
-router.post("/:id/conflicts/analyze", async (req, res) => {
+router.post("/:id/conflicts/analyze", requireLocalAI, async (req, res) => {
   const teamId = Number(req.params.id);
 
   try {

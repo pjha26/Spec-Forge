@@ -1,3 +1,4 @@
+import { requireLocalAI } from "../lib/model-router";
 import { Router } from "express";
 import { db, specsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
@@ -5,7 +6,7 @@ import { generateCompletion } from "../lib/model-router";
 
 const router = Router();
 
-router.post("/specs/:id/insights", async (req, res) => {
+router.post("/specs/:id/insights", requireLocalAI, async (req, res) => {
   const specId = Number(req.params["id"]);
   if (isNaN(specId)) { res.status(400).json({ error: "Invalid spec ID" }); return; }
 
@@ -16,7 +17,7 @@ router.post("/specs/:id/insights", async (req, res) => {
   try {
     const contentPreview = spec.content.slice(0, 5000);
     const completion = await generateCompletion({
-      model: "gpt-4o-mini",
+
       maxTokens: 1024,
     system: "You are a technical specifications assistant.",
       userMessage: `Analyze this "${spec.specType.replace(/_/g, " ")}" technical specification and return ONLY a valid JSON object with no markdown, no code fences, no explanation.

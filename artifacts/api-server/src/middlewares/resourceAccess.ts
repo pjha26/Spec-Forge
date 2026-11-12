@@ -20,7 +20,7 @@ export const requireSpecAccess: RequestHandler = async (req, res, next) => {
   const [spec] = await db.select({ owner: specsTable.userId, team: specsTable.teamId })
     .from(specsTable).where(and(eq(specsTable.id, id), visibleSpecs(userId)));
   if (!spec) { res.status(404).json({ error: "Spec not found" }); return; }
-  const ownerOnly = /^\/(?:share|webhook|commit-to-github|export\/notion)(?:\/|$)/i.test(req.path) || req.method === "DELETE" && req.path === "/";
+  const ownerOnly = /^\/(?:content|share|webhook|commit-to-github|export\/notion)(?:\/|$)/i.test(req.path) || req.method === "DELETE" && req.path === "/";
   if (spec.owner === userId || (!ownerOnly && (req.method === "GET" || req.method === "HEAD"))) {
     next();
     return;

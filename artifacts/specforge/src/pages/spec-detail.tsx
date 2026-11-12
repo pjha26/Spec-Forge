@@ -1,3 +1,4 @@
+import { useCapabilities } from "@/hooks/use-capabilities";
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
@@ -29,11 +30,14 @@ import { LinearSyncPanel } from "@/components/linear-sync-panel";
 import { SpecAnnotationPanel } from "@/components/spec-annotation-panel";
 
 export default function SpecDetail() {
+  const { localAI, githubAutoSync, notionExport } = useCapabilities();
   const { id } = useParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<"document" | "diagram" | "chat" | "insights">("document");
+  const [draftEdit, setDraftEdit] = useState<{ original: string; content: string } | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [showScaffold, setShowScaffold] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [shareData, setShareData] = useState<{ shareUrl: string; viewCount: number } | null>(null);
@@ -52,6 +56,8 @@ export default function SpecDetail() {
   const { data: spec, isLoading, error } = useGetSpec(Number(id));
 
   const isGitHub = spec?.inputType === "github_url";
+
+  useEffect(() => { setDraftEdit(null); }, [id]);
 
   useEffect(() => {
     if (spec?.status === "generating") {
@@ -82,7 +88,27 @@ export default function SpecDetail() {
       .then(data => { if (data?.versions) setVersions(data.versions); })
       .catch(() => {})
       .finally(() => setVersionsLoading(false));
-  }, [spec?.id, spec?.status]);
+  }, [spec?.id, spec?.status, spec?.updatedAt]);
+
+  const saveEdit = async () => {
+    if (!spec || !draftEdit) return;
+    setSavingEdit(true);
+    try {
+      const response = await fetch(`/api/specs/${spec.id}/content`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: draftEdit.content, previousContent: draftEdit.original }),
+      });
+      if (!response.ok) throw new Error((await response.json()).error ?? "Unable to save");
+      await queryClient.invalidateQueries({ queryKey: ["/api/specs/" + spec.id] });
+      setDraftEdit(null);
+      toast({ title: "Spec saved" });
+    } catch (error) {
+      toast({ title: "Could not save the spec", description: error instanceof Error ? error.message : undefined, variant: "destructive" });
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
   const handleCopy = () => {
     if (spec?.content) {
@@ -216,6 +242,21 @@ export default function SpecDetail() {
     }
   };
 
+  const handleRevokeShare = async () => {
+    if (!spec) return;
+    setIsSharing(true);
+    try {
+      const res = await fetch(`/api/specs/${spec.id}/share`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setShareData(null);
+      toast({ title: "Public link revoked" });
+    } catch {
+      toast({ title: "Failed to revoke share link", variant: "destructive" });
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   const handleSync = async () => {
     if (!spec) return;
     setIsSyncing(true);
@@ -344,7 +385,7 @@ export default function SpecDetail() {
                 {isSyncing ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-2" />}
                 {isSyncing ? "SYNCING…" : "SYNC NOW"}
               </Button>
-              <Button
+              {githubAutoSync && <Button
                 variant="outline"
                 size="sm"
                 onClick={handleWebhookToggle}
@@ -353,7 +394,7 @@ export default function SpecDetail() {
                 <Webhook className="w-3 h-3 mr-2" />
                 WEBHOOK
                 {showWebhook ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
-              </Button>
+              </Button>}
             </>
           )}
 
@@ -369,7 +410,7 @@ export default function SpecDetail() {
             .DOCX
           </Button>
 
-          <Button
+          {notionExport && <Button
             variant="outline"
             size="sm"
             onClick={handleExportNotion}
@@ -384,9 +425,9 @@ export default function SpecDetail() {
               </svg>
             )}
             NOTION
-          </Button>
+          </Button>}
 
-          <motion.button
+          {localAI && <motion.button
             onClick={() => setShowScaffold(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-bold"
             style={{
@@ -400,7 +441,7 @@ export default function SpecDetail() {
           >
             <Code2 className="w-3 h-3" />
             SCAFFOLD
-          </motion.button>
+          </motion.button>}
         </div>
       </header>
 
@@ -419,6 +460,7 @@ export default function SpecDetail() {
             <span className="text-cyan-300 shrink-0">Share link copied:</span>
             <span className="text-muted-foreground truncate">{shareData.shareUrl}</span>
             <button onClick={() => navigator.clipboard.writeText(shareData.shareUrl).then(() => toast({ title: "Copied!" }))} className="ml-auto text-cyan-400 hover:text-cyan-300 shrink-0">Copy again</button>
+            <button disabled={isSharing} onClick={handleRevokeShare} className="text-red-400 hover:text-red-300 shrink-0">Revoke link</button>
             <button onClick={() => setShareData(null)} className="text-muted-foreground hover:text-foreground shrink-0">✕</button>
           </motion.div>
         )}
@@ -462,7 +504,7 @@ export default function SpecDetail() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {showWebhook && isGitHub && (
+        {showWebhook && isGitHub && githubAutoSync && (
           <motion.div
             className="print-hide bg-blue-500/10 border-b border-blue-500/20 px-6 py-4"
             initial={{ height: 0, opacity: 0 }}
@@ -532,7 +574,7 @@ export default function SpecDetail() {
             <Card className="w-full border-border bg-[#0a0a0a] flex flex-col overflow-hidden min-h-full">
               <div className="print-hide border-b border-border flex items-center justify-between bg-card px-2">
                 <div className="flex">
-                  {(["document", "diagram", "chat", "insights"] as const).map((tab) => (
+                  {(["document", "diagram", "chat", "insights"] as const).filter(tab => localAI || tab === "document" || tab === "diagram").map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -562,7 +604,31 @@ export default function SpecDetail() {
                         <p className="font-mono text-sm">Regenerating from source…</p>
                       </div>
                     ) : (
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{spec.content}</ReactMarkdown>
+                      <>
+                        {draftEdit ? (
+                          <div className="print-hide space-y-3">
+                            <label htmlFor="spec-markdown" className="text-sm font-medium">Spec Markdown</label>
+                            <textarea
+                              id="spec-markdown"
+                              className="min-h-96 w-full rounded-md border bg-background p-3 font-mono text-sm"
+                              value={draftEdit.content}
+                              maxLength={200_000}
+                              onChange={e => setDraftEdit({ ...draftEdit, content: e.target.value })}
+                            />
+                            <div className="flex gap-2">
+                              <Button onClick={saveEdit} disabled={savingEdit || !draftEdit.content.trim() || draftEdit.content === draftEdit.original}>Save changes</Button>
+                              <Button variant="outline" onClick={() => setDraftEdit(null)} disabled={savingEdit}>Cancel</Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {spec.status === "completed" && currentUserId && currentUserId === spec.userId && (
+                              <Button className="print-hide mb-4" variant="outline" size="sm" onClick={() => setDraftEdit({ original: spec.content, content: spec.content })}>Edit Markdown</Button>
+                            )}
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{spec.content}</ReactMarkdown>
+                          </>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
@@ -571,14 +637,14 @@ export default function SpecDetail() {
                     <MermaidDiagram chart={spec.mermaidDiagram} />
                   </div>
                 )}
-                {activeTab === "chat" && <SpecChat specId={spec.id} />}
-                {activeTab === "insights" && <SpecInsights specId={spec.id} />}
+                {localAI && activeTab === "chat" && <SpecChat specId={spec.id} />}
+                {localAI && activeTab === "insights" && <SpecInsights specId={spec.id} />}
               </div>
             </Card>
           </div>
 
           <div className="lg:col-span-1 space-y-6 print-hide">
-            {spec.status === "completed" && spec.content && (
+            {localAI && spec.status === "completed" && spec.content && (
               <LinearSyncPanel specId={spec.id} specContent={spec.content} />
             )}
 
@@ -709,12 +775,12 @@ export default function SpecDetail() {
             )}
 
             {/* Spec Health Card */}
-            {spec.status === "completed" && (
+            {localAI && spec.status === "completed" && (
               <SpecHealthCard specId={spec.id} specStatus={spec.status} />
             )}
 
             {/* PR Description Agent */}
-            {spec.status === "completed" && (
+            {localAI && spec.status === "completed" && (
               <Card className="border-border bg-card overflow-hidden">
                 <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                   <h3 className="text-xs font-mono font-bold text-foreground">PR Agent</h3>
@@ -730,7 +796,7 @@ export default function SpecDetail() {
 
       {/* Scaffold slide-over panel */}
       <AnimatePresence>
-        {showScaffold && spec && (
+        {localAI && showScaffold && spec && (
           <SpecScaffold
             specId={spec.id}
             specTitle={spec.title}

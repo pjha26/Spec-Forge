@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db, conversations as conversationsTable, messages as messagesTable } from "@workspace/db";
 import { and, eq, desc } from "drizzle-orm";
-import { getOpenAI } from "@workspace/integrations-openai-ai-server";
+import { getLocalAI, requireLocalAI } from "../lib/model-router";
 import {
   CreateAnthropicConversationBody,
   GetAnthropicConversationParams,
@@ -157,7 +157,7 @@ router.get("/conversations/:id/messages", async (req, res) => {
   }
 });
 
-router.post("/conversations/:id/messages", async (req, res) => {
+router.post("/conversations/:id/messages", requireLocalAI, async (req, res) => {
   const paramsParsed = SendAnthropicMessageParams.safeParse({
     id: Number(req.params.id),
   });
@@ -204,9 +204,10 @@ router.post("/conversations/:id/messages", async (req, res) => {
 
     let fullResponse = "";
 
-    const stream = await getOpenAI().chat.completions.create({
-      model: "gpt-4o-mini",
-      max_completion_tokens: 4096,
+    const { client, model } = getLocalAI();
+    const stream = await client.chat.completions.create({
+      model,
+      max_tokens: 4096,
       stream: true,
       messages: [{ role: "system", content: `You are the SpecForge AI Assistant — a helpful, expert technical advisor embedded in SpecForge, an AI-powered tool that generates professional technical design documents for developers and teams.
 

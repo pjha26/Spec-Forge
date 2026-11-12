@@ -1,3 +1,4 @@
+import { useCapabilities } from "@/hooks/use-capabilities";
 import { useState, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -63,6 +64,7 @@ const SPEC_ICON: Record<string, React.ComponentType<{ className?: string; style?
 type ActiveTab = "overview" | "knowledge" | "conflicts" | "audit" | "settings";
 
 export default function TeamDetail() {
+  const { localAI } = useCapabilities();
   const { id } = useParams();
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -203,7 +205,7 @@ export default function TeamDetail() {
     { id: "audit",      label: "Audit Log",       Icon: ScrollText,     ownerOnly: true },
     { id: "settings",   label: "Settings",        Icon: Settings,       ownerOnly: true },
   ];
-  const TABS = ALL_TABS.filter((t): t is TabDef => !t.ownerOnly || isOwner);
+  const TABS = ALL_TABS.filter(t => (!t.ownerOnly || isOwner) && (localAI || t.id !== "conflicts"));
 
   return (
     <div className="flex-1 overflow-auto p-6 max-w-5xl mx-auto w-full space-y-6">
@@ -457,7 +459,7 @@ export default function TeamDetail() {
       )}
 
       {/* ── Conflicts tab ────────────────────────────────────────────── */}
-      {activeTab === "conflicts" && isOwner && (
+      {localAI && activeTab === "conflicts" && isOwner && (
         <Card className="border-border bg-card p-5">
           <SpecConflictsPanel teamId={team.id} />
         </Card>
@@ -476,8 +478,6 @@ export default function TeamDetail() {
           <TeamSettingsPanel
             teamId={team.id}
             initialPrompt={team.customSystemPrompt}
-            initialNotifyEmail={(team as any).notifyEmail ?? null}
-            initialDigestFrequency={(team as any).digestFrequency ?? "off"}
           />
         </Card>
       )}

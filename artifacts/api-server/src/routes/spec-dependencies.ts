@@ -1,3 +1,4 @@
+import { requireLocalAI } from "../lib/model-router";
 /**
  * Spec dependency graph routes
  * POST /api/specs/dependencies/analyze  → AI extracts cross-spec dependencies
@@ -34,7 +35,7 @@ router.get("/dependencies", async (req, res) => {
   }
 });
 
-router.post("/dependencies/analyze", async (req, res) => {
+router.post("/dependencies/analyze", requireLocalAI, async (req, res) => {
   try {
     // Load all completed specs (titles + first 600 chars of content)
     const specs = await db
@@ -75,7 +76,7 @@ Only include relationships that are clearly supported by the spec content. Outpu
 If no clear relationships exist, output: []`;
 
     const completion = await generateCompletion({
-      model: "gpt-4o-mini",
+
       maxTokens: 1024,
     system: "You are a technical specifications assistant.",
       userMessage: prompt,

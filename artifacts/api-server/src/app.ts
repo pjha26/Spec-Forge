@@ -28,6 +28,23 @@ app.use(
     },
   }),
 );
+// Cap webhook intake before body parsing and database work on the single API instance.
+let webhookWindow = 0;
+let webhookCount = 0;
+app.post("/api/webhooks/github", (_req, res, next) => {
+  const now = Date.now();
+  if (now >= webhookWindow) {
+    webhookWindow = now + 60_000;
+    webhookCount = 0;
+  }
+  if (++webhookCount > 120) {
+    res.set("Retry-After", String(Math.ceil((webhookWindow - now) / 1000)));
+    res.status(429).json({ error: "Webhook rate limit exceeded" });
+    return;
+  }
+  next();
+});
+
 app.use(cookieParser());
 app.use(express.json({
   limit: "3mb",

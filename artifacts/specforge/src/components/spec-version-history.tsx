@@ -27,6 +27,7 @@ const TRIGGER_META: Record<string, {
   Icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
 }> = {
   initial:        { label: "Initial generation", color: "#10B981", Icon: GitBranch },
+  edit:           { label: "Markdown edit",       color: "#F59E0B", Icon: FileText },
   manual:         { label: "Manual sync",         color: "#06B6D4", Icon: RefreshCw },
   github_webhook: { label: "GitHub push",          color: "#8B5CF6", Icon: Zap },
 };

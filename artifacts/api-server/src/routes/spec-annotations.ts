@@ -1,3 +1,4 @@
+import { requireLocalAI } from "../lib/model-router";
 /**
  * Collaborative spec audit feature
  *
@@ -138,7 +139,7 @@ router.delete("/:id/annotations/:aId", async (req: Request, res: Response) => {
 });
 
 // ── AI-assisted audit ─────────────────────────────────────────────────────────
-router.post("/:id/audit", async (req: Request, res: Response) => {
+router.post("/:id/audit", requireLocalAI, async (req: Request, res: Response) => {
   if (!requireUser(req, res)) return;
   const userId = (req as AuthedRequest).user!.id;
   const specId = Number(req.params.id);
@@ -208,7 +209,7 @@ Return ONLY the JSON object, no markdown fences.`;
       const userMsg = `TECHNICAL SPEC:\n${spec.content.slice(0, 8000)}${context}`;
 
       let fullResponse = "";
-      for await (const chunk of streamCompletion({ model: "gpt-4o-mini", system: systemPrompt, userMessage: userMsg, maxTokens: 2000 })) {
+      for await (const chunk of streamCompletion({ system: systemPrompt, userMessage: userMsg, maxTokens: 2000 })) {
         fullResponse += chunk;
       }
 

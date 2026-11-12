@@ -32,7 +32,6 @@ services:
       NODE_ENV: production
       PORT: 8080
       DATABASE_URL: postgresql://specforge:${POSTGRES_PASSWORD:-changeme}@db:5432/specforge
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       REPL_ID: ${REPL_ID:-}
       NOTION_API_KEY: ${NOTION_API_KEY:-}
       ISSUER_URL: ${ISSUER_URL:-https://replit.com/oidc}
@@ -40,8 +39,6 @@ services:
       # Local dev auth bypass (leave unset / false in production)
       LOCAL_DEV: ${LOCAL_DEV:-false}
       LOCAL_DEV_USER_ID: ${LOCAL_DEV_USER_ID:-local-dev-user}
-      AI_INTEGRATIONS_OPENAI_API_KEY: ${AI_INTEGRATIONS_OPENAI_API_KEY:-}
-      AI_INTEGRATIONS_OPENAI_BASE_URL: ${AI_INTEGRATIONS_OPENAI_BASE_URL:-}
 
 volumes:
   pgdata:

@@ -1,3 +1,4 @@
+import { useCapabilities } from "@/hooks/use-capabilities";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import {
@@ -188,7 +189,7 @@ function useBootSequence() {
     const sequence = [
       "> SPECFORGE OS v1.0.0-beta",
       "> Initializing neural engine...",
-      "> Connecting to Claude API... OK",
+      "> Checking project capabilities... OK",
       "> Loading nav modules... DONE",
       "> System ready.",
     ];
@@ -262,6 +263,7 @@ function PowerBar({ color }: { color: string }) {
 
 // ── Main Layout ───────────────────────────────────────────────────────────────
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { localAI } = useCapabilities();
   const [location] = useLocation();
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
   const [aiOpen, setAiOpen] = useState(false);
@@ -772,7 +774,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             boxShadow: "-8px 0 48px rgba(var(--primary-rgb),0.1)",
           }}
         >
-          <AIChat />
+          {localAI && <AIChat />}
         </SheetContent>
       </Sheet>
 

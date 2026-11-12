@@ -20,5 +20,5 @@ export async function githubSource(input: string) {
     const file = await readmeResponse.json() as { content?: string; encoding?: string };
     if (file.encoding === "base64" && file.content) readme = Buffer.from(file.content.slice(0, 16_000), "base64").toString("utf8").slice(0, 10_000);
   }
-  return JSON.stringify({ url: input, description: repo.description, language: repo.language, readme });
+  return { url: input, description: repo.description, language: repo.language, readme };
 }

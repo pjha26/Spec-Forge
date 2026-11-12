@@ -1,3 +1,4 @@
+import { requireLocalAI } from "../lib/model-router";
 /**
  * Spec-to-PR Auto-Description Agent
  * POST /api/specs/:id/pr-description
@@ -46,7 +47,7 @@ async function fetchPrMeta(owner: string, repo: string, prNumber: number, token?
   return res.json() as Promise<{ title: string; body: string; head: { ref: string }; changed_files: number; additions: number; deletions: number }>;
 }
 
-router.post("/:id/pr-description", async (req, res) => {
+router.post("/:id/pr-description", requireLocalAI, async (req, res) => {
   const specId = Number(req.params.id);
   const { prUrl, githubToken } = req.body as { prUrl?: string; githubToken?: string };
 
@@ -103,7 +104,7 @@ PR DIFF:
 ${diff}`;
 
     const raw = await generateCompletion({
-      model: "gpt-4o-mini",
+
       system: "You analyze GitHub PRs against technical specs. Return only valid JSON.",
       userMessage: prompt,
       maxTokens: 4096,

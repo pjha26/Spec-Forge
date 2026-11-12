@@ -1,3 +1,4 @@
+import { requireLocalAI } from "../lib/model-router";
 /**
  * Spec Health Monitoring
  * GET  /api/specs/:id/health
@@ -78,7 +79,7 @@ ${spec.content.slice(0, 5000)}
 ${repoContext}`;
 
   const raw = await generateCompletion({
-    model: "gpt-4o-mini",
+
     system: "You audit spec vs codebase alignment. Return only valid JSON.",
     userMessage: prompt,
     maxTokens: 3000,
@@ -120,7 +121,7 @@ router.get("/:id/health", async (req, res) => {
   }
 });
 
-router.post("/:id/health/analyze", async (req, res) => {
+router.post("/:id/health/analyze", requireLocalAI, async (req, res) => {
   const specId = Number(req.params.id);
   try {
     const [spec] = await db.select().from(specsTable).where(eq(specsTable.id, specId));

@@ -2,11 +2,6 @@ import app from "./app";
 import { db, specsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { logger } from "./lib/logger";
-import { startHealthCron } from "./lib/health-cron";
-
-if (!process.env.OPENAI_API_KEY && !process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
-  throw new Error("Set OPENAI_API_KEY or configure the Replit OpenAI integration");
-}
 
 const rawPort = process.env["PORT"];
 
@@ -35,5 +30,4 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
-  startHealthCron();
 });

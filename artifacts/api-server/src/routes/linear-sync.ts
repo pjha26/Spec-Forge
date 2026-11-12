@@ -1,3 +1,4 @@
+import { requireLocalAI } from "../lib/model-router";
 /**
  * Linear / Jira issue sync
  * POST /api/specs/:id/sync-issues   — AI extracts tasks, creates issues
@@ -19,7 +20,7 @@ interface ExtractedTask {
 
 async function extractTasksFromSpec(content: string): Promise<ExtractedTask[]> {
   const completion = await generateCompletion({
-    model: "gpt-4o-mini",
+
     maxTokens: 2048,
     system: "You are a technical specifications assistant.",
     userMessage: `From the following technical specification, extract all concrete action items, implementation tasks, and development tickets. Group them by spec section. Each task should be specific and actionable.
@@ -128,7 +129,7 @@ router.get("/:id/issues", async (req: Request, res: Response) => {
 });
 
 // POST /api/specs/:id/sync-issues
-router.post("/:id/sync-issues", async (req: Request, res: Response) => {
+router.post("/:id/sync-issues", requireLocalAI, async (req: Request, res: Response) => {
   const specId = Number(req.params.id);
   const userId = req.user?.id as string | undefined;
   if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }

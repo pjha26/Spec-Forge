@@ -16,3 +16,4 @@ export * from "./spec-issues";
 export * from "./outbound-webhooks";
 export * from "./spec-annotations";
 export * from "./spec-audit-runs";
+export * from "./github-webhook-deliveries";

@@ -111,6 +111,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
+  /readyz:
+    get:
+      operationId: readinessCheck
+      tags: [health]
+      summary: Check PostgreSQL readiness
+      responses:
+        "200":
+          description: Ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+        "503":
+          description: Database unavailable
+
   /specs:
     get:
       operationId: listSpecs
@@ -246,7 +261,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Spec"
+                $ref: "#/components/schemas/SharedSpec"
         "404":
           description: Not found
           content:
@@ -478,6 +493,46 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
 
+  /specs/{id}/content:
+    patch:
+      operationId: updateSpecContent
+      tags: [specs]
+      summary: Edit Markdown and save a version as the spec owner
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content, previousContent]
+              properties:
+                content:
+                  type: string
+                  minLength: 1
+                  maxLength: 200000
+                previousContent:
+                  type: string
+                  maxLength: 200000
+      responses:
+        "200":
+          description: Updated spec
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Spec"
+        "400":
+          description: Invalid content
+        "403":
+          description: Spec owner required
+        "409":
+          description: Spec changed since editing began
+
   /specs/{id}/share:
     post:
       operationId: shareSpec
@@ -502,6 +557,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+
+    delete:
+      operationId: revokeSpecShare
+      tags: [specs]
+      summary: Revoke the public link as the spec owner
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Link revoked
+        "403":
+          description: Spec owner required
+        "404":
+          description: Spec not found
 
   /specs/recent:
     get:
@@ -670,6 +743,9 @@ components:
     Spec:
       type: object
       properties:
+        userId:
+          type: string
+          nullable: true
         id:
           type: integer
         title:
@@ -704,9 +780,6 @@ components:
         conversationId:
           type: integer
           nullable: true
-        shareToken:
-          type: string
-          nullable: true
         viewCount:
           type: integer
         lastSyncedAt:
@@ -730,6 +803,42 @@ components:
         - viewCount
         - createdAt
         - updatedAt
+
+    SharedSpec:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        specType:
+          type: string
+          enum: [system_design, api_design, database_schema, feature_spec]
+        inputType:
+          type: string
+          enum: [github_url, description, image]
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        viewCount:
+          type: integer
+        mermaidDiagram:
+          type: string
+          nullable: true
+        complexityScore:
+          type: integer
+          nullable: true
+        techDebtRisks:
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/TechDebtRisk"
+        complexitySummary:
+          type: string
+          nullable: true
+      required: [id, title, specType, inputType, content, createdAt, viewCount]
 
     ShareSpecResponse:
       type: object
