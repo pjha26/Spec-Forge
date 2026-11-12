@@ -476,7 +476,6 @@ export default function TeamDetail() {
           <TeamSettingsPanel
             teamId={team.id}
             initialPrompt={team.customSystemPrompt}
-            ssoEnabled={team.ssoEnabled === "true"}
             initialNotifyEmail={(team as any).notifyEmail ?? null}
             initialDigestFrequency={(team as any).digestFrequency ?? "off"}
           />

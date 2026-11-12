@@ -1,7 +1,7 @@
 FROM node:24-alpine AS base
 WORKDIR /app
 ENV CI=true
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@11.9.0 --activate
 
 # ── Install dependencies ────────────────────────────────────────────────────
 FROM base AS deps
@@ -34,12 +34,13 @@ RUN pnpm --filter @workspace/api-server run build
 # ── Production image ────────────────────────────────────────────────────────
 FROM node:24-alpine AS production
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@11.9.0 --activate
 
 # Copy workspace manifests for production install
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY artifacts/api-server/package.json ./artifacts/api-server/
 COPY lib/db/package.json ./lib/db/
+COPY lib/api-zod/package.json ./lib/api-zod/
 COPY lib/integrations-anthropic-ai/package.json ./lib/integrations-anthropic-ai/
 COPY lib/integrations-openai-ai-server/package.json ./lib/integrations-openai-ai-server/
 COPY lib/integrations-gemini-ai/package.json ./lib/integrations-gemini-ai/

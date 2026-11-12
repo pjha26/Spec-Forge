@@ -9,6 +9,10 @@
 import { db, usersTable } from "@workspace/db";
 import { logger } from "./logger.js";
 
+if (process.env.NODE_ENV === "production" && process.env.LOCAL_DEV === "true") {
+  throw new Error("LOCAL_DEV cannot be enabled in production");
+}
+
 export const DEV_USER_ID = process.env.LOCAL_DEV_USER_ID ?? "local-dev-user";
 
 export const DEV_USER = {

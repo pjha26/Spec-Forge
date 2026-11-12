@@ -2,7 +2,7 @@
 
 **AI-powered technical spec generator for developers, students, and hackathon builders.**
 
-Drop in a GitHub URL or describe your project in plain text and SpecForge instantly produces a professional, structured technical specification — system designs, API contracts, database schemas, or feature specs — powered by your choice of AI model.
+Drop in a GitHub URL or describe your project in plain text and SpecForge produces a professional, structured technical specification — system designs, API contracts, database schemas, or feature specs — powered by OpenAI.
 
 ---
 
@@ -10,16 +10,15 @@ Drop in a GitHub URL or describe your project in plain text and SpecForge instan
 
 ### Core Generation
 - **4 spec types** — System Design, API Design, Database Schema, Feature Spec
-- **2 input modes** — GitHub repository URL or plain-text description
+- **3 input modes** — public GitHub repository URL, plain-text description, or a JPEG/PNG up to 2 MB
 - **Streaming output** — content appears token-by-token in real time as the AI writes
 - **Mermaid architecture diagrams** — auto-generated alongside the document (architecture, ER, sequence diagrams depending on spec type)
 - **Complexity score** — AI-scored 1–10 rating with tech debt risk breakdown and written summary
 - **8 starter templates** — SaaS API, Mobile App, Real-time Chat, Data Pipeline, E-commerce Platform, Microservices, ML API, Multi-tenant Database
 
-### Multi-Model AI
-- **GPT-5** (OpenAI) — default, alternative with strong reasoning
-- **Gemini 2.5 Pro / Flash** (Google) — Flash optimised for speed
-- Model selector on the generator page; choice is stored per spec
+### AI provider
+- GPT-4o Mini powers generation, diagrams, scoring, and chat.
+- Multi-agent mode generates four specialist sections and merges them into a single spec.
 
 ### Export & Sharing
 - **Public share links** — generate a token-based URL (`/share/:token`) anyone can read without logging in; view count tracked
@@ -31,8 +30,8 @@ Drop in a GitHub URL or describe your project in plain text and SpecForge instan
 - **Code scaffold** — generate 8–15 real starter files (README, package.json, source files, config) from any spec and download as a ZIP
 
 ### GitHub Integration
-- **GitHub Auto-sync** — for specs generated from a GitHub repo, a manual sync button re-reads the latest source and regenerates the spec
-- **GitHub Webhook** — auto-regenerates on every `git push`; HMAC-SHA256 verified; fires in-app notification on completion or failure
+- **GitHub Auto-sync** — for specs generated from a GitHub repo, a manual sync button refreshes the repository metadata and README and regenerates the spec
+- **GitHub Webhook** — regenerates on a signed push to the default branch; HMAC-SHA256 verified; fires in-app notification on completion or failure
 
 ### AI-Powered Extras
 - **Ask Your Doc** — AI-powered chat scoped to each spec; ask questions, request clarifications, get implementation advice
@@ -72,12 +71,12 @@ Drop in a GitHub URL or describe your project in plain text and SpecForge instan
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18+, Vite, TypeScript, Tailwind CSS v4 |
+| Frontend | React 19, Vite, TypeScript, Tailwind CSS v4 |
 | UI Components | shadcn/ui, Radix UI primitives |
 | Animation | Framer Motion, GSAP |
 | Backend | Node.js, Express, TypeScript |
 | Database | PostgreSQL (Replit-managed), Drizzle ORM |
-| AI | OpenAI GPT, Google Gemini |
+| AI | OpenAI GPT-4o Mini |
 | Auth | Replit Auth — OpenID Connect + PKCE, sessions in PostgreSQL |
 | Realtime | Server-Sent Events (SSE) — presence, notifications, generation stream |
 | API Contract | OpenAPI 3.1 → Orval codegen → React Query hooks + Zod schemas |
@@ -198,8 +197,8 @@ graph TD
 
 ### Prerequisites
 
-- Node.js 20+
-- pnpm 9+
+- Node.js 24
+- pnpm 11.9.0
 - A Replit account (for Auth and PostgreSQL)
 - An OpenAI or Gemini API key (set as environment secret)
 
@@ -237,8 +236,8 @@ pnpm --filter @workspace/db run push
 | Variable | Required | Description |
 |---|---|---|
 | `DATABASE_URL` | Yes | PostgreSQL connection string (auto-provisioned by Replit) |
-| `SESSION_SECRET` | Yes | Secret for signing session cookies |
-| `OPENAI_API_KEY` / `GOOGLE_AI_API_KEY` | Yes | API key for spec generation |
+| `OPENAI_API_KEY` | Yes, unless using the Replit OpenAI integration | Server-side provider credentials |
+| `PUBLIC_URL` | Production | Public HTTPS origin for sign-in and webhook URLs |
 | `NOTION_API_KEY` | Optional | Notion Internal Integration token for Notion export |
 | `LOCAL_DEV` | Dev only | Set `true` to bypass Replit Auth |
 | `VITE_LOCAL_DEV` | Dev only | Shows the LOCAL DEV MODE banner in the UI |
@@ -332,26 +331,29 @@ All endpoints are prefixed `/api` and require authentication unless noted.
 
 ---
 
-## Recommended Improvements
+## Deployment
 
-### High Impact
-1. **Spec versioning UI** — the backend already snapshots every generation; surfacing a full diff view in the frontend with `+`/`-` color coding would let users track how their spec evolves over time.
-2. **Webhook-triggered auto-sync completion** — complete the GitHub webhook flow so specs regenerate automatically on push with no manual step required.
-3. **Semantic search** — replace the current text search with vector embeddings (pgvector) so users can find specs by meaning and concept, not just keywords.
-4. **Custom section templates** — let users define reusable sections (e.g. "Our standard security checklist") injected at a fixed position in every new spec.
+Use one Replit Reserved VM with a separate production PostgreSQL database. Configure Replit Auth and the OpenAI integration or provide a server-side `OPENAI_API_KEY`. Set `PUBLIC_URL` to the final HTTPS origin and `LOCAL_DEV=false`. Leave `VITE_LOCAL_DEV` unset when building.
 
-### Medium Impact
-5. **Spec quality scoring** — after generation, run a secondary AI pass that scores completeness, consistency, and security coverage and surfaces specific gaps with suggested fixes.
-6. **Mobile-responsive layout** — add a collapsible bottom tab bar for the sidebar on small screens so the app is usable on phones.
-7. **Dark/light auto mode** — add a "System" option to the theme picker that follows `prefers-color-scheme` automatically.
-8. **Keyboard shortcut palette** — `cmd+k` command palette for quick navigation, spec creation, and theme switching without reaching for the mouse.
+From the repo root, install dependencies and run the typecheck before building.
 
-### Polish
-9. **Onboarding checklist** — a persistent first-run checklist (generate your first spec, try GitHub sync, share a spec) to help new users discover features.
-10. **Spec tagging** — add free-form tags to specs and filter the spec list by tag, complementing the existing type and status filters.
-11. **AI model comparison** — a side-by-side mode that runs the same prompt through two models simultaneously so users can compare output quality before committing to one.
+```bash
+pnpm install --frozen-lockfile
+pnpm run typecheck
+NODE_ENV=production PORT=8080 BASE_PATH=/ pnpm --filter @workspace/specforge run build
+pnpm --filter @workspace/api-server run build
+```
 
----
+For a fresh database, set `DATABASE_URL` and run `pnpm --filter @workspace/db run migrate`. For an existing database created with schema push, back it up and apply [the upgrade SQL](scripts/upgrade-existing-db.sql) using `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/upgrade-existing-db.sql`. This adds chat ownership and backfills chats whose spec ownership can be determined. Unowned legacy specs and chats remain in the database and need an explicit ownership assignment before appearing in the app.
+
+Start the built server after the database is ready.
+
+```bash
+NODE_ENV=production PORT=8080 STATIC_DIR="$PWD/artifacts/specforge/dist" \
+  node --enable-source-maps artifacts/api-server/dist/index.mjs
+```
+
+Before opening the beta, verify `/api/healthz`, Replit sign-in, streaming generation, export, and account isolation using two test users. Set a budget on the OpenAI project. SAML, MCP, GitHub writeback, and arbitrary outbound webhooks are outside this release. Leave the shared Notion token unset for a public beta. GitHub generation uses public metadata and README content.
 
 ## License
 

@@ -1,192 +1,47 @@
-/**
- * Unified model router — abstracts Claude, GPT, and Gemini behind a single
- * streaming interface so route handlers stay model-agnostic.
- * Supports: standard completion, extended thinking (Claude), multimodal image input.
- */
+import { getOpenAI } from "@workspace/integrations-openai-ai-server";
 
-import { anthropic } from "@workspace/integrations-anthropic-ai";
-import { openai } from "@workspace/integrations-openai-ai-server";
-import { ai as gemini } from "@workspace/integrations-gemini-ai";
-
-export type SupportedModel =
-  | "gpt-4o-mini"
-  | "gemini-1.5-flash";
-
-export const MODEL_META: Record<SupportedModel, { label: string; provider: "anthropic" | "openai" | "gemini"; badge: string }> = {
-  "gpt-4o-mini":       { label: "GPT-4o Mini",      provider: "openai",    badge: "OpenAI"    },
-  "gemini-1.5-flash":  { label: "Gemini 1.5 Flash", provider: "gemini",    badge: "Google"    },
-};
+export type SupportedModel = "gpt-4o-mini";
 
 export function isValidModel(model: unknown): model is SupportedModel {
-  return typeof model === "string" && model in MODEL_META;
+  return model === "gpt-4o-mini";
 }
 
-export interface CompletionOpts {
+interface CompletionOpts {
   model: SupportedModel;
   system: string;
   userMessage: string;
   maxTokens?: number;
-  /** base64-encoded image (JPEG/PNG/WebP) — only supported on Claude and GPT */
   imageBase64?: string;
-  imageMediaType?: "image/jpeg" | "image/png" | "image/webp" | "image/gif";
+  imageMediaType?: string;
 }
 
-export interface ThinkingResult {
-  thinking: string;
-  text: string;
-}
-
-/** Standard non-streaming completion. */
-export async function generateCompletion(opts: CompletionOpts): Promise<string> {
-  const { model, system, userMessage, maxTokens = 8192, imageBase64, imageMediaType } = opts;
-  const meta = MODEL_META[model];
-
-  if (meta.provider === "anthropic") {
-    const userContent: any[] = imageBase64
-      ? [
-          { type: "image", source: { type: "base64", media_type: imageMediaType ?? "image/jpeg", data: imageBase64 } },
-          { type: "text", text: userMessage },
-        ]
-      : [{ type: "text", text: userMessage }];
-
-    const msg = await anthropic.messages.create({
-      model,
-      max_tokens: maxTokens,
-      system,
-      messages: [{ role: "user", content: userContent }],
-    });
-    const block = msg.content.find((b: any) => b.type === "text");
-    return block?.type === "text" ? block.text : "";
-  }
-
-  if (meta.provider === "openai") {
-    const userContent: any[] = imageBase64
-      ? [
-          { type: "text", text: userMessage },
-          { type: "image_url", image_url: { url: `data:${imageMediaType ?? "image/jpeg"};base64,${imageBase64}` } },
-        ]
-      : [{ type: "text", text: userMessage }];
-
-    const resp = await openai.chat.completions.create({
-      model,
-      max_completion_tokens: maxTokens,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: userContent },
-      ],
-    } as any);
-    return resp.choices[0]?.message?.content ?? "";
-  }
-
-  // Gemini — no image support yet, fall back to text-only
-  const response = await gemini.models.generateContent({
+function request({ model, system, userMessage, maxTokens = 8192, imageBase64, imageMediaType }: CompletionOpts) {
+  const content = imageBase64 ? [
+    { type: "text" as const, text: userMessage },
+    { type: "image_url" as const, image_url: { url: "data:" + (imageMediaType ?? "image/jpeg") + ";base64," + imageBase64 } },
+  ] : userMessage;
+  return {
     model,
-    contents: [{ role: "user", parts: [{ text: `${system}\n\n${userMessage}` }] }],
-    config: { maxOutputTokens: maxTokens },
-  });
-  return response.text ?? "";
+    max_completion_tokens: maxTokens,
+    messages: [{ role: "system" as const, content: system }, { role: "user" as const, content }],
+  };
 }
 
-/**
- * Extended thinking — Claude only.
- * Returns both the thinking process and the final answer.
- * Falls back to standard completion for non-Claude models.
- */
-export async function generateCompletionWithThinking(opts: CompletionOpts & { thinkingBudget?: number }): Promise<ThinkingResult> {
-  const { model, system, userMessage, maxTokens = 16000, thinkingBudget = 10000, imageBase64, imageMediaType } = opts;
-  const meta = MODEL_META[model];
-
-  if (meta.provider === "anthropic") {
-    const userContent: any[] = imageBase64
-      ? [
-          { type: "image", source: { type: "base64", media_type: imageMediaType ?? "image/jpeg", data: imageBase64 } },
-          { type: "text", text: userMessage },
-        ]
-      : [{ type: "text", text: userMessage }];
-
-    const msg = await anthropic.messages.create({
-      model,
-      max_tokens: maxTokens,
-      thinking: { type: "enabled", budget_tokens: thinkingBudget },
-      system,
-      messages: [{ role: "user", content: userContent }],
-    } as any);
-
-    let thinking = "";
-    let text = "";
-    for (const block of msg.content as any[]) {
-      if (block.type === "thinking") thinking += block.thinking;
-      else if (block.type === "text") text += block.text;
-    }
-    return { thinking, text };
-  }
-
-  // Non-Claude: no extended thinking, return empty thinking + normal text
-  const text = await generateCompletion(opts);
-  return { thinking: "", text };
+export async function generateCompletion(opts: CompletionOpts) {
+  const result = await getOpenAI().chat.completions.create(request(opts));
+  const text = result.choices[0]?.message?.content;
+  if (!text?.trim()) throw new Error("The model returned an empty response");
+  return text;
 }
 
-/** Streams tokens via an async generator — yields string chunks. */
-export async function* streamCompletion(opts: CompletionOpts): AsyncGenerator<string> {
-  const { model, system, userMessage, maxTokens = 8192, imageBase64, imageMediaType } = opts;
-  const meta = MODEL_META[model];
-
-  if (meta.provider === "anthropic") {
-    const userContent: any[] = imageBase64
-      ? [
-          { type: "image", source: { type: "base64", media_type: imageMediaType ?? "image/jpeg", data: imageBase64 } },
-          { type: "text", text: userMessage },
-        ]
-      : [{ type: "text", text: userMessage }];
-
-    const stream = anthropic.messages.stream({
-      model,
-      max_tokens: maxTokens,
-      system,
-      messages: [{ role: "user", content: userContent }],
-    });
-    for await (const event of stream) {
-      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-        yield event.delta.text;
-      }
-    }
-    return;
-  }
-
-  if (meta.provider === "openai") {
-    const userContent: any[] = imageBase64
-      ? [
-          { type: "text", text: userMessage },
-          { type: "image_url", image_url: { url: `data:${imageMediaType ?? "image/jpeg"};base64,${imageBase64}` } },
-        ]
-      : [{ type: "text", text: userMessage }];
-
-    const stream = await openai.chat.completions.create({
-      model,
-      max_completion_tokens: maxTokens,
-      stream: true,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: userContent },
-      ],
-    } as any);
-    for await (const chunk of stream) {
-      const delta = chunk.choices[0]?.delta?.content;
-      if (delta) yield delta;
-    }
-    return;
-  }
-
-  // Gemini streaming
-  const stream = await gemini.models.generateContentStream({
-    model,
-    contents: [{ role: "user", parts: [{ text: `${system}\n\n${userMessage}` }] }],
-    config: { maxOutputTokens: maxTokens },
-  });
+export async function* streamCompletion(opts: CompletionOpts) {
+  const stream = await getOpenAI().chat.completions.create({ ...request(opts), stream: true });
+  let hasText = false;
   for await (const chunk of stream) {
-    const text = chunk.text;
-    if (text) yield text;
+    const delta = chunk.choices[0]?.delta?.content;
+    if (delta) { hasText = true; yield delta; }
   }
+  if (!hasText) throw new Error("The model returned an empty response");
 }
 
 /**
@@ -246,7 +101,7 @@ Do not repeat information other specialists would cover. Be concise but complete
           userMessage: `${basePrompt}\n\nGenerate your specialist section now.`,
           maxTokens: 4096,
           imageBase64,
-          imageMediaType: imageMediaType as any,
+          imageMediaType,
         })) {
           text += chunk;
           onProgress?.(agent.name, chunk);
@@ -260,6 +115,7 @@ Do not repeat information other specialists would cover. Be concise but complete
 
   // Coordinator merge pass
   const sections = agentResults.map(r => r.text).filter(Boolean).join("\n\n---\n\n");
+  if (!sections) throw new Error("All generation agents failed");
   const coordinatorSystem = `You are a technical writing coordinator. You have received ${agentResults.length} specialist sections for a ${specType.replace(/_/g, " ")} document.
 Your job is to merge them into one cohesive, professional document:
 1. Add a proper document title and Executive Summary at the top

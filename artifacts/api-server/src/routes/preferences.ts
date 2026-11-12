@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 const router = Router();
 
 router.get("/preferences", async (req: Request, res: Response) => {
-  const userId = (req as any).session?.user?.id as string | undefined;
+  const userId = req.user?.id as string | undefined;
   if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
 
   try {
@@ -18,7 +18,7 @@ router.get("/preferences", async (req: Request, res: Response) => {
 });
 
 router.put("/preferences", async (req: Request, res: Response) => {
-  const userId = (req as any).session?.user?.id as string | undefined;
+  const userId = req.user?.id as string | undefined;
   if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
 
   const { preferredStack, domain, alwaysIncludeSections, preferredModel, defaultSpecType, extraContext } = req.body;

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import mermaid from "mermaid";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface MermaidDiagramProps {
@@ -12,15 +11,11 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
   const [error, setError] = useState<boolean>(false);
 
   useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: "dark",
-      securityLevel: "loose",
-    });
-
     const renderChart = async () => {
       try {
         setError(false);
+        const { default: mermaid } = await import("mermaid");
+        mermaid.initialize({ startOnLoad: false, theme: "dark", securityLevel: "strict" });
         const id = `mermaid-svg-${Math.round(Math.random() * 10000000)}`;
         const { svg } = await mermaid.render(id, chart);
         setSvg(svg);

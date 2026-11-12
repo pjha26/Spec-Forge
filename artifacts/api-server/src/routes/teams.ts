@@ -239,7 +239,8 @@ router.post("/:id/specs/:specId", async (req: Request, res: Response) => {
   if (!access) { res.status(404).json({ error: "Team not found" }); return; }
   if (access.role === "viewer") { res.status(403).json({ error: "Viewers cannot add specs" }); return; }
 
-  await db.update(specsTable).set({ teamId, updatedAt: new Date() }).where(eq(specsTable.id, specId));
+  const assigned = await db.update(specsTable).set({ teamId, updatedAt: new Date() }).where(and(eq(specsTable.id, specId), eq(specsTable.userId, userId))).returning({ id: specsTable.id });
+  if (!assigned.length) { res.status(404).json({ error: "Spec not found" }); return; }
   res.json({ success: true });
 });
 

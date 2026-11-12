@@ -161,12 +161,10 @@ router.post("/:id/audit", async (req: Request, res: Response) => {
     try {
       let context = "";
       if (spec.inputType === "github_url") {
-        const ghToken = process.env.GITHUB_TOKEN ?? "";
         const match = spec.inputValue.match(/github\.com\/([^/]+)\/([^/]+)/);
         if (match) {
           const [, owner, repo] = match;
           const headers: Record<string, string> = { Accept: "application/vnd.github.v3+json" };
-          if (ghToken) headers.Authorization = `Bearer ${ghToken}`;
           const treeRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/HEAD?recursive=1`, { headers });
           if (treeRes.ok) {
             const tree = await treeRes.json() as { tree: Array<{ path: string; type: string }> };
@@ -264,8 +262,8 @@ router.post("/:id/commit-to-github", async (req: Request, res: Response) => {
   const role = await getTeamRole(specId, userId);
   if (role !== "owner") { res.status(403).json({ error: "Only team owners can commit specs back to GitHub" }); return; }
 
-  const token = process.env.GITHUB_TOKEN;
-  if (!token) { res.status(500).json({ error: "GITHUB_TOKEN not configured on server" }); return; }
+  const token = process.env.NODE_ENV === "production" ? undefined : process.env.GITHUB_TOKEN;
+  if (!token) { res.status(503).json({ error: "GitHub writeback is unavailable on this deployment" }); return; }
 
   const match = spec.inputValue.match(/github\.com\/([^/]+)\/([^/?#]+)/);
   if (!match) { res.status(400).json({ error: "Cannot parse GitHub owner/repo from spec URL" }); return; }

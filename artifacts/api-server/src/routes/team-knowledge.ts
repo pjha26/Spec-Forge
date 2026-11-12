@@ -58,7 +58,7 @@ router.post("/:teamId/knowledge", async (req, res) => {
   if (!content?.trim()) { res.status(400).json({ error: "content is required" }); return; }
 
   const wordCount = content.trim().split(/\s+/).length;
-  const userId = (req as any).session?.user?.id as string | undefined;
+  const userId = req.user?.id as string | undefined;
   const validType = ["spec", "adr", "decision", "doc", "runbook"].includes(docType) ? docType : "doc";
 
   try {

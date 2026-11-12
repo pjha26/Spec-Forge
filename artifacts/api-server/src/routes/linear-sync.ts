@@ -7,7 +7,7 @@
 import { Router, type Request, type Response } from "express";
 import { db, specsTable, specIssuesTable, userPreferencesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { anthropic } from "@workspace/integrations-anthropic-ai";
+import { generateCompletion } from "../lib/model-router";
 
 const router = Router();
 
@@ -18,24 +18,20 @@ interface ExtractedTask {
 }
 
 async function extractTasksFromSpec(content: string): Promise<ExtractedTask[]> {
-  const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-5",
-    max_tokens: 2048,
-    messages: [
-      {
-        role: "user",
-        content: `From the following technical specification, extract all concrete action items, implementation tasks, and development tickets. Group them by spec section. Each task should be specific and actionable.
+  const completion = await generateCompletion({
+    model: "gpt-4o-mini",
+    maxTokens: 2048,
+    system: "You are a technical specifications assistant.",
+    userMessage: `From the following technical specification, extract all concrete action items, implementation tasks, and development tickets. Group them by spec section. Each task should be specific and actionable.
 
 Output ONLY a JSON array (no markdown, no explanation):
 [{"section": "Authentication", "title": "Implement JWT token generation", "description": "Create JWT signing logic with RS256 algorithm and 24h expiry"}]
 
 Spec content:
 ${content.slice(0, 6000)}`,
-      },
-    ],
   });
 
-  const raw = (message.content[0] as { text: string }).text.trim();
+  const raw = completion.trim();
   const match = raw.match(/\[[\s\S]*\]/);
   if (!match) return [];
   return JSON.parse(match[0]);
@@ -75,8 +71,14 @@ async function createJiraIssue(
   title: string,
   description: string,
 ): Promise<{ id: string; url: string } | null> {
-  const cleanBase = baseUrl.replace(/\/$/, "");
+  const jiraUrl = new URL(baseUrl);
+  if (jiraUrl.protocol !== "https:" || !/^[a-z0-9-]+\.atlassian\.net$/.test(jiraUrl.hostname) ||
+      jiraUrl.port || jiraUrl.username || jiraUrl.password || jiraUrl.pathname !== "/" || jiraUrl.search || jiraUrl.hash) {
+    throw new Error("Enter a Jira Cloud site URL");
+  }
+  const cleanBase = jiraUrl.origin;
   const res = await fetch(`${cleanBase}/rest/api/3/issue`, {
+    redirect: "error",
     method: "POST",
     headers: {
       Authorization: `Basic ${Buffer.from(`token:${apiKey}`).toString("base64")}`,
@@ -128,7 +130,7 @@ router.get("/:id/issues", async (req: Request, res: Response) => {
 // POST /api/specs/:id/sync-issues
 router.post("/:id/sync-issues", async (req: Request, res: Response) => {
   const specId = Number(req.params.id);
-  const userId = (req as any).session?.user?.id as string | undefined;
+  const userId = req.user?.id as string | undefined;
   if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
 
   const { platform } = req.body as { platform: "linear" | "jira" };
@@ -198,7 +200,7 @@ router.post("/:id/sync-issues", async (req: Request, res: Response) => {
 
 // GET /api/integrations/linear/teams
 router.get("/linear-teams", async (req: Request, res: Response) => {
-  const userId = (req as any).session?.user?.id as string | undefined;
+  const userId = req.user?.id as string | undefined;
   if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
   try {
     const [prefs] = await db.select().from(userPreferencesTable).where(eq(userPreferencesTable.userId, userId));

@@ -6,14 +6,16 @@
  */
 
 import { Router } from "express";
+import { and, eq, inArray } from "drizzle-orm";
+import { visibleSpecs } from "../middlewares/resourceAccess";
 import { db, specsTable, specDependenciesTable } from "@workspace/db";
-import { anthropic } from "@workspace/integrations-anthropic-ai";
+import { generateCompletion } from "../lib/model-router";
 
 const router = Router();
 
 router.get("/dependencies", async (req, res) => {
   try {
-    const deps = await db.select().from(specDependenciesTable);
+
     const specs = await db
       .select({
         id: specsTable.id,
@@ -21,8 +23,10 @@ router.get("/dependencies", async (req, res) => {
         specType: specsTable.specType,
         status: specsTable.status,
       })
-      .from(specsTable);
+      .from(specsTable).where(visibleSpecs(req.user!.id));
 
+    const ids = specs.map(spec => spec.id);
+    const deps = await db.select().from(specDependenciesTable).where(and(inArray(specDependenciesTable.sourceSpecId, ids), inArray(specDependenciesTable.targetSpecId, ids)));
     res.json({ dependencies: deps, specs });
   } catch (err) {
     req.log.error({ err }, "Failed to get dependencies");
@@ -40,7 +44,7 @@ router.post("/dependencies/analyze", async (req, res) => {
         specType: specsTable.specType,
         content: specsTable.content,
       })
-      .from(specsTable);
+      .from(specsTable).where(eq(specsTable.userId, req.user!.id)).limit(50);
 
     const completedSpecs = specs.filter(s => s.content && s.content.length > 50);
 
@@ -70,13 +74,14 @@ Only include relationships that are clearly supported by the spec content. Outpu
 
 If no clear relationships exist, output: []`;
 
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-5",
-      max_tokens: 1024,
-      messages: [{ role: "user", content: prompt }],
+    const completion = await generateCompletion({
+      model: "gpt-4o-mini",
+      maxTokens: 1024,
+    system: "You are a technical specifications assistant.",
+      userMessage: prompt,
     });
 
-    const raw = (message.content[0] as { text: string }).text.trim();
+    const raw = completion.trim();
     const jsonMatch = raw.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       res.json({ dependencies: [], message: "No relationships found" });
@@ -97,20 +102,23 @@ If no clear relationships exist, output: []`;
     );
 
     // Clear old and insert new
-    await db.delete(specDependenciesTable);
-    if (valid.length > 0) {
-      await db
-        .insert(specDependenciesTable)
-        .values(valid.map(d => ({
-          sourceSpecId: d.sourceSpecId,
-          targetSpecId: d.targetSpecId,
-          relationshipType: d.relationshipType,
-          description: d.description ?? null,
-        })))
-        .onConflictDoNothing();
-    }
-
-    const saved = await db.select().from(specDependenciesTable);
+    const ids = [...validIds];
+    const scope = and(inArray(specDependenciesTable.sourceSpecId, ids), inArray(specDependenciesTable.targetSpecId, ids));
+    await db.transaction(async tx => {
+      await tx.delete(specDependenciesTable).where(scope);
+      if (valid.length > 0) {
+        await tx
+          .insert(specDependenciesTable)
+          .values(valid.map(d => ({
+            sourceSpecId: d.sourceSpecId,
+            targetSpecId: d.targetSpecId,
+            relationshipType: d.relationshipType,
+            description: d.description ?? null,
+          })))
+          .onConflictDoNothing();
+      }
+    });
+    const saved = await db.select().from(specDependenciesTable).where(scope);
     res.json({ dependencies: saved, analyzed: completedSpecs.length });
   } catch (err) {
     req.log.error({ err }, "Dependency analysis failed");

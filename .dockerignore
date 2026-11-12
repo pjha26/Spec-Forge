@@ -5,6 +5,11 @@ dist
 */dist
 */*/dist
 .env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
 .git
 .agents
 artifacts/api-server/dist

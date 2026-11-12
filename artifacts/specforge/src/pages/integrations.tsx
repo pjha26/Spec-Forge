@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Zap, GitBranch, Hash, Webhook, Plus, Trash2, CheckCircle2,
+  Zap, GitBranch, Hash, CheckCircle2,
   AlertCircle, Loader2, Eye, EyeOff, TestTube2, RefreshCw,
   ExternalLink, Settings, Shield,
 } from "lucide-react";
@@ -10,25 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
-type Tab = "linear" | "slack" | "webhooks";
-type OutboundHook = {
-  id: number; name: string; eventType: string; url: string;
-  secret: string | null; enabled: boolean;
-  lastTriggeredAt: string | null; lastStatus: number | null;
-  createdAt: string;
-};
-
-const EVENTS = [
-  { value: "spec.generated",      label: "Spec Generated",     desc: "Fires when a spec is successfully generated" },
-  { value: "spec.shared",         label: "Spec Shared",        desc: "Fires when a share link is created" },
-  { value: "spec.health_declined",label: "Health Declined",    desc: "Fires when a spec's health score drops" },
-  { value: "team.member_joined",  label: "Team Member Joined", desc: "Fires when someone joins a team" },
-];
-
+type Tab = "linear" | "slack";
 const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: "linear",   label: "Linear / Jira",   icon: GitBranch },
   { id: "slack",    label: "Slack",            icon: Hash },
-  { id: "webhooks", label: "Zapier / Webhooks",icon: Webhook },
 ];
 
 function StatusDot({ ok }: { ok: boolean }) {
@@ -60,14 +45,6 @@ export default function IntegrationsPage() {
   const [jiraProjectKey, setJiraProjectKey] = useState("");
   const [slackWebhookUrl, setSlackWebhookUrl] = useState("");
 
-  // Outbound webhooks
-  const [hooks, setHooks] = useState<OutboundHook[]>([]);
-  const [hooksLoading, setHooksLoading] = useState(false);
-  const [newHookName, setNewHookName] = useState("");
-  const [newHookEvent, setNewHookEvent] = useState("spec.generated");
-  const [newHookUrl, setNewHookUrl] = useState("");
-  const [addingHook, setAddingHook] = useState(false);
-
   const loadSettings = useCallback(async () => {
     setSettingsLoading(true);
     try {
@@ -84,20 +61,7 @@ export default function IntegrationsPage() {
     finally { setSettingsLoading(false); }
   }, []);
 
-  const loadHooks = useCallback(async () => {
-    setHooksLoading(true);
-    try {
-      const res = await fetch("/api/integrations/webhooks");
-      if (res.ok) {
-        const data = await res.json();
-        setHooks(data.webhooks ?? []);
-      }
-    } catch { /* ignore */ }
-    finally { setHooksLoading(false); }
-  }, []);
-
   useEffect(() => { loadSettings(); }, [loadSettings]);
-  useEffect(() => { if (tab === "webhooks") loadHooks(); }, [tab, loadHooks]);
 
   const saveSettings = async (updates: Record<string, string | null>) => {
     setSaving(true);
@@ -147,44 +111,6 @@ export default function IntegrationsPage() {
     } catch (err: any) {
       toast({ title: err.message ?? "Failed to send test message", variant: "destructive" });
     } finally { setSlackTestLoading(false); }
-  };
-
-  const addHook = async () => {
-    if (!newHookName || !newHookUrl) return;
-    setAddingHook(true);
-    try {
-      const res = await fetch("/api/integrations/webhooks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newHookName, eventType: newHookEvent, url: newHookUrl }),
-      });
-      if (!res.ok) throw new Error((await res.json()).error);
-      setNewHookName(""); setNewHookUrl(""); setNewHookEvent("spec.generated");
-      await loadHooks();
-      toast({ title: "Webhook registered!" });
-    } catch (err: any) {
-      toast({ title: err.message ?? "Failed to add webhook", variant: "destructive" });
-    } finally { setAddingHook(false); }
-  };
-
-  const deleteHook = async (id: number) => {
-    await fetch(`/api/integrations/webhooks/${id}`, { method: "DELETE" });
-    setHooks(prev => prev.filter(h => h.id !== id));
-    toast({ title: "Webhook deleted" });
-  };
-
-  const testHook = async (id: number) => {
-    await fetch(`/api/integrations/webhooks/${id}/test`, { method: "POST" });
-    toast({ title: "Test payload sent!" });
-  };
-
-  const toggleHook = async (id: number, enabled: boolean) => {
-    await fetch(`/api/integrations/webhooks/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ enabled }),
-    });
-    setHooks(prev => prev.map(h => h.id === id ? { ...h, enabled } : h));
   };
 
   return (
@@ -395,111 +321,6 @@ export default function IntegrationsPage() {
                     <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> A spec is successfully generated</li>
                     <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> A spec's health score declines</li>
                   </ul>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ─── ZAPIER / WEBHOOKS ─── */}
-            {tab === "webhooks" && (
-              <motion.div key="webhooks" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
-                {/* Add webhook */}
-                <div className="rounded-2xl p-5 space-y-3" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  <p className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                    <Plus className="w-3.5 h-3.5" /> New Webhook
-                  </p>
-                  <Input
-                    placeholder="Webhook name — e.g. Zapier Spec Alert"
-                    value={newHookName}
-                    onChange={e => setNewHookName(e.target.value)}
-                    className="font-mono text-xs"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
-                  />
-                  <select
-                    value={newHookEvent}
-                    onChange={e => setNewHookEvent(e.target.value)}
-                    className="w-full text-xs font-mono rounded-md px-3 py-2 h-9"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "white" }}
-                  >
-                    {EVENTS.map(ev => <option key={ev.value} value={ev.value}>{ev.label} — {ev.desc}</option>)}
-                  </select>
-                  <Input
-                    placeholder="https://hooks.zapier.com/hooks/catch/..."
-                    value={newHookUrl}
-                    onChange={e => setNewHookUrl(e.target.value)}
-                    className="font-mono text-xs"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
-                  />
-                  <Button size="sm" className="w-full font-mono text-xs" onClick={addHook} disabled={addingHook || !newHookName || !newHookUrl}>
-                    {addingHook ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Plus className="w-3 h-3 mr-2" />}
-                    Register Webhook
-                  </Button>
-                </div>
-
-                {/* Webhook list */}
-                {hooksLoading ? (
-                  <div className="flex items-center justify-center py-8"><Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /></div>
-                ) : hooks.length === 0 ? (
-                  <div className="text-center py-10 space-y-2">
-                    <Webhook className="w-7 h-7 mx-auto opacity-20" />
-                    <p className="text-sm text-muted-foreground font-mono">No webhooks registered yet</p>
-                    <p className="text-xs text-muted-foreground/50">Zapier, Make.com, or any HTTP endpoint works</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {hooks.map(hook => {
-                      const ev = EVENTS.find(e => e.value === hook.eventType);
-                      const ok = hook.lastStatus && hook.lastStatus >= 200 && hook.lastStatus < 300;
-                      return (
-                        <div key={hook.id} className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="text-sm font-semibold">{hook.name}</p>
-                                <button onClick={() => toggleHook(hook.id, !hook.enabled)} className="shrink-0">
-                                  <Badge variant="outline" className="text-[9px] font-mono cursor-pointer"
-                                    style={hook.enabled ? { color: "#10B981", borderColor: "rgba(16,185,129,0.4)", background: "rgba(16,185,129,0.1)" } : {}}>
-                                    {hook.enabled ? "Active" : "Paused"}
-                                  </Badge>
-                                </button>
-                              </div>
-                              <p className="text-[10px] font-mono text-muted-foreground mt-0.5">{ev?.label ?? hook.eventType}</p>
-                              <p className="text-[10px] font-mono text-muted-foreground/50 truncate max-w-xs mt-0.5">{hook.url}</p>
-                            </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                              {hook.lastStatus !== null && (
-                                <span className="text-[9px] font-mono flex items-center gap-1" style={{ color: ok ? "#10B981" : "#EF4444" }}>
-                                  {ok ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
-                                  {hook.lastStatus}
-                                </span>
-                              )}
-                              <button onClick={() => testHook(hook.id)} className="p-1.5 rounded hover:bg-white/5 text-muted-foreground hover:text-white transition-colors" title="Send test">
-                                <TestTube2 className="w-3.5 h-3.5" />
-                              </button>
-                              <button onClick={() => deleteHook(hook.id)} className="p-1.5 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                          {hook.secret && (
-                            <div className="flex items-center gap-2 mt-2 px-2.5 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                              <Shield className="w-3 h-3 text-muted-foreground/50 shrink-0" />
-                              <code className="text-[9px] font-mono text-muted-foreground/50 truncate">HMAC: sha256={hook.secret.slice(0, 8)}••••</code>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <div className="rounded-xl p-4 text-xs font-mono" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <p className="text-muted-foreground/70 font-semibold mb-2">Payload format</p>
-                  <pre className="text-muted-foreground/50 text-[10px] overflow-x-auto">{`{
-  "event": "spec.generated",
-  "timestamp": "2025-01-01T00:00:00Z",
-  "data": { "id": 1, "title": "My Spec", ... }
-}`}</pre>
-                  <p className="text-muted-foreground/40 mt-2">All requests include <code className="text-primary/70">X-SpecForge-Signature</code> (HMAC-SHA256) for verification.</p>
                 </div>
               </motion.div>
             )}

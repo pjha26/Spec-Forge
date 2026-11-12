@@ -93,14 +93,13 @@ export default function Home() {
   const [inputType, setInputType] = useState<"github_url" | "description" | "image">("github_url");
   const [inputValue, setInputValue] = useState("");
   const [specType, setSpecType] = useState<"system_design" | "api_design" | "database_schema" | "feature_spec">("system_design");
-  const [aiModel, setAiModel] = useState<"gpt-4o-mini" | "gemini-1.5-flash">("gemini-1.5-flash");
+  const [aiModel, setAiModel] = useState("gpt-4o-mini");
 
   // New feature state
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [multiAgent, setMultiAgent] = useState(false);
-  const [extendedThinking, setExtendedThinking] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [thinkingContent, setThinkingContent] = useState("");
   const [showThinking, setShowThinking] = useState(false);
@@ -167,6 +166,10 @@ export default function Home() {
   };
 
   const handleImageUpload = (file: File) => {
+    if (file.type !== "image/jpeg" && file.type !== "image/png" || file.size > 2 * 1024 * 1024) {
+      toast({ title: "Choose a JPEG or PNG under 2 MB", variant: "destructive" });
+      return;
+    }
     setImageFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -215,14 +218,15 @@ export default function Home() {
           inputValue: inputType === "image" ? (inputValue.trim() || "Generated from uploaded image") : inputValue,
           aiModel,
           multiAgent,
-          extendedThinking,
           imageInput: imageBase64,
           imageDescription: inputValue.trim() || undefined,
         }),
       });
+      if (!createRes.ok) throw new Error((await createRes.json()).error);
       const freshSpec = await createRes.json();
 
       const response = await fetch(`/api/specs/${freshSpec.id}/stream`, { method: "POST" });
+      if (!response.ok) throw new Error((await response.json()).error);
       if (!response.body) throw new Error("No response body");
 
       const reader = response.body.getReader();
@@ -288,11 +292,12 @@ export default function Home() {
         }
       }
 
+      if (!completed && !hasError) throw new Error("Generation was interrupted");
       if (completed && !hasError) {
-        toast({ title: "Spec generated!", description: multiAgent ? "4 specialist agents merged." : extendedThinking ? "Extended reasoning complete." : "Your technical document is ready." });
+        toast({ title: "Spec generated!", description: multiAgent ? "4 specialist agents merged." : "Your technical document is ready." });
       }
-    } catch {
-      toast({ title: "Error", description: "Failed to generate spec.", variant: "destructive" });
+    } catch (error) {
+      toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to generate spec.", variant: "destructive" });
     } finally {
       setIsGenerating(false);
       setGenerationPhase("idle");
@@ -523,7 +528,7 @@ export default function Home() {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/png"
                       className="hidden"
                       onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }}
                     />
@@ -572,7 +577,6 @@ export default function Home() {
                 <div className="grid grid-cols-1 gap-1.5">
                   {([
                     { value: "gpt-4o-mini" as const, label: "GPT-4o Mini",          badge: "OpenAI",    color: "#34D399", dot: "rgba(52,211,153,0.8)"  },
-                    { value: "gemini-1.5-flash" as const, label: "Gemini 1.5 Flash", badge: "Google", color: "#60A5FA", dot: "rgba(96,165,250,0.8)"  },
                   ] as const).map(({ value, label, badge, color, dot }, idx) => {
                     const active = aiModel === value;
                     return (
@@ -624,7 +628,7 @@ export default function Home() {
                 <div className="space-y-1.5">
                   {/* Multi-Agent toggle */}
                   <button
-                    onClick={() => { setMultiAgent(m => !m); if (!multiAgent) setExtendedThinking(false); }}
+                    onClick={() => { setMultiAgent(m => !m); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left"
                     style={multiAgent ? {
                       background: "rgba(var(--primary-rgb),0.12)",
@@ -650,44 +654,6 @@ export default function Home() {
                     >
                       <div className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all"
                         style={{ left: multiAgent ? "18px" : "2px" }}
-                      />
-                    </div>
-                  </button>
-
-                  {/* Extended Thinking toggle — Claude only */}
-                  <button
-                    onClick={() => { setExtendedThinking(e => !e); if (!extendedThinking) setMultiAgent(false); }}
-                    disabled={!aiModel.startsWith("claude")}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left disabled:opacity-40"
-                    style={extendedThinking ? {
-                      background: "rgba(6,182,212,0.12)",
-                      border: "1px solid rgba(6,182,212,0.3)",
-                    } : {
-                      background: "rgba(255,255,255,0.02)",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-                      style={{ background: extendedThinking ? "rgba(6,182,212,0.2)" : "rgba(255,255,255,0.04)" }}
-                    >
-                      <BrainCircuit className="w-3.5 h-3.5" style={{ color: extendedThinking ? "#06B6D4" : undefined }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-xs font-semibold" style={{ color: extendedThinking ? "#06B6D4" : undefined }}>
-                          Extended Thinking
-                        </p>
-                        <span className="text-[9px] font-mono px-1 py-0.5 rounded"
-                          style={{ background: "rgba(192,132,252,0.15)", color: "#C084FC", border: "1px solid rgba(192,132,252,0.2)" }}
-                        >Claude</span>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground">Deeper reasoning, better quality</p>
-                    </div>
-                    <div className="w-8 h-4 rounded-full relative transition-all shrink-0"
-                      style={{ background: extendedThinking ? "#06B6D4" : "rgba(255,255,255,0.1)" }}
-                    >
-                      <div className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all"
-                        style={{ left: extendedThinking ? "18px" : "2px" }}
                       />
                     </div>
                   </button>

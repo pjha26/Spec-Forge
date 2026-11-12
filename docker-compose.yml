@@ -32,22 +32,16 @@ services:
       NODE_ENV: production
       PORT: 8080
       DATABASE_URL: postgresql://specforge:${POSTGRES_PASSWORD:-changeme}@db:5432/specforge
-      SESSION_SECRET: ${SESSION_SECRET}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+      REPL_ID: ${REPL_ID:-}
       NOTION_API_KEY: ${NOTION_API_KEY:-}
       ISSUER_URL: ${ISSUER_URL:-https://replit.com/oidc}
       PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8080}
       # Local dev auth bypass (leave unset / false in production)
       LOCAL_DEV: ${LOCAL_DEV:-false}
       LOCAL_DEV_USER_ID: ${LOCAL_DEV_USER_ID:-local-dev-user}
-      AI_INTEGRATIONS_ANTHROPIC_BASE_URL: ${AI_INTEGRATIONS_ANTHROPIC_BASE_URL:-https://api.anthropic.com}
-      AI_INTEGRATIONS_ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-dummy_anthropic_key}
-      AI_INTEGRATIONS_OPENAI_BASE_URL: ${AI_INTEGRATIONS_OPENAI_BASE_URL:-https://api.openai.com/v1}
-      AI_INTEGRATIONS_OPENAI_API_KEY: ${OPENAI_API_KEY:-dummy_openai_key}
-      AI_INTEGRATIONS_GEMINI_BASE_URL: ${AI_INTEGRATIONS_GEMINI_BASE_URL:-https://generativelanguage.googleapis.com}
-      AI_INTEGRATIONS_GEMINI_API_KEY: ${GOOGLE_AI_API_KEY:-dummy_gemini_key}
+      AI_INTEGRATIONS_OPENAI_API_KEY: ${AI_INTEGRATIONS_OPENAI_API_KEY:-}
+      AI_INTEGRATIONS_OPENAI_BASE_URL: ${AI_INTEGRATIONS_OPENAI_BASE_URL:-}
 
 volumes:
   pgdata:

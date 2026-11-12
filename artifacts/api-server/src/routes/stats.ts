@@ -24,9 +24,7 @@ router.get("/stats", async (req: Request, res: Response) => {
   const sevenDaysAgo  = new Date(Date.now() -  7 * 24 * 60 * 60 * 1000);
 
   // Filter: user's own specs OR legacy unowned specs
-  const ownerFilter = userId
-    ? or(eq(specsTable.userId, userId), sql`${specsTable.userId} IS NULL`)
-    : undefined;
+  const ownerFilter = eq(specsTable.userId, req.user!.id);
 
   try {
     const [
@@ -101,7 +99,7 @@ router.get("/stats", async (req: Request, res: Response) => {
           : sql`TRUE`),
 
       db.select({ count: sql<number>`count(*)::int` })
-        .from(conversations),
+        .from(conversations).where(eq(conversations.userId, req.user!.id)),
 
       db.select({ count: sql<number>`count(*)::int` })
         .from(specAnnotationsTable)

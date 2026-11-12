@@ -36,10 +36,8 @@ router.get("/specs/:id/presence", (req: Request, res: Response) => {
   res.flushHeaders();
 
   const sessionId = randomBytes(6).toString("hex");
-  const user = (req as any).session?.user;
-  const name = user?.firstName
-    ? user.firstName
-    : user?.email?.split("@")[0] ?? "Visitor";
+  const user = req.user;
+  const name = user?.name || user?.username || user?.email?.split("@")[0] || "Member";
   const color = VIEWER_COLORS[Math.floor(Math.random() * VIEWER_COLORS.length)]!;
 
   if (!specViewers.has(specId)) specViewers.set(specId, new Map());

@@ -1,23 +1,12 @@
 import app from "./app";
+import { db, specsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 import { logger } from "./lib/logger";
 import { startHealthCron } from "./lib/health-cron";
 
-const required = ['DATABASE_URL', 'SESSION_SECRET'];
-const aiKey = process.env.OPENAI_API_KEY || 
-              process.env.GOOGLE_AI_API_KEY ||
-              process.env.ANTHROPIC_API_KEY;
-
-if (!aiKey) {
-  console.error('MISSING: No AI API key found. Set OPENAI_API_KEY, GOOGLE_AI_API_KEY, or ANTHROPIC_API_KEY in .env');
-  process.exit(1);
+if (!process.env.OPENAI_API_KEY && !process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+  throw new Error("Set OPENAI_API_KEY or configure the Replit OpenAI integration");
 }
-
-required.forEach(key => {
-  if (!process.env[key]) {
-    console.error(`MISSING ENV: ${key}`);
-    process.exit(1);
-  }
-});
 
 const rawPort = process.env["PORT"];
 
@@ -31,6 +20,12 @@ const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
+
+// A single API instance owns generation. Release jobs interrupted by its restart.
+if (process.env.NODE_ENV === "production") {
+  await db.update(specsTable).set({ status: "failed", updatedAt: new Date() })
+    .where(eq(specsTable.status, "generating"));
 }
 
 app.listen(port, (err) => {

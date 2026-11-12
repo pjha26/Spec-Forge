@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, specsTable, specVersionsTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 
 const router = Router();
 
@@ -49,7 +49,7 @@ router.get("/:id/versions/:versionId", async (req, res) => {
   const [version] = await db
     .select()
     .from(specVersionsTable)
-    .where(eq(specVersionsTable.id, versionId));
+    .where(and(eq(specVersionsTable.id, versionId), eq(specVersionsTable.specId, specId)));
 
   if (!version || version.specId !== specId) {
     res.status(404).json({ error: "Version not found" });

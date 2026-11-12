@@ -1,67 +1,6 @@
-import { createHmac } from "crypto";
-import { db, outboundWebhooksTable, userPreferencesTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { db, userPreferencesTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 import { logger } from "./logger.js";
-
-export async function fireUserWebhooks(
-  userId: string,
-  eventType: string,
-  payload: object,
-): Promise<void> {
-  try {
-    const hooks = await db
-      .select()
-      .from(outboundWebhooksTable)
-      .where(
-        and(
-          eq(outboundWebhooksTable.userId, userId),
-          eq(outboundWebhooksTable.eventType, eventType),
-          eq(outboundWebhooksTable.enabled, true),
-        ),
-      );
-
-    await Promise.allSettled(
-      hooks.map(async (hook) => {
-        const body = JSON.stringify({
-          event: eventType,
-          timestamp: new Date().toISOString(),
-          data: payload,
-        });
-
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-          "User-Agent": "SpecForge-Webhook/1.0",
-          "X-SpecForge-Event": eventType,
-        };
-
-        if (hook.secret) {
-          const sig = createHmac("sha256", hook.secret).update(body).digest("hex");
-          headers["X-SpecForge-Signature"] = `sha256=${sig}`;
-        }
-
-        let status = 0;
-        try {
-          const res = await fetch(hook.url, {
-            method: "POST",
-            headers,
-            body,
-            signal: AbortSignal.timeout(10_000),
-          });
-          status = res.status;
-        } catch {
-          status = 0;
-        }
-
-        await db
-          .update(outboundWebhooksTable)
-          .set({ lastTriggeredAt: new Date(), lastStatus: status })
-          .where(eq(outboundWebhooksTable.id, hook.id));
-      }),
-    );
-  } catch (err) {
-    logger.error({ err }, "fireUserWebhooks failed");
-  }
-}
 
 export async function fireSlackNotification(
   webhookUrl: string,
@@ -69,6 +8,10 @@ export async function fireSlackNotification(
   body: string,
   specUrl?: string,
 ): Promise<void> {
+  const url = new URL(webhookUrl);
+  if (url.origin !== "https://hooks.slack.com" || url.username || url.password || !/^\/services\/[\w-]+\/[\w-]+\/[\w-]+$/.test(url.pathname) || url.search || url.hash) {
+    throw new Error("Enter a valid Slack incoming webhook URL");
+  }
   const blocks: object[] = [
     {
       type: "header",
@@ -100,12 +43,14 @@ export async function fireSlackNotification(
     elements: [{ type: "mrkdwn", text: "Sent by <https://specforge.app|SpecForge>" }],
   });
 
-  await fetch(webhookUrl, {
+  const response = await fetch(url, {
+    redirect: "error",
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ blocks }),
     signal: AbortSignal.timeout(8_000),
   });
+  if (!response.ok) throw new Error("Slack rejected the webhook");
 }
 
 export async function notifySlackOnSpecGenerated(

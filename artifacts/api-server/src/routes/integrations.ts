@@ -13,7 +13,7 @@ import { fireSlackNotification } from "../lib/fire-webhook.js";
 const router = Router();
 
 router.get("/integrations/settings", async (req: Request, res: Response) => {
-  const userId = (req as any).session?.user?.id as string | undefined;
+  const userId = req.user?.id as string | undefined;
   if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
 
   const [prefs] = await db.select({
@@ -42,7 +42,7 @@ router.get("/integrations/settings", async (req: Request, res: Response) => {
 });
 
 router.put("/integrations/settings", async (req: Request, res: Response) => {
-  const userId = (req as any).session?.user?.id as string | undefined;
+  const userId = req.user?.id as string | undefined;
   if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
 
   const {
@@ -72,7 +72,7 @@ router.put("/integrations/settings", async (req: Request, res: Response) => {
 });
 
 router.post("/integrations/slack/test", async (req: Request, res: Response) => {
-  const userId = (req as any).session?.user?.id as string | undefined;
+  const userId = req.user?.id as string | undefined;
   if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
 
   const { webhookUrl } = req.body as { webhookUrl?: string };

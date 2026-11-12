@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -5,17 +6,18 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout";
 import { ThemeProvider } from "@/components/theme-provider";
 import NotFound from "@/pages/not-found";
-import Home from "@/pages/home";
-import SpecsList from "@/pages/specs";
-import SpecDetail from "@/pages/spec-detail";
 import Landing from "@/pages/landing";
-import SharedSpec from "@/pages/shared-spec";
-import TeamsPage from "@/pages/teams";
-import TeamDetail from "@/pages/team-detail";
-import SearchPage from "@/pages/search";
-import GraphPage from "@/pages/graph";
-import IntegrationsPage from "@/pages/integrations";
 import { AuthGate } from "@/components/auth-gate";
+
+const Home = lazy(() => import("@/pages/home"));
+const SpecsList = lazy(() => import("@/pages/specs"));
+const SpecDetail = lazy(() => import("@/pages/spec-detail"));
+const SharedSpec = lazy(() => import("@/pages/shared-spec"));
+const TeamsPage = lazy(() => import("@/pages/teams"));
+const TeamDetail = lazy(() => import("@/pages/team-detail"));
+const SearchPage = lazy(() => import("@/pages/search"));
+const GraphPage = lazy(() => import("@/pages/graph"));
+const IntegrationsPage = lazy(() => import("@/pages/integrations"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -114,7 +116,9 @@ function App() {
       <ThemeProvider>
         <TooltipProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
+            <Suspense fallback={<p className="p-6 text-sm text-muted-foreground" role="status">Loading…</p>}>
+              <Router />
+            </Suspense>
           </WouterRouter>
           <Toaster />
         </TooltipProvider>

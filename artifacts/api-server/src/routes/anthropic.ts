@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db, conversations as conversationsTable, messages as messagesTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
-import { anthropic } from "@workspace/integrations-anthropic-ai";
+import { and, eq, desc } from "drizzle-orm";
+import { getOpenAI } from "@workspace/integrations-openai-ai-server";
 import {
   CreateAnthropicConversationBody,
   GetAnthropicConversationParams,
@@ -42,6 +42,7 @@ router.get("/conversations", async (req, res) => {
     const conversations = await db
       .select()
       .from(conversationsTable)
+      .where(eq(conversationsTable.userId, req.user!.id))
       .orderBy(desc(conversationsTable.createdAt));
     res.json(conversations.map(formatConversation));
   } catch (err) {
@@ -60,7 +61,7 @@ router.post("/conversations", async (req, res) => {
   try {
     const [conv] = await db
       .insert(conversationsTable)
-      .values({ title: parsed.data.title })
+      .values({ userId: req.user!.id, title: parsed.data.title })
       .returning();
     res.status(201).json(formatConversation(conv));
   } catch (err) {
@@ -82,7 +83,7 @@ router.get("/conversations/:id", async (req, res) => {
     const [conv] = await db
       .select()
       .from(conversationsTable)
-      .where(eq(conversationsTable.id, parsed.data.id));
+      .where(and(eq(conversationsTable.id, parsed.data.id), eq(conversationsTable.userId, req.user!.id)));
 
     if (!conv) {
       res.status(404).json({ error: "Conversation not found" });
@@ -90,9 +91,10 @@ router.get("/conversations/:id", async (req, res) => {
     }
 
     const messages = await db
-      .select()
+      .select({ id: messagesTable.id, conversationId: messagesTable.conversationId, role: messagesTable.role, content: messagesTable.content, createdAt: messagesTable.createdAt })
       .from(messagesTable)
-      .where(eq(messagesTable.conversationId, parsed.data.id))
+      .innerJoin(conversationsTable, eq(messagesTable.conversationId, conversationsTable.id))
+      .where(and(eq(messagesTable.conversationId, parsed.data.id), eq(conversationsTable.userId, req.user!.id)))
       .orderBy(messagesTable.createdAt);
 
     res.json({
@@ -117,7 +119,7 @@ router.delete("/conversations/:id", async (req, res) => {
   try {
     const result = await db
       .delete(conversationsTable)
-      .where(eq(conversationsTable.id, parsed.data.id))
+      .where(and(eq(conversationsTable.id, parsed.data.id), eq(conversationsTable.userId, req.user!.id)))
       .returning();
 
     if (result.length === 0) {
@@ -172,7 +174,7 @@ router.post("/conversations/:id/messages", async (req, res) => {
     const [conv] = await db
       .select()
       .from(conversationsTable)
-      .where(eq(conversationsTable.id, conversationId));
+      .where(and(eq(conversationsTable.id, conversationId), eq(conversationsTable.userId, req.user!.id)));
 
     if (!conv) {
       res.status(404).json({ error: "Conversation not found" });
@@ -189,9 +191,9 @@ router.post("/conversations/:id/messages", async (req, res) => {
       .select()
       .from(messagesTable)
       .where(eq(messagesTable.conversationId, conversationId))
-      .orderBy(messagesTable.createdAt);
+      .orderBy(desc(messagesTable.createdAt)).limit(30);
 
-    const chatMessages = history.map((m) => ({
+    const chatMessages = history.reverse().map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
     }));
@@ -202,10 +204,11 @@ router.post("/conversations/:id/messages", async (req, res) => {
 
     let fullResponse = "";
 
-    const stream = anthropic.messages.stream({
+    const stream = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
-      max_tokens: 8192,
-      system: `You are the SpecForge AI Assistant — a helpful, expert technical advisor embedded in SpecForge, an AI-powered tool that generates professional technical design documents for developers and teams.
+      max_completion_tokens: 4096,
+      stream: true,
+      messages: [{ role: "system", content: `You are the SpecForge AI Assistant — a helpful, expert technical advisor embedded in SpecForge, an AI-powered tool that generates professional technical design documents for developers and teams.
 
 You specialize in:
 - Software architecture (system design, microservices, monoliths, event-driven systems)
@@ -223,17 +226,15 @@ When answering:
 - Format responses with Markdown (headers, code blocks, bullet points) for clarity
 
 You are friendly, direct, and pragmatic. You help developers build better software faster.`,
-      messages: chatMessages,
+      }, ...chatMessages],
     });
 
     for await (const event of stream) {
-      if (
-        event.type === "content_block_delta" &&
-        event.delta.type === "text_delta"
-      ) {
-        fullResponse += event.delta.text;
+      const content = event.choices[0]?.delta?.content;
+      if (content) {
+        fullResponse += content;
         res.write(
-          `data: ${JSON.stringify({ content: event.delta.text })}\n\n`
+          `data: ${JSON.stringify({ content })}\n\n`
         );
       }
     }
