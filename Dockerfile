@@ -10,9 +10,6 @@ COPY lib/db/package.json ./lib/db/
 COPY lib/api-spec/package.json ./lib/api-spec/
 COPY lib/api-client-react/package.json ./lib/api-client-react/
 COPY lib/api-zod/package.json ./lib/api-zod/
-COPY lib/integrations-anthropic-ai/package.json ./lib/integrations-anthropic-ai/
-COPY lib/integrations-openai-ai-server/package.json ./lib/integrations-openai-ai-server/
-COPY lib/integrations-gemini-ai/package.json ./lib/integrations-gemini-ai/
 COPY lib/replit-auth-web/package.json ./lib/replit-auth-web/
 COPY artifacts/api-server/package.json ./artifacts/api-server/
 COPY artifacts/specforge/package.json ./artifacts/specforge/
@@ -41,9 +38,6 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY artifacts/api-server/package.json ./artifacts/api-server/
 COPY lib/db/package.json ./lib/db/
 COPY lib/api-zod/package.json ./lib/api-zod/
-COPY lib/integrations-anthropic-ai/package.json ./lib/integrations-anthropic-ai/
-COPY lib/integrations-openai-ai-server/package.json ./lib/integrations-openai-ai-server/
-COPY lib/integrations-gemini-ai/package.json ./lib/integrations-gemini-ai/
 
 RUN pnpm install --frozen-lockfile --prod
 
