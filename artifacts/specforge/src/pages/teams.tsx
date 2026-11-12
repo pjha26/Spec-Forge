@@ -131,13 +131,13 @@ export default function TeamsPage() {
               onChange={e => setFormName(e.target.value)}
               placeholder="Team name *"
               autoFocus
-              className="w-full rounded-lg px-3 py-2 text-sm font-mono bg-black/40 border border-border focus:border-cyan-500/60 outline-none"
+              className="w-full rounded-lg px-3 py-2 text-sm font-mono bg-background border border-border focus:border-primary outline-none"
             />
             <input
               value={formDesc}
               onChange={e => setFormDesc(e.target.value)}
               placeholder="Description (optional)"
-              className="w-full rounded-lg px-3 py-2 text-sm font-mono bg-black/40 border border-border focus:border-cyan-500/60 outline-none"
+              className="w-full rounded-lg px-3 py-2 text-sm font-mono bg-background border border-border focus:border-primary outline-none"
             />
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="ghost" size="sm" className="font-mono text-xs" onClick={() => { setShowForm(false); setFormName(""); setFormDesc(""); }}>

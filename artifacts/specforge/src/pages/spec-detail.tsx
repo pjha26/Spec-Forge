@@ -1,3 +1,5 @@
+import { SpecLoader } from "@/components/spec-loader";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useCapabilities } from "@/hooks/use-capabilities";
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "wouter";
@@ -342,15 +344,15 @@ export default function SpecDetail() {
 
   return (
     <div className="flex-1 overflow-auto bg-background flex flex-col">
-      <header className="print-hide sticky top-0 z-10 bg-background/80 backdrop-blur border-b border-border px-6 py-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4 min-w-0">
+      <header className="print-hide z-10 border-b border-primary/35 bg-background px-4 py-4 flex flex-wrap items-center justify-between gap-4 sm:px-6">
+        <div className="flex min-w-0 flex-1 basis-full items-center gap-3 lg:basis-auto">
           <Link href="/app/specs">
             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full shrink-0">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
           <div className="min-w-0">
-            <h1 className="text-lg font-bold leading-tight truncate">{spec.title}</h1>
+            <h1 className="break-words font-mono text-xl font-semibold leading-tight">{spec.title}</h1>
             <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono mt-1 flex-wrap">
               <span className="flex items-center gap-1">
                 {isGitHub ? <Github className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
@@ -368,7 +370,7 @@ export default function SpecDetail() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1.5 py-1 px-2.5">
             {getSpecTypeIcon(spec.specType)}{getSpecTypeLabel(spec.specType)}
           </Badge>
@@ -398,34 +400,28 @@ export default function SpecDetail() {
             </>
           )}
 
-          <Button variant="outline" size="sm" onClick={handleShare} disabled={isSharing} className="font-mono text-xs border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
-            {isSharing ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Share2 className="w-3 h-3 mr-2" />}
-            SHARE
+          {spec.status === "completed" && currentUserId === spec.userId && (
+            <Button variant="outline" size="sm" onClick={() => {
+              setActiveTab("document");
+              setDraftEdit({ original: spec.content, content: spec.content });
+            }} disabled={Boolean(draftEdit)}>Edit Markdown</Button>
+          )}
+          <Button variant="outline" size="sm" onClick={handleShare} disabled={isSharing}>
+            {isSharing ? <Loader2 className="size-4 animate-spin" /> : <Share2 className="size-4" />}
+            Share
           </Button>
-          <Button variant="outline" size="sm" onClick={handlePrint} className="font-mono text-xs"><Printer className="w-3 h-3 mr-2" />PDF</Button>
-          <Button variant="outline" size="sm" onClick={handleCopy} className="font-mono text-xs"><Copy className="w-3 h-3 mr-2" />COPY</Button>
-          <Button variant="outline" size="sm" onClick={handleDownload} className="font-mono text-xs"><Download className="w-3 h-3 mr-2" />.MD</Button>
-          <Button size="sm" onClick={handleDownloadDocx} disabled={isExportingDocx} className="font-mono text-xs">
-            {isExportingDocx ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <FileCode2 className="w-3 h-3 mr-2" />}
-            .DOCX
-          </Button>
-
-          {notionExport && <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportNotion}
-            disabled={isExportingNotion}
-            className="font-mono text-xs border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
-          >
-            {isExportingNotion ? (
-              <Loader2 className="w-3 h-3 mr-2 animate-spin" />
-            ) : (
-              <svg className="w-3 h-3 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.968c-.42-.326-.981-.7-2.055-.607L3.01 2.295c-.466.046-.56.28-.374.466zm.793 3.08v13.904c0 .747.373 1.027 1.214.98l14.523-.84c.841-.046.935-.56.935-1.167V6.354c0-.606-.233-.933-.748-.887l-15.177.887c-.56.047-.747.327-.747.933zm14.337.745c.093.42 0 .84-.42.888l-.7.14v10.264c-.608.327-1.168.514-1.635.514-.748 0-.935-.234-1.495-.933l-4.577-7.186v6.952L12.21 19s0 .84-1.168.84l-3.222.186c-.093-.186 0-.653.327-.746l.84-.233V9.854L7.822 9.76c-.094-.42.14-1.026.793-1.073l3.456-.233 4.764 7.279v-6.44l-1.215-.14c-.093-.514.28-.887.747-.933zM1.936 1.035l13.31-.98c1.634-.14 2.055-.047 3.082.7l4.249 2.986c.7.513.934.653.934 1.213v16.378c0 1.026-.373 1.634-1.68 1.726l-15.458.934c-.98.047-1.448-.093-1.962-.747l-3.129-4.06c-.56-.747-.793-1.306-.793-1.96V2.667c0-.839.374-1.54 1.447-1.632z"/>
-              </svg>
-            )}
-            NOTION
-          </Button>}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm"><Download className="size-4" /> Export <ChevronDown className="size-4" /></Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={handleCopy}><Copy /> Copy Markdown</DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleDownload}><FileText /> Download Markdown</DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleDownloadDocx} disabled={isExportingDocx}><FileCode2 /> Download DOCX</DropdownMenuItem>
+              <DropdownMenuItem onSelect={handlePrint}><Printer /> Print or save as PDF</DropdownMenuItem>
+              {notionExport && <DropdownMenuItem onSelect={handleExportNotion} disabled={isExportingNotion}>Export to Notion</DropdownMenuItem>}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {localAI && <motion.button
             onClick={() => setShowScaffold(true)}
@@ -530,7 +526,7 @@ export default function SpecDetail() {
                     <div>
                       <p className="text-xs text-muted-foreground font-mono mb-1.5">PAYLOAD URL</p>
                       <div className="flex items-center gap-2">
-                        <code className="text-xs bg-black/40 border border-border rounded px-2.5 py-1.5 flex-1 truncate text-green-300 font-mono">
+                        <code className="text-xs bg-muted border border-border rounded px-2.5 py-1.5 flex-1 truncate text-foreground font-mono">
                           {webhookConfig.webhookUrl}
                         </code>
                         <button
@@ -544,7 +540,7 @@ export default function SpecDetail() {
                     <div>
                       <p className="text-xs text-muted-foreground font-mono mb-1.5">SECRET</p>
                       <div className="flex items-center gap-2">
-                        <code className="text-xs bg-black/40 border border-border rounded px-2.5 py-1.5 flex-1 truncate text-yellow-300 font-mono">
+                        <code className="text-xs bg-muted border border-border rounded px-2.5 py-1.5 flex-1 truncate text-foreground font-mono">
                           {webhookConfig.secret}
                         </code>
                         <button
@@ -557,7 +553,7 @@ export default function SpecDetail() {
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    <span className="text-blue-400 font-semibold">Setup:</span> In your GitHub repo → Settings → Webhooks → Add webhook. Set the Payload URL and Secret above, Content type: <code className="text-xs bg-black/30 px-1 rounded">application/json</code>, and trigger on <strong>push</strong> events. SpecForge will regenerate this doc on every commit.
+                    <span className="text-primary font-semibold">Setup:</span> In your GitHub repo → Settings → Webhooks → Add webhook. Set the Payload URL and Secret above, Content type: <code className="text-xs bg-muted px-1 rounded">application/json</code>, and trigger on <strong>push</strong> events. SpecForge will regenerate this doc on every commit.
                   </p>
                 </div>
               ) : (
@@ -571,7 +567,7 @@ export default function SpecDetail() {
       <div className="flex-1 p-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3">
-            <Card className="w-full border-border bg-[#0a0a0a] flex flex-col overflow-hidden min-h-full">
+            <Card className="retro-panel w-full bg-card flex flex-col overflow-hidden min-h-full">
               <div className="print-hide border-b border-border flex items-center justify-between bg-card px-2">
                 <div className="flex">
                   {(["document", "diagram", "chat", "insights"] as const).filter(tab => localAI || tab === "document" || tab === "diagram").map((tab) => (
@@ -597,12 +593,9 @@ export default function SpecDetail() {
 
               <div className="flex-1 print-content">
                 {activeTab === "document" && (
-                  <div className="p-8 overflow-auto prose prose-invert max-w-none prose-pre:bg-black/50 prose-pre:border prose-pre:border-border">
+                  <div className="p-4 sm:p-8 overflow-auto prose dark:prose-invert max-w-none prose-headings:font-mono prose-pre:bg-muted prose-pre:border prose-pre:border-border">
                     {isSyncing && spec.status === "generating" ? (
-                      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-4">
-                        <Loader2 className="w-8 h-8 animate-spin text-green-500" />
-                        <p className="font-mono text-sm">Regenerating from source…</p>
-                      </div>
+                      <SpecLoader label="Regenerating from source…" />
                     ) : (
                       <>
                         {draftEdit ? (
@@ -622,9 +615,6 @@ export default function SpecDetail() {
                           </div>
                         ) : (
                           <>
-                            {spec.status === "completed" && currentUserId && currentUserId === spec.userId && (
-                              <Button className="print-hide mb-4" variant="outline" size="sm" onClick={() => setDraftEdit({ original: spec.content, content: spec.content })}>Edit Markdown</Button>
-                            )}
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{spec.content}</ReactMarkdown>
                           </>
                         )}
@@ -667,7 +657,7 @@ export default function SpecDetail() {
             />
 
             {/* Version history */}
-            <Card className="border-border bg-card overflow-hidden">
+            <Card className="retro-panel bg-card overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-3"
                 style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
               >
@@ -692,7 +682,7 @@ export default function SpecDetail() {
             </Card>
 
             {/* Team assignment */}
-            <Card className="border-border bg-card overflow-hidden">
+            <Card className="retro-panel bg-card overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-3"
                 style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
               >
@@ -781,7 +771,7 @@ export default function SpecDetail() {
 
             {/* PR Description Agent */}
             {localAI && spec.status === "completed" && (
-              <Card className="border-border bg-card overflow-hidden">
+              <Card className="retro-panel bg-card overflow-hidden">
                 <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                   <h3 className="text-xs font-mono font-bold text-foreground">PR Agent</h3>
                 </div>

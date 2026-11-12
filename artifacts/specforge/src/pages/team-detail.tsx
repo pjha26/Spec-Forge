@@ -223,7 +223,7 @@ export default function TeamDetail() {
                 value={nameDraft}
                 onChange={e => setNameDraft(e.target.value)}
                 autoFocus
-                className="flex-1 max-w-xs rounded-lg px-3 py-1.5 text-lg font-bold bg-black/40 border border-cyan-500/40 outline-none"
+                className="flex-1 max-w-xs rounded-lg px-3 py-1.5 text-lg font-bold bg-background border border-input outline-none focus:border-primary"
               />
               <button onClick={handleSaveName} disabled={savingName} className="p-1.5 rounded text-green-400 hover:bg-green-500/10">
                 {savingName ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
@@ -317,18 +317,18 @@ export default function TeamDetail() {
                   onChange={e => setInviteId(e.target.value)}
                   placeholder="Replit user ID *"
                   autoFocus
-                  className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-black/40 border border-border outline-none focus:border-cyan-500/50"
+                  className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-background border border-border outline-none focus:border-primary"
                 />
                 <input
                   value={inviteUsername}
                   onChange={e => setInviteUsername(e.target.value)}
                   placeholder="Display name (optional)"
-                  className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-black/40 border border-border outline-none focus:border-cyan-500/50"
+                  className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-background border border-border outline-none focus:border-primary"
                 />
                 <select
                   value={inviteRole}
                   onChange={e => setInviteRole(e.target.value as "editor" | "auditor" | "viewer")}
-                  className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-black/40 border border-border outline-none"
+                  className="w-full rounded px-2.5 py-1.5 text-xs font-mono bg-background border border-border outline-none"
                 >
                   <option value="editor">Editor — can generate & sync specs</option>
                   <option value="auditor">Auditor — can annotate & review specs</option>
@@ -367,7 +367,7 @@ export default function TeamDetail() {
                       <select
                         value={member.role}
                         onChange={e => handleRoleChange(member, e.target.value as "editor" | "auditor" | "viewer")}
-                        className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border bg-black/40 outline-none cursor-pointer"
+                        className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border bg-background outline-none cursor-pointer"
                         style={{ color: rm.color }}
                       >
                         <option value="editor">Editor</option>

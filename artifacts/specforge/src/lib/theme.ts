@@ -1,8 +1,8 @@
 // ─── Theme System ─────────────────────────────────────────────────────────────
-// 7 hand-crafted themes: 6 dark + 1 light.
+// 8 themes: 6 dark and 2 light.
 // Each theme sets ALL CSS custom properties so the whole UI repaints.
 
-export type ThemeId = "midnight" | "ember" | "verdant" | "crimson" | "daylight" | "gotham" | "vengeance";
+export type ThemeId = "forge" | "midnight" | "ember" | "verdant" | "crimson" | "daylight" | "gotham" | "vengeance";
 
 export interface ThemeConfig {
   themeId: ThemeId;
@@ -23,7 +23,59 @@ export interface ThemeDefinition {
 }
 
 export const THEMES: ThemeDefinition[] = [
-  // ─── 1. Midnight — deep space navy + electric teal (new default) ─────────
+  {
+    id: "forge",
+    label: "Forge",
+    description: "Warm cream, deep teal, and hot coral",
+    mode: "light",
+    swatches: ["#F3EEE8", "#17645F", "#FF6845"],
+    vars: {
+      "--background":                    "32.727 31.429% 93.137%",
+      "--foreground":                    "175 37% 14%",
+      "--card":                          "36 55% 97%",
+      "--card-foreground":               "175 37% 14%",
+      "--card-border":                   "33 21% 78%",
+      "--popover":                       "36 55% 97%",
+      "--popover-foreground":            "175 37% 14%",
+      "--popover-border":                "33 21% 78%",
+      "--primary":                       "176.104 62.602% 24.118%",
+      "--primary-foreground":            "32.727 31.429% 93.137%",
+      "--secondary":                     "166 22% 88%",
+      "--secondary-foreground":          "175 37% 14%",
+      "--muted":                         "33 24% 88%",
+      "--muted-foreground":              "173 17% 33%",
+      "--accent":                        "11.29 100% 63.529%",
+      "--accent-foreground":             "175 37% 14%",
+      "--destructive":                   "0 71% 40%",
+      "--destructive-foreground":        "0 0% 100%",
+      "--border":                        "33 21% 78%",
+      "--input":                         "173 14% 56%",
+      "--ring":                          "176.104 62.602% 24.118%",
+      "--sidebar":                       "33 27% 89%",
+      "--sidebar-foreground":            "175 37% 14%",
+      "--sidebar-border":                "33 21% 78%",
+      "--sidebar-primary":               "176.104 62.602% 24.118%",
+      "--sidebar-primary-foreground":    "32.727 31.429% 93.137%",
+      "--sidebar-accent":                "166 22% 88%",
+      "--sidebar-accent-foreground":     "175 37% 14%",
+      "--sidebar-ring":                  "176.104 62.602% 24.118%",
+      "--chart-1":                       "176.104 62.602% 24.118%",
+      "--chart-2":                       "11.29 100% 63.529%",
+      "--chart-3":                       "160 52% 31%",
+      "--chart-4":                       "288 38% 43%",
+      "--chart-5":                       "36 74% 36%",
+      "--violet":                        "176.104 62.602% 24.118%",
+      "--cyan":                          "176.104 62.602% 24.118%",
+      "--button-outline":                "rgba(23,100,95,0.35)",
+      "--primary-rgb":                   "23, 100, 95",
+      "--primary-hex":                   "#17645F",
+      "--primary-light-hex":             "#358079",
+      "--elevate-1":                     "rgba(0,0,0,0.04)",
+      "--elevate-2":                     "rgba(0,0,0,0.08)",
+    },
+  },
+
+  // ─── 1. Midnight — deep space navy + electric teal ─────────
   {
     id: "midnight",
     label: "Midnight",
@@ -387,7 +439,7 @@ export const THEMES: ThemeDefinition[] = [
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 export const DEFAULT_THEME: ThemeConfig = {
-  themeId: "midnight",
+  themeId: "forge",
   font: "inter",
   syntaxTheme: "dracula",
 };
@@ -411,6 +463,11 @@ export function saveTheme(config: ThemeConfig) {
 export function applyTheme(config: ThemeConfig) {
   const root = document.documentElement;
   const def = THEMES.find(t => t.id === config.themeId) ?? THEMES[0];
+
+  // Light themes override elevation. Clear those overrides before switching.
+  root.style.removeProperty("--elevate-1");
+  root.style.removeProperty("--elevate-2");
+  root.dataset.theme = def.id;
 
   // Apply all CSS custom properties from theme
   Object.entries(def.vars).forEach(([k, v]) => root.style.setProperty(k, v));

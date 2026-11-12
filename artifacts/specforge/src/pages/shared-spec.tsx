@@ -236,7 +236,7 @@ export default function SharedSpec() {
               {/* Content */}
               <div className="print-content">
                 {activeTab === "document" ? (
-                  <div className="p-8 prose prose-invert max-w-none prose-pre:bg-black/50 prose-pre:border prose-pre:border-border">
+                  <div className="p-4 sm:p-8 prose dark:prose-invert max-w-none prose-headings:font-mono prose-pre:bg-muted prose-pre:border prose-pre:border-border">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {spec.content}
                     </ReactMarkdown>

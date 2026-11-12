@@ -1,4 +1,5 @@
 import { useCapabilities } from "@/hooks/use-capabilities";
+import { SpecLoader } from "@/components/spec-loader";
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
@@ -556,7 +557,7 @@ export default function Home() {
                       exit={{ opacity: 0, y: -6 }}
                       transition={{ duration: 0.15 }}
                     >
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-4 h-4 motion-safe:animate-spin" />
                       GENERATING…
                     </motion.span>
                   ) : (
@@ -607,16 +608,8 @@ export default function Home() {
           </div>
 
           <div className="lg:col-span-2 animate-slide-up" style={{ animationDelay: "0.08s" }}>
-            <div className="h-full min-h-[520px] rounded-xl flex flex-col overflow-hidden"
-              style={{
-                background: "rgba(8,8,14,0.9)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
-              }}
-            >
-              <div className="flex items-center justify-between px-2"
-                style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
-              >
+            <div className="retro-panel flex h-full min-h-[520px] flex-col overflow-hidden border bg-card text-card-foreground">
+              <div className="flex items-center justify-between border-b border-border bg-muted/40 px-2">
                 <div className="flex">
                   {[
                     { key: "document" as const, icon: FileCode2, label: "Document" },
@@ -629,7 +622,7 @@ export default function Home() {
                       className="px-4 py-3 text-sm font-mono flex items-center gap-2 transition-all duration-200 border-b-2"
                       style={{
                         borderBottomColor: activeTab === key ? "hsl(var(--primary))" : "transparent",
-                        color: activeTab === key ? "white" : undefined,
+                        color: activeTab === key ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
                         opacity: key === "diagram" && !diagramData && !isGenerating ? 0.4 : 1,
                       }}
                     >
@@ -640,7 +633,7 @@ export default function Home() {
                 </div>
                 {isGenerating && (
                   <div className="flex items-center gap-2 pr-3">
-                    <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(var(--primary))" }} />
+                    <div className="w-1.5 h-1.5 rounded-full motion-safe:animate-pulse" style={{ background: "hsl(var(--primary))" }} />
                     <span className="text-xs font-mono text-muted-foreground">Generating…</span>
                   </div>
                 )}
@@ -660,16 +653,18 @@ export default function Home() {
                       />
                     </div>
                     <div className="text-center space-y-1">
-                      <p className="font-mono text-sm">Awaiting input sequence…</p>
-                      <p className="text-xs text-muted-foreground/60">Select a spec type and enter your source</p>
+                      <p className="font-mono text-sm">Your draft will appear here</p>
+                      <p className="text-xs text-muted-foreground/60">Choose a spec type and describe your project or enter a GitHub URL.</p>
                     </div>
                   </div>
+                ) : activeTab === "document" && isGenerating && !streamedContent ? (
+                  <SpecLoader />
                 ) : activeTab === "document" ? (
                   <div className="flex flex-col h-full">
-                    <div className="prose prose-invert max-w-none p-6">
+                    <div className="prose dark:prose-invert max-w-none p-6">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{streamedContent}</ReactMarkdown>
                       {isGenerating && !diagramData && (
-                        <span className="inline-block w-2 h-4 rounded-sm ml-1 animate-pulse align-middle"
+                        <span aria-hidden="true" className="inline-block w-2 h-4 rounded-sm ml-1 motion-safe:animate-pulse align-middle"
                           style={{ background: "hsl(var(--primary))" }}
                         />
                       )}
@@ -681,10 +676,7 @@ export default function Home() {
                     {diagramData ? (
                       <MermaidDiagram chart={diagramData} />
                     ) : isGenerating ? (
-                      <div className="w-full h-full flex flex-col items-center justify-center gap-4" style={{ color: "hsl(var(--muted-foreground))" }}>
-                        <Loader2 className="w-8 h-8 animate-spin opacity-40" />
-                        <p className="text-sm font-mono">Synthesizing diagram structure…</p>
-                      </div>
+                      <SpecLoader label="Preparing the diagram…" />
                     ) : null}
                   </div>
                 )}

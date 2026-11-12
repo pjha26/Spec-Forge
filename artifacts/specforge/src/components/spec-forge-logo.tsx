@@ -181,7 +181,7 @@ export function SpecForgeLogo({
       {showText && (
         <div className="flex items-center gap-1.5">
           <span
-            className={`font-mono font-bold tracking-tight text-white select-none ${textSize} ${textClassName}`}
+            className={`font-mono font-bold tracking-tight text-foreground select-none ${textSize} ${textClassName}`}
           >
             SpecForge
           </span>

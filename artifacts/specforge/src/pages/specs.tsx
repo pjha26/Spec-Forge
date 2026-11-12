@@ -187,22 +187,7 @@ export default function SpecsList() {
                   style={{ animationDelay: `${index * 40}ms`, animationFillMode: "both" }}
                 >
                   <Link href={`/app/specs/${spec.id}`}>
-                    <div className="group relative h-full rounded-xl cursor-pointer overflow-hidden transition-all duration-300"
-                      style={{
-                        background: "rgba(255,255,255,0.02)",
-                        border: "1px solid rgba(255,255,255,0.07)",
-                        boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = meta.border;
-                        e.currentTarget.style.boxShadow = `0 8px 30px rgba(0,0,0,0.4), 0 0 20px ${meta.glow}`;
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)";
-                        e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.3)";
-                        e.currentTarget.style.transform = "translateY(0)";
-                      }}
+                    <div className="retro-panel group relative h-full cursor-pointer overflow-hidden border bg-card transition-colors hover:border-primary/60"
                     >
                       <div className="absolute top-0 left-0 right-0 h-px"
                         style={{
@@ -239,7 +224,7 @@ export default function SpecsList() {
                           </button>
                         </div>
 
-                        <h3 className="font-bold text-base mb-2 text-foreground line-clamp-2 leading-tight group-hover:text-white transition-colors">
+                        <h3 className="font-bold text-base mb-2 text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
                           {spec.title}
                         </h3>
 

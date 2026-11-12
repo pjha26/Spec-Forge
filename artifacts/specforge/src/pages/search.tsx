@@ -268,19 +268,7 @@ export default function SearchPage() {
                     >
                       <Link href={`/app/specs/${r.id}`}>
                         <div
-                          className="group rounded-xl p-4 cursor-pointer transition-all duration-200"
-                          style={{
-                            background: "rgba(255,255,255,0.02)",
-                            border: "1px solid rgba(255,255,255,0.07)",
-                          }}
-                          onMouseEnter={e => {
-                            (e.currentTarget as HTMLElement).style.borderColor = "rgba(var(--primary-rgb),0.25)";
-                            (e.currentTarget as HTMLElement).style.background = "rgba(var(--primary-rgb),0.04)";
-                          }}
-                          onMouseLeave={e => {
-                            (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)";
-                            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)";
-                          }}
+                          className="retro-panel group cursor-pointer border bg-card p-4 transition-colors hover:border-primary/60"
                         >
                           <div className="flex items-start gap-3">
                             <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
@@ -290,7 +278,7 @@ export default function SearchPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-semibold text-sm text-white truncate group-hover:text-primary transition-colors">
+                                <h3 className="font-semibold text-sm text-foreground truncate group-hover:text-primary transition-colors">
                                   {highlightText(r.title, query)}
                                 </h3>
                                 <Badge variant="outline" className="text-[9px] font-mono shrink-0"

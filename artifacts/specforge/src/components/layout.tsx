@@ -4,7 +4,7 @@ import { Link, useLocation } from "wouter";
 import {
   FileCode2, History, LogIn, LogOut, User, Sparkles,
   Server, Code2, Database, BookOpen, ChevronRight, Users,
-  Search, Network, PlugZap, Terminal, Activity, Shield,
+  Search, Network, PlugZap, Terminal, Activity,
 } from "lucide-react";
 import { SpecForgeLogo } from "@/components/spec-forge-logo";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -19,9 +19,7 @@ import { useListSpecs } from "@workspace/api-client-react";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
 
-gsap.registerPlugin(useGSAP);
 
 // ── Spec type registry ────────────────────────────────────────────────────────
 const SPEC_TYPE_META: Record<string, { color: string; Icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }> = {
@@ -30,21 +28,6 @@ const SPEC_TYPE_META: Record<string, { color: string; Icon: React.ComponentType<
   "Database Schema": { color: "#10B981", Icon: Database },
   "Feature Spec":    { color: "#F59E0B", Icon: BookOpen },
 };
-
-// ── Scanline overlay ──────────────────────────────────────────────────────────
-function Scanlines() {
-  return (
-    <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-none">
-      <div
-        style={{
-          position: "absolute", inset: 0,
-          backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px)",
-          animation: "scanSlide 8s linear infinite",
-        }}
-      />
-    </div>
-  );
-}
 
 // ── Corner brackets on active nav item ────────────────────────────────────────
 function CornerBrackets({ color = "hsl(var(--primary))" }: { color?: string }) {
@@ -144,7 +127,7 @@ function GlitchLogo({ text }: { text: string }) {
     <span
       ref={ref}
       onMouseEnter={triggerGlitch}
-      className="font-mono font-bold tracking-tight text-base text-white cursor-pointer select-none"
+      className="font-mono font-bold tracking-tight text-base text-foreground cursor-pointer select-none"
       style={{ fontVariantNumeric: "tabular-nums" }}
     >
       {text}
@@ -178,35 +161,6 @@ function HexGrid() {
       }}
     />
   );
-}
-
-// ── Boot sequence ─────────────────────────────────────────────────────────────
-function useBootSequence() {
-  const [phase, setPhase] = useState<"booting" | "ready">("booting");
-  const [lines, setLines] = useState<string[]>([]);
-
-  useEffect(() => {
-    const sequence = [
-      "> SPECFORGE OS v1.0.0-beta",
-      "> Initializing neural engine...",
-      "> Checking project capabilities... OK",
-      "> Loading nav modules... DONE",
-      "> System ready.",
-    ];
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < sequence.length) {
-        setLines(prev => [...prev, sequence[i]]);
-        i++;
-      } else {
-        clearInterval(interval);
-        setTimeout(() => setPhase("ready"), 400);
-      }
-    }, 280);
-    return () => clearInterval(interval);
-  }, []);
-
-  return { phase, lines };
 }
 
 // ── Animated energy ring on logo ──────────────────────────────────────────────
@@ -270,27 +224,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [justOpened, setJustOpened] = useState(false);
   const { data: specs } = useListSpecs();
   const recentSpecs = (specs ?? []).slice(0, 4);
-  const sidebarRef = useRef<HTMLElement>(null);
-  const navRef = useRef<HTMLElement>(null);
   const spark = useSparkOnClick();
-  const { phase, lines } = useBootSequence();
 
   const initials = user
     ? [user.firstName, user.lastName].filter(Boolean).map((s) => s![0]).join("").toUpperCase() || "U"
     : "?";
   const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
-
-  // GSAP boot entrance for nav items
-  useGSAP(() => {
-    if (phase !== "ready") return;
-    const items = navRef.current?.querySelectorAll("[data-nav-item]");
-    if (!items) return;
-    gsap.fromTo(
-      Array.from(items),
-      { x: -32, opacity: 0, filter: "blur(6px)" },
-      { x: 0, opacity: 1, filter: "blur(0px)", stagger: 0.07, duration: 0.5, ease: "power3.out" }
-    );
-  }, { scope: sidebarRef, dependencies: [phase] });
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -328,10 +267,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ── Global CSS for gaming animations ── */}
       <style>{`
-        @keyframes scanSlide {
-          0%   { transform: translateY(-50%); }
-          100% { transform: translateY(0%);   }
-        }
         @keyframes dataStream {
           0%   { transform: translateY(-50%); }
           100% { transform: translateY(0%);   }
@@ -357,13 +292,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           10%  { opacity: 1; }
           90%  { opacity: 1; }
           100% { transform: translateY(100vh); opacity: 0; }
-        }
-        @keyframes flickerIn {
-          0%   { opacity: 0; }
-          20%  { opacity: 1; }
-          22%  { opacity: 0; }
-          24%  { opacity: 1; }
-          100% { opacity: 1; }
         }
         @keyframes hueRotate {
           from { filter: hue-rotate(0deg); }
@@ -406,7 +334,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ── GAMING SIDEBAR ── */}
       <aside
-        ref={sidebarRef}
         className="w-full md:w-64 flex flex-col relative overflow-hidden shrink-0"
         style={{
           background: "hsl(var(--sidebar))",
@@ -415,7 +342,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }}
       >
         <HexGrid />
-        <Scanlines />
         <DataStream />
 
         {/* Top energy line */}
@@ -443,208 +369,168 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </Link>
 
-        {/* ── Boot screen → Nav ── */}
-        {phase === "booting" ? (
-          <div className="flex-1 p-4 font-mono text-[10px] space-y-1 overflow-hidden" style={{ color: "#22c55e" }}>
-            {lines.map((line, i) => (
-              <div key={i} style={{ animation: "flickerIn 0.3s ease forwards" }}>
-                {line}
-                {i === lines.length - 1 && (
-                  <span className="animate-pulse ml-0.5">█</span>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <nav ref={navRef} className="flex-1 p-3 space-y-0.5 pt-4 flex flex-col min-h-0">
-            {navItems.map(({ href, label, icon: Icon, exact, color }, idx) => {
-              const active = exact ? location === href : location.startsWith(href);
-              return (
-                <Link key={href} href={href}>
+        <nav aria-label="Workspace" className="flex min-h-0 flex-1 flex-col space-y-0.5 p-3 pt-4">
+          {navItems.map(({ href, label, icon: Icon, exact, color }, idx) => {
+            const active = exact ? location === href : location.startsWith(href);
+            return (
+              <Link key={href} href={href} aria-current={active ? "page" : undefined}>
+                <div
+                  onClick={spark}
+                  className="gaming-nav-item group flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer relative overflow-hidden"
+                  style={active ? {
+                    background: `linear-gradient(135deg, ${color}22 0%, ${color}08 100%)`,
+                    border: `1px solid ${color}40`,
+                    boxShadow: `0 0 16px ${color}20, inset 0 1px 0 rgba(255,255,255,0.05)`,
+                  } : {
+                    background: "transparent",
+                    border: "1px solid transparent",
+                  }}
+                >
+                  {/* Sweep shine on hover */}
+                  <div className="nav-sweep absolute inset-y-0 w-12 pointer-events-none"
+                    style={{
+                      background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)",
+                      left: "-100%",
+                    }}
+                  />
+
+                  {active && <CornerBrackets color={color} />}
+
+                  {/* Left energy bar */}
+                  {active && (
+                    <div className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r overflow-hidden">
+                      <div style={{
+                        position: "absolute", inset: 0,
+                        background: `linear-gradient(180deg, transparent, ${color}, ${color}, transparent)`,
+                        animation: "dataStream 1.5s linear infinite",
+                        height: "200%",
+                      }} />
+                    </div>
+                  )}
+
+                  {/* Icon with glow */}
                   <div
-                    data-nav-item
-                    onClick={spark}
-                    className="gaming-nav-item group flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer relative overflow-hidden"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 relative"
                     style={active ? {
-                      background: `linear-gradient(135deg, ${color}22 0%, ${color}08 100%)`,
-                      border: `1px solid ${color}40`,
-                      boxShadow: `0 0 16px ${color}20, inset 0 1px 0 rgba(255,255,255,0.05)`,
+                      background: `${color}20`,
+                      border: `1px solid ${color}35`,
+                      boxShadow: `0 0 10px ${color}30`,
                     } : {
-                      background: "transparent",
-                      border: "1px solid transparent",
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.06)",
                     }}
                   >
-                    {/* Sweep shine on hover */}
-                    <div className="nav-sweep absolute inset-y-0 w-12 pointer-events-none"
-                      style={{
-                        background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)",
-                        left: "-100%",
-                      }}
+                    <Icon
+                      className="w-3.5 h-3.5 transition-all duration-200"
+                      style={{ color: active ? color : "hsl(var(--muted-foreground))" }}
                     />
-
-                    {active && <CornerBrackets color={color} />}
-
-                    {/* Left energy bar */}
                     {active && (
-                      <div className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r overflow-hidden">
-                        <div style={{
-                          position: "absolute", inset: 0,
-                          background: `linear-gradient(180deg, transparent, ${color}, ${color}, transparent)`,
-                          animation: "dataStream 1.5s linear infinite",
-                          height: "200%",
-                        }} />
-                      </div>
+                      <div className="absolute inset-0 rounded-lg opacity-50 blur-sm"
+                        style={{ background: color }} />
                     )}
+                  </div>
 
-                    {/* Icon with glow */}
-                    <div
-                      className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 relative"
-                      style={active ? {
-                        background: `${color}20`,
-                        border: `1px solid ${color}35`,
-                        boxShadow: `0 0 10px ${color}30`,
-                      } : {
-                        background: "rgba(255,255,255,0.04)",
-                        border: "1px solid rgba(255,255,255,0.06)",
-                      }}
-                    >
-                      <Icon
-                        className="w-3.5 h-3.5 transition-all duration-200"
-                        style={{ color: active ? color : "rgba(255,255,255,0.45)" }}
-                      />
-                      {active && (
-                        <div className="absolute inset-0 rounded-lg opacity-50 blur-sm"
-                          style={{ background: color }} />
-                      )}
+                  {/* Label */}
+                  <span
+                    className="nav-label font-mono text-sm font-medium flex-1"
+                    style={{ color: active ? "hsl(var(--sidebar-foreground))" : "hsl(var(--muted-foreground))" }}
+                  >
+                    {label}
+                  </span>
+
+                  {/* Active status */}
+                  {active && (
+                    <div className="flex items-center gap-1.5">
+                      <StatusDot color={color} />
                     </div>
+                  )}
 
-                    {/* Label */}
-                    <span
-                      className="nav-label font-mono text-sm font-medium flex-1"
-                      style={{ color: active ? "white" : "rgba(255,255,255,0.5)" }}
-                    >
-                      {label}
-                    </span>
+                  {/* Index number HUD style */}
+                  <span
+                    className="text-[8px] font-mono opacity-0 group-hover:opacity-40 transition-opacity duration-150"
+                    style={{ color }}
+                  >
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
 
-                    {/* Active status */}
-                    {active && (
-                      <div className="flex items-center gap-1.5">
-                        <StatusDot color={color} />
-                      </div>
-                    )}
-
-                    {/* Index number HUD style */}
-                    <span
-                      className="text-[8px] font-mono opacity-0 group-hover:opacity-40 transition-opacity duration-150"
-                      style={{ color }}
-                    >
-                      {String(idx + 1).padStart(2, "0")}
-                    </span>
-                  </div>
+          {/* ── Recent specs ── */}
+          {recentSpecs.length > 0 && (
+            <div className="pt-5">
+              <div className="flex items-center justify-between px-3 mb-2">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-2.5 h-2.5" style={{ color: "rgba(var(--primary-rgb),0.6)" }} />
+                  <span className="text-[9px] font-mono font-bold uppercase tracking-widest"
+                    style={{ color: "rgba(var(--primary-rgb),0.6)" }}>
+                    Recent
+                  </span>
+                </div>
+                <Link href="/app/specs">
+                  <span className="text-[9px] font-mono flex items-center gap-0.5 cursor-pointer transition-all duration-150 hover:text-violet-400"
+                    style={{ color: "hsl(var(--muted-foreground))" }}>
+                    all <ChevronRight className="w-2.5 h-2.5" />
+                  </span>
                 </Link>
-              );
-            })}
+              </div>
 
-            {/* ── Recent specs ── */}
-            {recentSpecs.length > 0 && (
-              <div className="pt-5">
-                <div className="flex items-center justify-between px-3 mb-2">
-                  <div className="flex items-center gap-2">
-                    <Activity className="w-2.5 h-2.5" style={{ color: "rgba(var(--primary-rgb),0.6)" }} />
-                    <span className="text-[9px] font-mono font-bold uppercase tracking-widest"
-                      style={{ color: "rgba(var(--primary-rgb),0.6)" }}>
-                      Recent
-                    </span>
-                  </div>
-                  <Link href="/app/specs">
-                    <span className="text-[9px] font-mono flex items-center gap-0.5 cursor-pointer transition-all duration-150 hover:text-violet-400"
-                      style={{ color: "rgba(255,255,255,0.3)" }}>
-                      all <ChevronRight className="w-2.5 h-2.5" />
-                    </span>
-                  </Link>
-                </div>
+              {/* Divider with energy effect */}
+              <div className="mx-3 mb-2 h-px relative overflow-hidden">
+                <div style={{
+                  position: "absolute", inset: 0,
+                  background: "linear-gradient(90deg, transparent, rgba(var(--primary-rgb),0.4), rgba(var(--primary-rgb),0.2), transparent)",
+                  animation: "borderSweep 3s linear infinite",
+                  backgroundSize: "300% 100%",
+                }} />
+              </div>
 
-                {/* Divider with energy effect */}
-                <div className="mx-3 mb-2 h-px relative overflow-hidden">
-                  <div style={{
-                    position: "absolute", inset: 0,
-                    background: "linear-gradient(90deg, transparent, rgba(var(--primary-rgb),0.4), rgba(var(--primary-rgb),0.2), transparent)",
-                    animation: "borderSweep 3s linear infinite",
-                    backgroundSize: "300% 100%",
-                  }} />
-                </div>
-
-                <div className="space-y-0.5">
-                  {recentSpecs.map((spec) => {
-                    const meta = SPEC_TYPE_META[spec.specType] ?? SPEC_TYPE_META["System Design"];
-                    const { Icon: SpecIcon, color } = meta;
-                    const active = location === `/app/specs/${spec.id}`;
-                    return (
-                      <Link key={spec.id} href={`/app/specs/${spec.id}`}>
-                        <div
-                          data-nav-item
-                          onClick={spark}
-                          className="gaming-nav-item group px-3 py-2 rounded-lg cursor-pointer relative overflow-hidden"
-                          style={active ? {
-                            background: `${color}15`,
-                            border: `1px solid ${color}30`,
-                          } : {
-                            background: "transparent",
-                            border: "1px solid transparent",
-                          }}
-                        >
-                          <div className="nav-sweep absolute inset-y-0 w-10 pointer-events-none"
-                            style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)", left: "-100%" }}
-                          />
-                          <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 rounded flex items-center justify-center shrink-0 transition-all duration-200"
-                              style={{ background: `${color}20`, border: `1px solid ${color}30` }}>
-                              <SpecIcon className="w-2.5 h-2.5" style={{ color }} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <span className="nav-label text-[11px] font-mono truncate block leading-tight"
-                                style={{ color: active ? "white" : "rgba(255,255,255,0.45)" }}>
-                                {spec.title}
-                              </span>
-                              <PowerBar color={color} />
-                            </div>
+              <div className="space-y-0.5">
+                {recentSpecs.map((spec) => {
+                  const meta = SPEC_TYPE_META[spec.specType] ?? SPEC_TYPE_META["System Design"];
+                  const { Icon: SpecIcon, color } = meta;
+                  const active = location === `/app/specs/${spec.id}`;
+                  return (
+                    <Link key={spec.id} href={`/app/specs/${spec.id}`}>
+                      <div
+                        onClick={spark}
+                        className="gaming-nav-item group px-3 py-2 rounded-lg cursor-pointer relative overflow-hidden"
+                        style={active ? {
+                          background: `${color}15`,
+                          border: `1px solid ${color}30`,
+                        } : {
+                          background: "transparent",
+                          border: "1px solid transparent",
+                        }}
+                      >
+                        <div className="nav-sweep absolute inset-y-0 w-10 pointer-events-none"
+                          style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)", left: "-100%" }}
+                        />
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 rounded flex items-center justify-center shrink-0 transition-all duration-200"
+                            style={{ background: `${color}20`, border: `1px solid ${color}30` }}>
+                            <SpecIcon className="w-2.5 h-2.5" style={{ color }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="nav-label text-[11px] font-mono truncate block leading-tight"
+                              style={{ color: active ? "hsl(var(--sidebar-foreground))" : "hsl(var(--muted-foreground))" }}>
+                              {spec.title}
+                            </span>
+                            <PowerBar color={color} />
                           </div>
                         </div>
-                      </Link>
-                    );
-                  })}
-                </div>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
-            )}
-
-            {/* spacer */}
-            <div className="flex-1" />
-
-            {/* System stats HUD */}
-            <div className="px-3 py-2 rounded-lg mx-0"
-              style={{ border: "1px solid rgba(255,255,255,0.04)", background: "rgba(255,255,255,0.02)" }}>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <Shield className="w-2.5 h-2.5" style={{ color: "rgba(var(--primary-rgb),0.6)" }} />
-                <span className="text-[8px] font-mono uppercase tracking-widest" style={{ color: "rgba(var(--primary-rgb),0.6)" }}>
-                  System Status
-                </span>
-              </div>
-              {[
-                { label: "API", value: 98, color: "#22c55e" },
-                { label: "AI", value: 100, color: "hsl(var(--primary))" },
-                { label: "DB", value: 95, color: "hsl(var(--primary))" },
-              ].map(({ label, value, color }) => (
-                <div key={label} className="flex items-center gap-2 mb-1">
-                  <span className="text-[8px] font-mono w-5 shrink-0" style={{ color: "rgba(255,255,255,0.35)" }}>{label}</span>
-                  <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-                    <div className="h-full rounded-full" style={{ width: `${value}%`, background: color, boxShadow: `0 0 4px ${color}` }} />
-                  </div>
-                  <span className="text-[8px] font-mono w-6 text-right shrink-0" style={{ color }}>{value}%</span>
-                </div>
-              ))}
             </div>
-          </nav>
-        )}
+          )}
+
+          {/* spacer */}
+          <div className="flex-1" />
+        </nav>
 
         {/* ── AI Assistant button ── */}
         <div className="p-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(var(--primary-rgb),0.08)" }}>
@@ -706,7 +592,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-mono font-semibold truncate leading-tight text-white">
+                    <p className="text-xs font-mono font-semibold truncate leading-tight text-foreground">
                       {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email ?? "User"}
                     </p>
                     {user.email && (
@@ -734,7 +620,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <button
               onClick={login}
               className="gaming-nav-item w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-mono text-xs transition-all duration-200 relative overflow-hidden group"
-              style={{ border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}
+              style={{ border: "1px solid rgba(255,255,255,0.08)", color: "hsl(var(--muted-foreground))" }}
             >
               <div className="nav-sweep absolute inset-y-0 w-16 pointer-events-none"
                 style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)", left: "-100%" }}
@@ -748,10 +634,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* Theme switcher + version footer */}
         <div className="px-3 pb-3 space-y-2">
           <ThemeSwitcher />
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[9px] font-mono opacity-25">v1.0.0-beta</span>
-            <span className="text-[9px] font-mono opacity-25" style={{ color: "#22c55e" }}>● ONLINE</span>
-          </div>
         </div>
 
         {/* Bottom energy line */}

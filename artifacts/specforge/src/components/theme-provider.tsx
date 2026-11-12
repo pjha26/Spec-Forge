@@ -1,4 +1,4 @@
-import { useEffect, createContext, useContext, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { loadTheme, saveTheme, applyTheme, type ThemeConfig, DEFAULT_THEME } from "@/lib/theme";
 
 interface ThemeContextValue {
@@ -16,13 +16,7 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeConfig>(DEFAULT_THEME);
-
-  useEffect(() => {
-    const stored = loadTheme();
-    setThemeState(stored);
-    applyTheme(stored);
-  }, []);
+  const [theme, setThemeState] = useState(loadTheme);
 
   const setTheme = (t: ThemeConfig) => {
     setThemeState(t);

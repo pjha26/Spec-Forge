@@ -31,7 +31,7 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
   };
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative" onKeyDown={event => { if (event.key === "Escape") { setOpen(false); ref.current?.querySelector("button")?.focus(); } }}>
       {/* Trigger button */}
       <motion.button
         onClick={() => setOpen(o => !o)}
@@ -50,6 +50,8 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
             : "hsl(var(--muted-foreground))",
         }}
         title="Change theme"
+        aria-label="Change theme"
+        aria-expanded={open}
       >
         {/* Current theme swatch */}
         <span
@@ -73,7 +75,7 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
-            className="absolute right-0 top-full mt-2 z-[200] p-3 rounded-2xl w-72"
+            className="absolute right-0 top-full mt-2 z-[200] p-3 rounded-2xl w-72 max-w-[calc(100vw-2rem)]"
             style={{
               background: "hsl(var(--card))",
               border: "1px solid hsl(var(--border))",

@@ -69,12 +69,7 @@ export function OnboardingOverlay({ onDismiss }: Props) {
       />
 
       <motion.div
-        className="relative w-full max-w-md rounded-2xl overflow-hidden"
-        style={{
-          background: "rgba(10,10,18,0.98)",
-          border: "1px solid rgba(139,92,246,0.3)",
-          boxShadow: "0 0 80px rgba(139,92,246,0.2), 0 32px 64px rgba(0,0,0,0.7)",
-        }}
+        className="retro-panel relative w-full max-w-md overflow-hidden border bg-card text-card-foreground"
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 360, damping: 30 }}
@@ -82,8 +77,8 @@ export function OnboardingOverlay({ onDismiss }: Props) {
         {/* Close */}
         <button
           onClick={onDismiss}
-          className="absolute top-4 right-4 p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors z-10"
-          style={{ border: "1px solid rgba(255,255,255,0.06)" }}
+          aria-label="Close onboarding"
+          className="absolute top-4 right-4 z-10 rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:text-foreground"
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -98,8 +93,8 @@ export function OnboardingOverlay({ onDismiss }: Props) {
                 width: i === step ? "20px" : "6px",
                 height: "6px",
                 background: i === step
-                  ? "hsl(263,90%,70%)"
-                  : "rgba(255,255,255,0.15)",
+                  ? "hsl(var(--primary))"
+                  : "hsl(var(--border))",
               }}
             />
           ))}
@@ -138,7 +133,7 @@ export function OnboardingOverlay({ onDismiss }: Props) {
               <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
                 {current.subtitle}
               </p>
-              <h2 className="text-lg font-bold text-white leading-snug">
+              <h2 className="text-lg font-bold leading-snug">
                 {current.title}
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
@@ -150,11 +145,6 @@ export function OnboardingOverlay({ onDismiss }: Props) {
             <Button
               className="w-full font-mono text-sm h-11"
               onClick={handleNext}
-              style={{
-                background: isLast
-                  ? "linear-gradient(135deg, hsl(263,90%,60%), hsl(193,90%,50%))"
-                  : undefined,
-              }}
             >
               {isLast && <Zap className="w-4 h-4 mr-2" />}
               {current.cta}

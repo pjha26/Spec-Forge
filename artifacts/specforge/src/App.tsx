@@ -1,12 +1,14 @@
 import { lazy, Suspense } from "react";
+import { MotionConfig } from "framer-motion";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout";
+import { SpecLoader } from "@/components/spec-loader";
 import { ThemeProvider } from "@/components/theme-provider";
 import NotFound from "@/pages/not-found";
-import Landing from "@/pages/landing";
+import Landing, { PublicExample } from "@/pages/landing";
 import { AuthGate } from "@/components/auth-gate";
 
 const Home = lazy(() => import("@/pages/home"));
@@ -32,6 +34,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
+      <Route path="/examples" component={PublicExample} />
       <Route path="/share/:token" component={SharedSpec} />
       <Route path="/app">
         {() => (
@@ -113,16 +116,18 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Suspense fallback={<p className="p-6 text-sm text-muted-foreground" role="status">Loading…</p>}>
-              <Router />
-            </Suspense>
-          </WouterRouter>
-          <Toaster />
-        </TooltipProvider>
-      </ThemeProvider>
+      <MotionConfig reducedMotion="user">
+        <ThemeProvider>
+          <TooltipProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Suspense fallback={<SpecLoader label="Loading SpecForge…" />}>
+                <Router />
+              </Suspense>
+            </WouterRouter>
+            <Toaster />
+          </TooltipProvider>
+        </ThemeProvider>
+      </MotionConfig>
     </QueryClientProvider>
   );
 }
